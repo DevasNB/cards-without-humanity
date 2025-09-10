@@ -1,4 +1,4 @@
-export default {
+module.exports = {
     "frontend/**/*.{ts,js,html,css,scss}": [
         "prettier --write",
         "cd frontend && npm run lint --if-present"
@@ -7,4 +7,4 @@ export default {
         "prettier --write",
         "cd backend && npm run lint --if-present"
     ]
-}
+};
