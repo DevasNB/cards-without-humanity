@@ -36,9 +36,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
+          projectBaseDir: frontend
           args: >
             -Dsonar.projectKey=cards-without-humanity-frontend
-            -Dsonar.sources=src
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.branch.name=${{ github.ref_name }}
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
@@ -75,7 +75,6 @@ jobs:
         with:
           args: >
             -Dsonar.projectKey=cards-without-humanity-backend
-            -Dsonar.sources=src
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.branch.name=${{ github.ref_name }}
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
