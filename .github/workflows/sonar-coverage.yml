@@ -55,7 +55,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actioncd s/setup-node@v3
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
 
