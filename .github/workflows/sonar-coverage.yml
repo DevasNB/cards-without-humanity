@@ -40,7 +40,7 @@ jobs:
           args: >
             -Dsonar.projectKey=cards-without-humanity-frontend
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.branch.name=${{ github.ref_name }}
+            -Dsonar.branch.name=${{ github.base_ref }}
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
             -Dsonar.token=${{ secrets.SONAR_TOKEN_FRONTEND }}
 
@@ -77,6 +77,6 @@ jobs:
             -Dsonar.projectKey=cards-without-humanity-backend
             -Dsonar.sources=.
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.branch.name=${{ github.ref_name }}
+            -Dsonar.branch.name=${{ github.base_ref }}
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
             -Dsonar.token=${{ secrets.SONAR_TOKEN_BACKEND }}
