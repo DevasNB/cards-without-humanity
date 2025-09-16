@@ -37,17 +37,17 @@
     --pill-accent: var(--bright-blue);
 
     font-family:
-      "Inter",
+      'Inter',
       -apple-system,
       BlinkMacSystemFont,
-      "Segoe UI",
+      'Segoe UI',
       Roboto,
       Helvetica,
       Arial,
       sans-serif,
-      "Apple Color Emoji",
-      "Segoe UI Emoji",
-      "Segoe UI Symbol";
+      'Apple Color Emoji',
+      'Segoe UI Emoji',
+      'Segoe UI Symbol';
     box-sizing: border-box;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -61,17 +61,17 @@
     letter-spacing: -0.125rem;
     margin: 0;
     font-family:
-      "Inter Tight",
+      'Inter Tight',
       -apple-system,
       BlinkMacSystemFont,
-      "Segoe UI",
+      'Segoe UI',
       Roboto,
       Helvetica,
       Arial,
       sans-serif,
-      "Apple Color Emoji",
-      "Segoe UI Emoji",
-      "Segoe UI Symbol";
+      'Apple Color Emoji',
+      'Segoe UI Emoji',
+      'Segoe UI Symbol';
   }
 
   p {
@@ -142,6 +142,7 @@
     line-height: 1.4rem;
     letter-spacing: -0.00875rem;
     text-decoration: none;
+    white-space: nowrap;
   }
 
   .pill:hover {
@@ -153,12 +154,16 @@
   }
 
   .pill-group .pill:nth-child(6n + 2) {
+    --pill-accent: var(--electric-violet);
+  }
+
+  .pill-group .pill:nth-child(6n + 3) {
     --pill-accent: var(--french-violet);
   }
 
-  .pill-group .pill:nth-child(6n + 3),
   .pill-group .pill:nth-child(6n + 4),
-  .pill-group .pill:nth-child(6n + 5) {
+  .pill-group .pill:nth-child(6n + 5),
+  .pill-group .pill:nth-child(6n + 6) {
     --pill-accent: var(--hot-red);
   }
 
@@ -229,14 +234,7 @@
             <stop offset=".707" stop-color="#FF41F8" stop-opacity=".5" />
             <stop offset="1" stop-color="#FF41F8" stop-opacity="0" />
           </radialGradient>
-          <linearGradient
-            id="b"
-            x1="0"
-            x2="982"
-            y1="192"
-            y2="192"
-            gradientUnits="userSpaceOnUse"
-          >
+          <linearGradient id="b" x1="0" x2="982" y1="192" y2="192" gradientUnits="userSpaceOnUse">
             <stop stop-color="#F0060B" />
             <stop offset="0" stop-color="#F0070C" />
             <stop offset=".526" stop-color="#CC26D5" />
@@ -247,7 +245,7 @@
           </clipPath>
         </defs>
       </svg>
-      <h1>Hello, {{ title }}</h1>
+      <h1>Hello, {{ title() }}</h1>
       <p>Congratulations! Your app is running. 🎉</p>
     </div>
     <div class="divider" role="separator" aria-label="Divider"></div>
@@ -255,20 +253,18 @@
       <div class="pill-group">
         @for (
           item of [
-            { title: "Explore the Docs", link: "https://angular.dev" },
+            { title: 'Explore the Docs', link: 'https://angular.dev' },
+            { title: 'Learn with Tutorials', link: 'https://angular.dev/tutorials' },
             {
-              title: "Learn with Tutorials",
-              link: "https://angular.dev/tutorials",
+              title: 'Prompt and best practices for AI',
+              link: 'https://angular.dev/ai/develop-with-ai',
             },
-            { title: "CLI Docs", link: "https://angular.dev/tools/cli" },
+            { title: 'CLI Docs', link: 'https://angular.dev/tools/cli' },
             {
-              title: "Angular Language Service",
-              link: "https://angular.dev/tools/language-service",
+              title: 'Angular Language Service',
+              link: 'https://angular.dev/tools/language-service',
             },
-            {
-              title: "Angular DevTools",
-              link: "https://angular.dev/tools/devtools",
-            },
+            { title: 'Angular DevTools', link: 'https://angular.dev/tools/devtools' },
           ];
           track item.title
         ) {
@@ -309,12 +305,7 @@
             />
           </svg>
         </a>
-        <a
-          href="https://twitter.com/angular"
-          aria-label="Twitter"
-          target="_blank"
-          rel="noopener"
-        >
+        <a href="https://twitter.com/angular" aria-label="Twitter" target="_blank" rel="noopener">
           <svg
             width="24"
             height="24"
