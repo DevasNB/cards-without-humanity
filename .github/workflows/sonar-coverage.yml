@@ -28,7 +28,7 @@ jobs:
 
       - name: Run tests with coverage (Frontend)
         working-directory: ./frontend
-        run: ng test --watch=false --browsers=ChromeHeadless || echo "No tests found"
+        run: npx ng test --watch=false --browsers=ChromeHeadless || echo "No tests found"
 
       - name: Run SonarQube Scanner (Frontend)
         uses: sonarsource/sonarcloud-github-action@v2
