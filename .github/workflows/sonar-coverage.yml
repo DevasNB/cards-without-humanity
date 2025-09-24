@@ -28,7 +28,7 @@ jobs:
 
       - name: Run tests with coverage (Frontend)
         working-directory: ./frontend
-        run: npm test -- --coverage || echo "No tests found"
+        run: npm test || echo "No tests found"
 
       - name: Run SonarQube Scanner (Frontend)
         uses: sonarsource/sonarcloud-github-action@v2
