@@ -1,0 +1,84 @@
+name: SonarQube Analysis
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  frontend:
+    name: Frontend Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Install dependencies (Frontend)
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Run tests with coverage (Frontend)
+        working-directory: ./frontend
+        run: npm test -- --coverage || echo "No tests found"
+
+      - name: Run SonarQube Scanner (Frontend)
+        uses: sonarsource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          projectBaseDir: ./frontend
+          args: >
+            -Dsonar.projectKey=cards-without-humanity-frontend
+            -Dsonar.sources=.
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.branch.name=${{ github.base_ref }}
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
+            -Dsonar.token=${{ secrets.SONAR_TOKEN_FRONTEND }}
+
+  backend:
+    name: Backend Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Install dependencies (Backend)
+        working-directory: ./backend
+        run: npm install
+
+      - name: Run tests with coverage (Backend)
+        working-directory: ./backend
+        run: npm test -- --coverage || echo "No tests found"
+
+      - name: Run SonarQube Scanner (Backend)
+        uses: sonarsource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          projectBaseDir: ./backend
+          args: >
+            -Dsonar.projectKey=cards-without-humanity-backend
+            -Dsonar.sources=.
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.branch.name=${{ github.base_ref }}
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
+            -Dsonar.token=${{ secrets.SONAR_TOKEN_BACKEND }}
