@@ -20,7 +20,26 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            cd www/cards-without-humanity
-            git pull origin master
+            set -e
+
+            APP_DIR="/home/devas/www/cards-against-humanity"
+            REPO_URL="https://github.com/DevasNB/cards-without-humanity.git"
+            BRANCH="feat/docker-deploy"
+
+            mkdir -p /home/devas/www
+
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "Repository found, cloning..."
+              rm -rf "$APP_DIR"
+              git clone -b $BRANCH $REPO_URL "$APP_DIR"
+            else
+              echo "Repository found, updating..."
+              cd "$APP_DIR"
+              git fetch origin
+              git checkout $BRANCH
+              git pull origin $BRANCH
+            fi
+
+            cd "$APP_DIR"
             docker-compose down
             docker-compose up -d --build
