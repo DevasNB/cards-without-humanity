@@ -41,5 +41,7 @@ jobs:
             fi
 
             cd "$APP_DIR"
-            docker-compose down
-            docker-compose up -d --build
+
+            echo "Restarting containers..."
+            docker compose down
+            docker compose up -d --build

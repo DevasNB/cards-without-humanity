@@ -1,15 +1,33 @@
-
 version: "3.9"
 
 services:
-  frontend:
-    build: ./frontend
-    ports:
-      - "80:80"
+  # Angular SSR
+  frontend-ssr:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.ssr
+    container_name: cards-frontend-ssr
     restart: always
+    expose:
+      - "4000"
 
+  # Backend Node API
   backend:
     build: ./backend
+    container_name: cards-backend
+    restart: always
     ports:
       - "3000:3000"
+
+  # Nginx reverse proxy
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: cards-nginx
     restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend-ssr
+      - backend
