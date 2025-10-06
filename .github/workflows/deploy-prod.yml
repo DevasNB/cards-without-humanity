@@ -22,7 +22,7 @@ jobs:
           script: |
             set -e
 
-            APP_DIR="/home/devas/www/cards-against-humanity"
+            APP_DIR="/home/devas/www/cards-without-humanity"
             REPO_URL="https://github.com/DevasNB/cards-without-humanity.git"
             BRANCH="feat/docker-deploy"
 
