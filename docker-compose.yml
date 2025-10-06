@@ -1,5 +1,8 @@
 version: "3.9"
 
+volumes:
+  frontend-build:
+
 services:
   # Angular SSR
   frontend-ssr:
@@ -10,6 +13,8 @@ services:
     restart: always
     expose:
       - "4000"
+    volumes:
+      - frontend-build:/app/dist/frontend
 
   # Backend Node API
   backend:
@@ -22,8 +27,8 @@ services:
   # Nginx reverse proxy
   nginx:
     build:
-      context: .
-      dockerfile: nginx/Dockerfile
+      context: ./nginx
+      dockerfile: Dockerfile
     container_name: cards-nginx
     restart: always
     ports:
@@ -31,3 +36,5 @@ services:
     depends_on:
       - frontend-ssr
       - backend
+    volumes:
+      - frontend-build:/usr/share/nginx/html
