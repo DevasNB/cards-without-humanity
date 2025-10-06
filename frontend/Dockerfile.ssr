@@ -18,4 +18,4 @@ RUN npm ci
 EXPOSE 4000
 
 # Rodar SSR (entrypoint correto)
-CMD ["node", "dist/frontend/server/main.server.mjs"]
+CMD ["node", "--input-type=module", "dist/frontend/server/main.server.mjs"]
