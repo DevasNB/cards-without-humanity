@@ -21,9 +21,7 @@ services:
 
   # Nginx reverse proxy
   nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
+    build: ./nginx
     container_name: cards-nginx
     restart: always
     ports:
