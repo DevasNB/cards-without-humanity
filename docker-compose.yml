@@ -21,7 +21,7 @@ services:
 
   # Nginx reverse proxy
   nginx:
-    build: ./nginx
+    build: .
     container_name: cards-nginx
     restart: always
     ports:
