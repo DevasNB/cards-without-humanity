@@ -20,12 +20,14 @@ services:
       - "3000:3000"
 
   # Nginx reverse proxy
-  nginx:
-    build: .
-    container_name: cards-nginx
-    restart: always
-    ports:
-      - "80:80"
-    depends_on:
-      - frontend-ssr
-      - backend
+nginx:
+  build:
+    context: .
+    dockerfile: nginx/Dockerfile
+  container_name: cards-nginx
+  restart: always
+  ports:
+    - "80:80"
+  depends_on:
+    - frontend-ssr
+    - backend
