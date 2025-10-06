@@ -13,9 +13,9 @@ WORKDIR /app
 # Copiar build completo do SSR
 COPY --from=build /app/dist/frontend /app/dist/frontend
 COPY package*.json ./
-RUN npm ci --production
+RUN npm ci
 
 EXPOSE 4000
 
 # Rodar SSR (entrypoint correto)
-CMD ["node", "--experimental-specifier-resolution=node", "dist/frontend/server/main.server.mjs"]
+CMD ["node", "dist/frontend/server/main.server.mjs"]
