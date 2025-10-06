@@ -4,18 +4,17 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN npm run build --prod
+RUN npm run build:ssr
 
 # Stage 2: Runtime Node SSR
 FROM node:22-alpine
 WORKDIR /app
-
-# Copiar build completo do SSR
 COPY --from=build /app/dist/frontend /app/dist/frontend
 COPY package*.json ./
 RUN npm ci
 
-EXPOSE 4000
+# Novo entrypoint
+COPY server.js ./
 
-# Rodar SSR (entrypoint correto)
-CMD ["node", "--input-type=module", "dist/frontend/server/main.server.mjs"]
+EXPOSE 4000
+CMD ["node", "server.js"]
