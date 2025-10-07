@@ -10,6 +10,240 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+// The pack of cards
+model Deck {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String // A deck as a name
+
+  promptCards PromptCard[] // All the PromptCards of that Deck
+  answerCards AnswerCard[] // All the AnswerCards of that Deck
+
+  games GameDeck[] // Link to games using this pack
+}
+
+// The card that is a prompt
+model PromptCard {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  content String // The question on the card
+  pick    Int // How many answers it has
+  deckId  String // The deck it belongs to
+
+  deck   Deck    @relation(fields: [deckId], references: [id], onDelete: Cascade) // It belongs to a Deck; If the deck gets deleted, so is the card
+  rounds Round[] // It is present in many rounds, from different games
+}
+
+// The card that is an answer
+model AnswerCard {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  content String // The answer on the card
+  deckId  String // The deck it belongs to
+
+  deck Deck @relation(fields: [deckId], references: [id], onDelete: Cascade) // It belongs to a Deck; If the deck gets deleted, so the cards shall be
+
+  // Relations for tracking card usage
+  playerHands      PlayerHandCard[] // A user has many answer cards in its hands
+  roundSubmissions RoundPick[] // The card played by a user
+}
+
+// The user: It is an independent model
+model User {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  username String   @unique // Each user for now only has a username
+  role     UserRole // Each user has an authentication role
+
+  roomAsHost Room? // One user can only be the host of one room
+  rooms      RoomUser[] // The rooms the user is present in
+}
+
+// Enabling the ANONYMOUS role - still receives auth to enter games, but must be identified as such
+enum UserRole {
+  ANONYMOUS // If the user is anonymous
+  USER // If the user is a simple user
+  ADMIN // If the user is an admin
+}
+
+// A user can create a room or join a room
+model Room {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name     String  @unique // A room has a unique name that can be found
+  hostId   String  @unique // A user can only be the host of one open room. If they leave, the ownership must change
+  isPublic Boolean @default(true) // A room can be public or private
+
+  host User @relation(fields: [hostId], references: [id], onDelete: Restrict) // The host of the room. If a user is the host of a game and the user is deleted, the Room should restrict it
+
+  users RoomUser[] // A room has many users
+  games Game[] // A room has many games - In this way, if the game ends, the users can return to the lobby
+}
+
+// User to Room Relationship
+model RoomUser {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) // joinedAt
+  updatedAt DateTime @updatedAt
+
+  isHost       Boolean        @default(false) // ATTENTION: duplication of hostId in Room, but rapid access
+  connectionId String // connection of WebSocket
+  status       RoomUserStatus // status of the user inside the room
+
+  userId String // It is a user
+  roomId String // And it is in a room
+
+  players Player[] // One RoomUser can be many players (because there might be many games)
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade) // One room can hold multiple users. If the room gets deleted, so do the RoomUsers
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict) // And one user can be in multiple rooms - It is only present on one, but can hold the data for many. If a user is inside a room and it is deleted, the RoomUser should restrict it
+
+  @@unique([userId, roomId]) // But one user can only be in a room once
+}
+
+// Status of a RoomUser
+enum RoomUserStatus {
+  DISCONNECTED
+  WAITING
+  READY
+  IN_GAME
+}
+
+// When the Room countdown reaches an end, a Game is created
+model Game {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roomId String @unique // Each room can only have one active game at a time
+
+  status       GameStatus @default(WAITING_FOR_PLAYERS) // The status of the game
+  round        Int        @default(1) // The number of the round the game is in
+  winningScore Int // The max points a person can have
+
+  players Player[] // The game has many players playing
+  rounds  Round[] // A game has many rounds
+  decks   GameDeck[] // Each game as a set of decks
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade) // Each game belongs to a room. If the room is deleted, so should the game
+}
+
+enum GameStatus {
+  WAITING_FOR_PLAYERS // When in lobby
+  PLAYING // When playing a round
+  ROUND_ENDED // When a round has ended
+  GAME_ENDED // When the game ended
+}
+
+// After becoming a RoomUser, it becomes a Player inside a Game
+model Player {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roomUserId String // It is a RoomUser
+  gameId     String // And it is in a game
+
+  game Game     @relation(fields: [gameId], references: [id], onDelete: Cascade) // A player belongs to a game
+  user RoomUser @relation(fields: [roomUserId], references: [id], onDelete: Cascade) // A player is a user. If the RoomUser is deleted, so is the player
+
+  judgingRounds Round[] @relation("RoundCzar") // The rounds it has judged or is judging in a game
+  winningRounds Round[] @relation("RoundWinner") // The rounds it has own in a game
+
+  hand        PlayerHandCard[] // The cards the user has
+  submissions RoundPick[] // The cards the user submitted
+}
+
+// The round of a game
+model Round {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gameId      String // The game it belongs to
+  roundNumber Int // It has a numbering system. We need to know which is it
+  status      RoundStatus @default(DRAWING_CARDS) // The status of the round
+
+  czarId       String // Who is the judge?
+  winnerId     String? // Who won the round? Optional because in the start we don't know
+  promptCardId String // The prompt card of the round
+
+  game       Game       @relation(fields: [gameId], references: [id], onDelete: Cascade) // It belongs to one single game
+  czar       Player     @relation("RoundCzar", fields: [czarId], references: [id], onDelete: Cascade) // It only has one czar
+  winner     Player?    @relation("RoundWinner", fields: [winnerId], references: [id], onDelete: Cascade) // It may have one winner
+  promptCard PromptCard @relation(fields: [promptCardId], references: [id], onDelete: Restrict) // It has only one prompt card. If any game is running and a promptCard is deleted, the Round should restrict it
+
+  picks RoundPick[] // All answer card submissions for this round
+
+  @@unique([gameId, roundNumber]) // The round number is unique to the game it belongs to
+}
+
+// The status of the round
+enum RoundStatus {
+  DRAWING_CARDS // When the answer cards are being submitted
+  CZAR_VOTING // When the czar is voting on the answer cards
+  ENDED // When the czar has voted and the round has ended
+}
+
+// The decks of a game
+model GameDeck {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  deckId String // The deck is being used
+  gameId String // In one game
+
+  deck Deck @relation(fields: [deckId], references: [id], onDelete: Restrict) // One deck. If any game is running and a deck is deleted, the GameDeck should restrict it
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade) // To one game. If the game is deleted, so should the game be
+
+  @@unique([gameId, deckId]) // One deck can only be used once in a game
+}
+
+// An answer card that is in the hand of a user
+model PlayerHandCard {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cardId   String // An answer card
+  playerId String // In the hand of a player
+
+  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade) // If the player is deleted, it should be aswell
+  answerCard AnswerCard @relation(fields: [cardId], references: [id], onDelete: Restrict) // If any game is running and an AnswerCard is deleted, the PlayerHandCard should restrict it
+
+  @@unique([playerId, cardId]) // A user cannot hold the same card twice at the same time
+}
+
+// The answer cards submitted in a round
+model RoundPick {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  playerId String // One player
+  cardId   String // Has submitted one card
+  roundId  String // In one round
+
+  isWinner Boolean @default(false) // True if the czar picked this card
+
+  round      Round      @relation(fields: [roundId], references: [id], onDelete: Cascade) // If the round is deleted, so is the RoundPick
+  answerCard AnswerCard @relation(fields: [cardId], references: [id], onDelete: Restrict) // If any game is running and an AnswerCard is deleted, the RoundPick should restrict it
+  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade) // If the player is deleted, so is the RoundPick
+
+  @@unique([roundId, cardId, playerId]) // A player can only submit a specific card once per round
 }
