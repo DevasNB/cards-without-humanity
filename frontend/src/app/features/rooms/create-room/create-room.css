@@ -1,0 +1,11 @@
+.card {
+  border-radius: 1rem;
+}
+
+.list-group-item {
+  transition: background-color 0.2s;
+}
+
+.list-group-item:hover {
+  background-color: #f8f9fa;
+}

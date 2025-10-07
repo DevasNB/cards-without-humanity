@@ -1,0 +1,77 @@
+<div class="container my-5">
+  <h2 class="text-center mb-4">Configurar Sala</h2>
+
+  <!-- Room Settings -->
+  <div class="card mb-4 p-4 shadow-sm">
+    <div class="mb-3">
+      <label class="form-label">Nome da Sala</label>
+      <input [(ngModel)]="roomName" class="form-control" />
+    </div>
+
+    <div class="mb-3 d-flex align-items-center justify-content-between">
+      <div>
+        <label class="form-label d-block">Privacidade</label>
+        <button class="btn btn-outline-secondary" (click)="togglePrivacy()">
+          {{ isPublic ? 'Pública' : 'Privada' }}
+        </button>
+      </div>
+      <div *ngIf="!isPublic">
+        <button class="btn btn-outline-primary" (click)="copyInviteLink()">
+          <i class="bi bi-link-45deg"></i> Copiar link de convite
+        </button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Rondas para Vencer</label>
+        <input type="number" [(ngModel)]="winningRounds" class="form-control" min="1" />
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Máximo de Jogadores</label>
+        <input type="number" [(ngModel)]="maxPlayers" class="form-control" min="3" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Players Section -->
+  <div class="card p-4 shadow-sm mb-4">
+    <h4 class="mb-3">Jogadores ({{ players.length }}/{{ maxPlayers }})</h4>
+
+    <ul class="list-group">
+      <li
+        *ngFor="let player of players"
+        class="list-group-item d-flex justify-content-between align-items-center"
+      >
+        <div>
+          <strong>{{ player.name }}</strong>
+          <span *ngIf="player.isHost" class="text-warning ms-2">👑 Host</span>
+        </div>
+
+        <div>
+          <span
+            class="badge"
+            [ngClass]="{
+              'bg-success': player.status === 'READY',
+              'bg-secondary': player.status === 'WAITING'
+            }"
+            (click)="toggleStatus(player)"
+            style="cursor: pointer;"
+          >
+            {{ player.status === 'READY' ? 'Pronto' : 'À Espera' }}
+          </span>
+        </div>
+      </li>
+    </ul>
+
+    <div class="mt-3 text-center text-muted">
+      {{ readyCount }}/{{ players.length }} prontos
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="text-center">
+    <button class="btn btn-success btn-lg me-3" (click)="startGame()">Iniciar Jogo</button>
+    <a routerLink="/" class="btn btn-outline-secondary btn-lg">Voltar</a>
+  </div>
+</div>
