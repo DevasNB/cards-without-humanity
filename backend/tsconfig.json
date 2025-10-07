@@ -1,0 +1,18 @@
+{
+  // Visit https://aka.ms/tsconfig to read more about this file
+  "compilerOptions": {
+      "target": "es2020", // or "es2021", "es2022" for newer Node.js versions
+    "module": "commonjs", // Node.js typically uses CommonJS modules
+    "lib": ["es2020"],
+    "outDir": "./dist", // Output directory for compiled JavaScript files
+    "rootDir": "./src", // Root directory for your TypeScript source files
+    "strict": true, // Enable all strict type-checking options (highly recommended!)
+    "esModuleInterop": true, // Allows default imports from modules with no default export
+    "skipLibCheck": true, // Skip type checking of all declaration files (*.d.ts)
+    "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased file names.
+    "resolveJsonModule": true, // Allow importing .json files
+    "sourceMap": true // Generate source maps for debugging
+  },
+  "include": ["src/**/*.ts"], // Specify which files to include in compilation
+  "exclude": ["node_modules"] // Specify which files to exclude
+}
