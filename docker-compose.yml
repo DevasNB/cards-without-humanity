@@ -2,9 +2,13 @@ version: "3.9"
 
 volumes:
   frontend-build:
+  certbot-etc:
+  certbot-var:
 
 services:
+  # ==========================
   # Angular SSR
+  # ==========================
   frontend-ssr:
     build:
       context: ./frontend
@@ -16,7 +20,9 @@ services:
     volumes:
       - frontend-build:/app/dist/frontend
 
-  # Backend Node API
+  # ==========================
+  # Backend (Node.js)
+  # ==========================
   backend:
     build: ./backend
     container_name: cards-backend
@@ -24,7 +30,9 @@ services:
     ports:
       - "3000:3000"
 
-  # Nginx reverse proxy
+  # ==========================
+  # Nginx (Reverse Proxy + SSL)
+  # ==========================
   nginx:
     build:
       context: ./nginx
@@ -33,8 +41,27 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - frontend-ssr
       - backend
     volumes:
       - frontend-build:/usr/share/nginx/html
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+
+  # ==========================
+  # Certbot (Let's Encrypt)
+  # ==========================
+  certbot:
+    image: certbot/certbot
+    container_name: cards-certbot
+    restart: always
+    depends_on:
+      - nginx
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - ./nginx/entrypoint.sh:/etc/letsencrypt/entrypoint.sh
+    entrypoint: /bin/sh
+    command: /etc/letsencrypt/entrypoint.sh
