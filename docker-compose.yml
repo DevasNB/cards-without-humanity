@@ -7,7 +7,7 @@ volumes:
 
 services:
   # ==========================
-  # Angular SSR
+  # Angular SSR (Frontend)
   # ==========================
   frontend-ssr:
     build:
@@ -27,11 +27,13 @@ services:
     build: ./backend
     container_name: cards-backend
     restart: always
+    expose:
+      - "3000"
     ports:
       - "3000:3000"
 
   # ==========================
-  # Nginx (Reverse Proxy + SSL)
+  # Nginx (Reverse Proxy + HTTP/HTTPS)
   # ==========================
   nginx:
     build:
@@ -49,6 +51,8 @@ services:
       - frontend-build:/usr/share/nginx/html
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
+    # Make sure nginx works even if the certificates are not yet created
+    command: /bin/sh -c "nginx -g 'daemon off;'"
 
   # ==========================
   # Certbot (Let's Encrypt)
