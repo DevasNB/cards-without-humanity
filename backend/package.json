@@ -1,26 +1,28 @@
 {
-  "name": "backend",
+  "name": "cards-against-humanity-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "build": "npx tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^6.16.0",
-    "@types/express": "^5.0.3",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
-    "prisma": "^6.16.0",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.2"
+    "prisma": "^6.16.0"
   },
   "description": "",
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.7.0",
+    "nodemon": "^3.1.10",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3"
   }
 }
