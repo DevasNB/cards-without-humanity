@@ -2,8 +2,6 @@ version: "3.9"
 
 volumes:
   frontend-build:
-  certbot-etc:
-  certbot-var:
 
 services:
   # ==========================
@@ -43,30 +41,8 @@ services:
     restart: always
     ports:
       - "80:80"
-      - "443:443"
     depends_on:
       - frontend-ssr
       - backend
     volumes:
       - frontend-build:/usr/share/nginx/html
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - ./nginx/certs:/etc/letsencrypt/live
-    # Make sure nginx works even if the certificates are not yet created
-    command: /bin/sh -c "nginx -g 'daemon off;'"
-
-  # ==========================
-  # Certbot (Let's Encrypt)
-  # ==========================
-  certbot:
-    image: certbot/certbot
-    container_name: cards-certbot
-    restart: always
-    depends_on:
-      - nginx
-    volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - ./nginx/entrypoint.sh:/etc/letsencrypt/entrypoint.sh
-    entrypoint: /bin/sh
-    command: /etc/letsencrypt/entrypoint.sh
