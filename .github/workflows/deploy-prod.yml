@@ -3,7 +3,7 @@ name: Deploy to Raspberry PI
 on:
   push:
     branches:
-      - feat/docker-deploy
+      - main
 
 jobs:
   deploy:
@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          ref: main  
 
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v0.1.10
