@@ -51,6 +51,7 @@ services:
       - frontend-build:/usr/share/nginx/html
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
+      - ./nginx/certs:/etc/letsencrypt/live
     # Make sure nginx works even if the certificates are not yet created
     command: /bin/sh -c "nginx -g 'daemon off;'"
 
