@@ -1,0 +1,76 @@
+<div class="container my-5">
+  <!-- Central Title -->
+  <h1 class="text-center mb-5">Bem-vindo</h1>
+
+  <div class="row justify-content-center mb-4">
+    <!-- Create Room -->
+    <div class="col-md-5 col-lg-4 d-flex align-items-center mb-4">
+      <button class="btn btn-outline-primary btn-lg me-3" [routerLink]="['/lobby/create-lobby']">
+        <i class="bi bi-plus-square"></i>
+      </button>
+      <div>
+        <h4>Criar Sala</h4>
+        <p class="text-muted">Cria uma sala nova para jogar com os teus amigos.</p>
+      </div>
+    </div>
+
+    <!-- Enter Room -->
+    <div class="col-md-5 col-lg-4 d-flex align-items-center mb-4">
+      <button class="btn btn-outline-primary btn-lg me-3" [routerLink]="['/lobby/join-lobby']">
+        <i class="bi bi-door-open"></i>
+      </button>
+      <div>
+        <h4>Entrar Numa Sala</h4>
+        <p class="text-muted">Entra numa sala existente e começa a jogar.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row justify-content-center mb-4">
+    <!-- View Decks -->
+    <div class="col-md-5 col-lg-4 d-flex align-items-center mb-4">
+      <button class="btn btn-outline-primary btn-lg me-3" [routerLink]="['/decks/list-decks']">
+        <i class="bi bi-card-list"></i>
+      </button>
+      <div>
+        <h4>Ver Baralho de Cartas</h4>
+        <p class="text-muted">Vê os baralhos de cartas disponíveis para utilizares jogo.</p>
+      </div>
+    </div>
+
+    <!-- Create Deck -->
+    <div class="col-md-5 col-lg-4 d-flex align-items-center mb-4">
+      <button class="btn btn-outline-primary btn-lg me-3" [routerLink]="['/decks/create-deck']">
+        <i class="bi bi-card-text"></i>
+      </button>
+      <div>
+        <h4>Criar Baralho de Cartas</h4>
+        <p class="text-muted">Cria o teu próprio baralho de cartas personalizado.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row justify-content-center mb-4">
+    <!-- Settings -->
+    <div class="col-md-5 col-lg-4 d-flex align-items-center mb-4">
+      <button class="btn btn-outline-primary btn-lg me-3" [routerLink]="['/settings']">
+        <i class="bi bi-gear"></i>
+      </button>
+      <div>
+        <h4>Configurações do Jogo</h4>
+        <p class="text-muted">Ajusta as configurações do jogo para melhorares a tua experiência.</p>
+      </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="col-md-5 col-lg-4 d-flex align-items-center mb-4">
+      <button class="btn btn-outline-primary btn-lg me-3" [routerLink]="['/statistics']">
+        <i class="bi bi-bar-chart"></i>
+      </button>
+      <div>
+        <h4>Ver Estatísticas</h4>
+        <p class="text-muted">Vê as tuas estatísticas e desempenho no jogo.</p>
+      </div>
+    </div>
+  </div>
+</div>

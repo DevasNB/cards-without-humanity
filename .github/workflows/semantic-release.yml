@@ -1,0 +1,35 @@
+name: Release on Conventional Commits
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Configure Git remote with token
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/DevasNB/cards-without-humanity.git
+
+      - name: Run semantic-release
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: npx semantic-release
