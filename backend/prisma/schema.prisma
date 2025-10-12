@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -65,7 +65,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   username String   @unique // Each user for now only has a username
-  role     UserRole // Each user has an authentication role
+  role     UserRole @default(ANONYMOUS) // Each user has an authentication role
 
   roomAsHost Room? // One user can only be the host of one room
   rooms      RoomUser[] // The rooms the user is present in

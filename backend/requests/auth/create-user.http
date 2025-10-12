@@ -1,0 +1,32 @@
+### Create a new user (Success)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser123"
+}
+
+### Create a new user (Conflict - duplicate username)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser123"
+}
+
+### Create a new user (Validation Error - too short)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "ab"
+}
+
+### Create a new user (Validation Error - invalid characters)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "user with spaces"
+}
+
