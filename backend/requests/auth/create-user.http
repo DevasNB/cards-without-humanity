@@ -1,3 +1,5 @@
+@baseUrl = {{baseUrl}}
+
 ### Create a new user (Success)
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
