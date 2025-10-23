@@ -1,0 +1,9 @@
+<header class="app-header">
+  <button type="submit" (click)="toggleLogin()">
+    @if (!isAuthenticated) {
+      Login
+    } @else {
+      Logout
+    }
+  </button>
+</header>
