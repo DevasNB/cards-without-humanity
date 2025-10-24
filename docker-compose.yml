@@ -1,12 +1,29 @@
 version: "3.9"
 
-volumes:
-  frontend-build:
-
 services:
-  # ==========================
-  # Angular SSR (Frontend)
-  # ==========================
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - certs:/etc/nginx/certs:rw
+      - nginx_conf:/etc/nginx/conf.d
+
+  letsencrypt:
+    image: nginxproxy/acme-companion
+    container_name: nginx-letsencrypt
+    restart: always
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - certs:/etc/nginx/certs:rw
+      - nginx_conf:/etc/nginx/conf.d
+
   frontend-ssr:
     build:
       context: ./frontend
@@ -15,34 +32,22 @@ services:
     restart: always
     expose:
       - "4000"
-    volumes:
-      - frontend-build:/app/dist/frontend
+    environment:
+      - VIRTUAL_HOST=cards.devas.pt
+      - LETSENCRYPT_HOST=cards.devas.pt
+      - LETSENCRYPT_EMAIL=teu-email@dominio.com
 
-  # ==========================
-  # Backend (Node.js)
-  # ==========================
   backend:
     build: ./backend
     container_name: cards-backend
     restart: always
     expose:
       - "3000"
-    ports:
-      - "3000:3000"
+    environment:
+      - VIRTUAL_HOST=cardsapi.devas.pt
+      - LETSENCRYPT_HOST=cardsapi.devas.pt
+      - LETSENCRYPT_EMAIL=teu-email@dominio.com
 
-  # ==========================
-  # Nginx (Reverse Proxy + HTTP)
-  # ==========================
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    container_name: cards-nginx
-    restart: always
-    ports:
-      - "80:80"
-    depends_on:
-      - frontend-ssr
-      - backend
-    volumes:
-      - frontend-build:/usr/share/nginx/html
+volumes:
+  certs:
+  nginx_conf:

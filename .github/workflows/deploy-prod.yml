@@ -3,7 +3,7 @@ name: Deploy to Raspberry PI
 on:
   push:
     branches:
-      - main
+      - feat/deploy-https
 
 jobs:
   deploy:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          ref: main  
+          ref: feat/deploy-https  
 
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v0.1.10
@@ -26,12 +26,12 @@ jobs:
 
             APP_DIR="/home/devas/www/cards-without-humanity"
             REPO_URL="https://github.com/DevasNB/cards-without-humanity.git"
-            BRANCH="feat/docker-deploy"
+            BRANCH="feat/deploy-https"
 
             mkdir -p /home/devas/www
 
             if [ ! -d "$APP_DIR/.git" ]; then
-              echo "Repository found, cloning..."
+              echo "Repository not found, cloning..."
               rm -rf "$APP_DIR"
               git clone -b $BRANCH $REPO_URL "$APP_DIR"
             else
