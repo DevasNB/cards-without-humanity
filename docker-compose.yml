@@ -35,7 +35,7 @@ services:
     environment:
       - VIRTUAL_HOST=cards.devas.pt
       - LETSENCRYPT_HOST=cards.devas.pt
-      - LETSENCRYPT_EMAIL=teu-email@dominio.com
+      - LETSENCRYPT_EMAIL=joaodevesa212@gmail.com
 
   backend:
     build: ./backend
@@ -46,7 +46,7 @@ services:
     environment:
       - VIRTUAL_HOST=cardsapi.devas.pt
       - LETSENCRYPT_HOST=cardsapi.devas.pt
-      - LETSENCRYPT_EMAIL=teu-email@dominio.com
+      - LETSENCRYPT_EMAIL=joaodevesa212@gmail.com
 
 volumes:
   certs:
