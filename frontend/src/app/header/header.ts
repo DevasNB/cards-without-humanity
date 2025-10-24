@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
 import { Router } from '@angular/router';
+import { UserResponse } from '../auth/auth.types';
 
 @Component({
   selector: 'app-header',
@@ -16,6 +17,10 @@ export class Header {
 
   get isAuthenticated(): boolean {
     return this.authService.isAuthenticated();
+  }
+
+  get user(): UserResponse | null {
+    return this.authService.currentUser();
   }
 
   toggleLogin(): void {

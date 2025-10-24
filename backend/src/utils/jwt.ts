@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import { JwtPayload, UserResponse } from "../types/auth"; // Your JWT payload type
 import { UnauthorizedError } from "./errors"; // Custom error for auth issues
 import { JWT_SECRET, JWT_EXPIRES_IN } from "../configs/constants";
+import { getCookies } from "./cookies";
+import { UserRole } from "@prisma/client";
 
 export const jwtCookieConfig = {
   httpOnly: true,
@@ -38,6 +40,31 @@ export const verifyToken = (token: string): JwtPayload => {
     // General unexpected error
     throw new UnauthorizedError("Authentication failed.");
   }
+};
+
+export const extractUserFromJWT = (
+  cookieString: string,
+  role: UserRole
+): JwtPayload => {
+  const cookies = getCookies(cookieString);
+
+  if ("empty" in cookies || !cookies.accessToken) {
+    throw new UnauthorizedError("No token provided. Authentication required.");
+  }
+
+  const decoded = verifyToken(cookies.accessToken); // Verify and decode the token
+
+  const userRole = decoded.role;
+
+  // If the user's role doesn't match the expected role
+  if (
+    (userRole === UserRole.ANONYMOUS && role !== UserRole.ANONYMOUS) ||
+    (userRole === UserRole.USER && role === UserRole.ADMIN)
+  ) {
+    throw new UnauthorizedError("Unauthorized access.");
+  }
+
+  return decoded;
 };
 
 const getJwtPayload = (newUser: UserResponse): JwtPayload => ({

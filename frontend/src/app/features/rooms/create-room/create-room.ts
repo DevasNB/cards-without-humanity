@@ -1,7 +1,8 @@
-import { Component} from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { SocketService } from '../../../services/socket.service';
 
 @Component({
   standalone: true,
@@ -21,6 +22,8 @@ export class CreateRoomComponent {
   maxPlayers = 8;
 
   players: RoomUser[] = [];
+
+  constructor(private readonly socketService: SocketService) {}
 
   // Getters
 

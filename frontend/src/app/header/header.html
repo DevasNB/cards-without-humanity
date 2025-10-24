@@ -1,4 +1,8 @@
 <header class="app-header">
+  @if (user) {
+    <p>Welcome, {{ user.username }}</p>
+  }
+
   <button type="submit" (click)="toggleLogin()">
     @if (!isAuthenticated) {
       Login
