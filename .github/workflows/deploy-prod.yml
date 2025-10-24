@@ -44,6 +44,20 @@ jobs:
 
             cd "$APP_DIR"
 
-            echo "Restarting containers..."
-            docker compose down
-            docker compose up -d --build
+            echo "Stopping all running containers..."
+            docker stop $(docker ps -q) || true
+
+            echo "Cleaning old containers..."
+            docker rm $(docker ps -aq) || true
+
+            echo "Removing old images, freeing ports..."
+            docker system prune -af || true
+
+            echo "Starting reverse proxy and SSL services first..."
+            docker compose up -d nginx-proxy letsencrypt || exit 1
+
+            echo "Waiting for proxy to initialize..."
+            sleep 10
+
+            echo "Starting remaining services..."
+            docker compose up -d --build || exit 1
