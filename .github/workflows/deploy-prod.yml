@@ -44,13 +44,37 @@ jobs:
 
             cd "$APP_DIR"
 
-            echo "Restarting containers..."
+            echo "Stopping old containers..."
             docker compose down
-            
+
+            # 1️⃣ Criar certificados dummy se não existirem
+            mkdir -p ./data/certbot/conf/live/cards.devas.pt
+            mkdir -p ./data/certbot/conf/live/cardsapi.devas.pt
+
+            for domain in cards.devas.pt cardsapi.devas.pt; do
+              cert_path="./data/certbot/conf/live/$domain"
+              if [ ! -f "$cert_path/fullchain.pem" ]; then
+                echo "Creating dummy certificate for $domain..."
+                openssl req -x509 -nodes -newkey rsa:2048 \
+                  -days 1 \
+                  -keyout "$cert_path/privkey.pem" \
+                  -out "$cert_path/fullchain.pem" \
+                  -subj "/CN=localhost"
+              fi
+            done
+
+            # 2️⃣ Start nginx com HTTP e dummy certs
             docker compose up -d --build nginx
-            sleep 10
+            sleep 5  # espera nginx iniciar
 
-            docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d cards.devas.pt -d cardsapi.devas.pt --email joaodevesa212@gmail.com --agree-tos --no-eff-email
+            # 3️⃣ Rodar certbot para criar certificados reais
+            docker compose run --rm certbot certonly \
+              --webroot -w /var/www/certbot \
+              -d cards.devas.pt -d cardsapi.devas.pt \
+              --email joaodevesa212@gmail.com \
+              --agree-tos \
+              --no-eff-email
 
+            # 4️⃣ Reiniciar nginx para usar certificados reais
             docker compose restart nginx
-            docker compose up -d certbot
+
