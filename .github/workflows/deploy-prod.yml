@@ -44,12 +44,19 @@ jobs:
 
             cd "$APP_DIR"
 
-            echo "Restarting containers..."
             docker compose down
-            sudo rm -rf ./certs/*
+            mkdir -p ./data/certbot/conf ./data/certbot/www
 
-            # garante que o script tem permissão de execução
+            # Start Nginx para servir o desafio HTTP
+            docker compose up -d nginx
+            sleep 5
+
+            # Corre o script para criar certificados reais
             chmod +x ./nginx/init-letsencrypt.sh
-
-            # roda o script
             ./nginx/init-letsencrypt.sh
+
+            # Nginx agora já pode usar HTTPS
+            docker compose restart nginx
+
+            # Start certbot container para renovações automáticas
+            docker compose up -d certbot
