@@ -1,6 +1,14 @@
 version: "3.9"
 
+volumes:
+  frontend-build:
+  certs:
+  certbot-www:
+
 services:
+  # ==========================
+  # Angular SSR (Frontend)
+  # ==========================
   frontend-ssr:
     build:
       context: ./frontend
@@ -9,16 +17,28 @@ services:
     restart: always
     expose:
       - "4000"
+    volumes:
+      - frontend-build:/app/dist/frontend
 
+  # ==========================
+  # Backend (Node.js)
+  # ==========================
   backend:
     build: ./backend
     container_name: cards-backend
     restart: always
     expose:
       - "3000"
+    ports:
+      - "3000:3000"
 
+  # ==========================
+  # Nginx (Reverse Proxy + HTTP)
+  # ==========================
   nginx:
-    image: nginx:1.25-alpine
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
     container_name: cards-nginx
     restart: always
     depends_on:
@@ -28,17 +48,17 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./data/nginx:/etc/nginx/conf.d
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
-    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+      - frontend-build:/usr/share/nginx/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - certs:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
 
+  # ==========================
+  # Certbot (Let's Encrypt)
+  # ==========================
   certbot:
     image: certbot/certbot
     container_name: certbot
-    depends_on:
-      - nginx
     volumes:
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+      - certs:/etc/letsencrypt
+      - certbot-www:/var/www/certbo

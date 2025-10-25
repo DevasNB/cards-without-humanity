@@ -44,19 +44,17 @@ jobs:
 
             cd "$APP_DIR"
 
+            echo "Restarting containers..."
             docker compose down
-            mkdir -p ./data/certbot/conf ./data/certbot/www
+            docker compose up -d --build nginx
+            sleep 10
 
-            # Start Nginx para servir o desafio HTTP
-            docker compose up -d nginx
-            sleep 5
+            docker compose run --rm certbot certonly \
+              --webroot -w /var/www/certbot \
+              -d cards.devas.pt -d cardsapi.devas.pt \
+              --email joaodevesa212@gmail.com \
+              --agree-tos \
+              --no-eff-email
 
-            # Corre o script para criar certificados reais
-            chmod +x ./nginx/init-letsencrypt.sh
-            ./nginx/init-letsencrypt.sh
-
-            # Nginx agora já pode usar HTTPS
             docker compose restart nginx
-
-            # Start certbot container para renovações automáticas
             docker compose up -d certbot
