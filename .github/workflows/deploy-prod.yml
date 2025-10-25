@@ -48,9 +48,8 @@ jobs:
             docker compose down
             sudo rm -rf ./certs/*
 
-            docker compose up -d nginx
-            sleep 10
+            # garante que o script tem permissão de execução
+            chmod +x ./nginx/init-letsencrypt.sh
 
-            docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d cards.devas.pt -d cardsapi.devas.pt --email joaodevesa212@gmail.com --agree-tos --verbose
-            docker compose restart nginx
-            docker compose up -d certbot
+            # roda o script
+            ./nginx/init-letsencrypt.sh
