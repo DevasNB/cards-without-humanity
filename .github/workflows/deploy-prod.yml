@@ -44,8 +44,34 @@ jobs:
 
             cd "$APP_DIR"
 
-            echo "Restarting containers..."
+            echo "Stopping old containers..."
             docker compose down
-            docker compose up -d --build
 
-            docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d cards.devas.pt -d cardsapi.devas.pt --email joaodevesa212@gmail.com --agree-tos --no-eff-email
+            # Cria volumes se não existirem
+            mkdir -p ./data/certbot/www ./data/certbot/conf ./nginx/ssl-enabled
+
+            # Start nginx apenas com HTTP
+            docker compose up -d --build nginx
+            sleep 5
+
+            # Roda certbot para gerar os certificados reais
+            docker compose run --rm certbot certonly \
+              --webroot -w /var/www/certbot \
+              -d cards.devas.pt -d cardsapi.devas.pt \
+              --email joaodevesa212@gmail.com \
+              --agree-tos \
+              --no-eff-email
+
+            # Copia ficheiros HTTPS apenas se os certificados foram criados
+            if [ -f ./data/certbot/conf/live/cards.devas.pt/fullchain.pem ]; then
+                cp ./nginx/ssl-cards.conf ./nginx/ssl-enabled/
+            fi
+            if [ -f ./data/certbot/conf/live/cardsapi.devas.pt/fullchain.pem ]; then
+                cp ./nginx/ssl-cardsapi.conf ./nginx/ssl-enabled/
+            fi
+
+            # Restart nginx para carregar HTTPS se existir
+            docker compose restart nginx
+
+            # Start do container certbot para renovações automáticas
+            docker compose up -d certbot

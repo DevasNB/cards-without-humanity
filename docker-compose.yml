@@ -33,7 +33,7 @@ services:
       - "3000:3000"
 
   # ==========================
-  # Nginx (Reverse Proxy + HTTP)
+  # Nginx (Reverse Proxy + HTTP and HTTPS)
   # ==========================
   nginx:
     build:
@@ -50,6 +50,7 @@ services:
     volumes:
       - frontend-build:/usr/share/nginx/html
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl-enabled:/etc/nginx/conf.d/ssl-enabled:ro
       - certs:/etc/letsencrypt
       - certbot-www:/var/www/certbot
 
