@@ -30,38 +30,20 @@ jobs:
 
             mkdir -p /home/devas/www
 
-            # Clone/update repositório
             if [ ! -d "$APP_DIR/.git" ]; then
+              echo "Repository not found, cloning..."
+              rm -rf "$APP_DIR"
               git clone -b $BRANCH $REPO_URL "$APP_DIR"
             else
+              echo "Repository found, updating..."
               cd "$APP_DIR"
               git fetch origin
               git checkout $BRANCH
-              git reset --hard origin/$BRANCH
+              git pull origin $BRANCH
             fi
 
             cd "$APP_DIR"
 
-            echo "Parando containers antigos..."
+            echo "Restarting containers..."
             docker compose down
-
-            # 1️⃣ Levanta nginx apenas com HTTP para validação
-            echo "Subindo nginx para desafio Let's Encrypt..."
-            docker compose up -d --build nginx
-            sleep 5
-
-            # 2️⃣ Roda certbot para criar os certificados reais
-            echo "Solicitando certificados SSL..."
-            docker compose run --rm certbot certonly \
-              --webroot -w /var/www/certbot \
-              -d cards.devas.pt -d cardsapi.devas.pt \
-              --email joaodevesa212@gmail.com \
-              --agree-tos \
-              --no-eff-email
-
-            # 3️⃣ Atualiza nginx para HTTPS e sobe os apps
-            echo "Subindo nginx + apps com HTTPS..."
-            docker compose up -d --build frontend-ssr backend nginx
-
-            # 4️⃣ Start do container certbot para renovações automáticas
-            docker compose up -d certbot
+            docker compose up -d --build
