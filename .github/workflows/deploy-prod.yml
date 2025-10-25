@@ -47,3 +47,5 @@ jobs:
             echo "Restarting containers..."
             docker compose down
             docker compose up -d --build
+
+            docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d cards.devas.pt -d cardsapi.devas.pt --email joaodevesa212@gmail.com --agree-tos --no-eff-email
