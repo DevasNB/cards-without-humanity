@@ -61,4 +61,4 @@ services:
     container_name: certbot
     volumes:
       - certs:/etc/letsencrypt
-      - certbot-www:/var/www/certbo
+      - certbot-www:/var/www/certbot
