@@ -60,7 +60,9 @@ jobs:
               -d cards.devas.pt -d cardsapi.devas.pt \
               --email joaodevesa212@gmail.com \
               --agree-tos \
-              --no-eff-email
+              --no-eff-email \
+              --non-interactive \
+              --force-renewal
 
             # Copia ficheiros HTTPS apenas se os certificados foram criados
             if [ -f ./data/certbot/conf/live/cards.devas.pt/fullchain.pem ]; then
