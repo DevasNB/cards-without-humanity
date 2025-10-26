@@ -33,8 +33,6 @@ export const initializeSocketIO = (httpServer: HttpServer): IoInstance => {
     // path: '/socket.io',
   });
 
-  console.log(14913);
-
   // --- Authentication Middleware & Initial Setup ---
   io.use(socketAuthenticationMiddleware);
 

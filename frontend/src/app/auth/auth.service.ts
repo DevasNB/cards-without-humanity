@@ -68,7 +68,9 @@ export class AuthService {
         }),
       )
       .subscribe({
-        error: (err) => console.error('Failed to load user from token:', err),
+        error: (err) => {
+          console.error('Failed to load user from token:', err);
+        },
       });
   }
 

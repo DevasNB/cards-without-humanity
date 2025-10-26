@@ -11,7 +11,7 @@ export class SocketService implements OnDestroy {
   private readonly socket: Socket;
 
   constructor() {
-    this.socket = io(environment.backendApiUrl, {
+    this.socket = io(environment.socketUrl, {
       transports: ['websocket'],
     });
   }
