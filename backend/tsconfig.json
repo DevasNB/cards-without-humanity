@@ -1,7 +1,8 @@
 {
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-      "target": "es2020", // or "es2021", "es2022" for newer Node.js versions
+    "target": "es2020", // or "es2021", "es2022" for newer Node.js versions
+    "types": ["node"],
     "module": "commonjs", // Node.js typically uses CommonJS modules
     "lib": ["es2020"],
     "outDir": "./dist", // Output directory for compiled JavaScript files

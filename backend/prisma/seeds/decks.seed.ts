@@ -14,10 +14,10 @@ export async function seedDecks(prisma: PrismaClient): Promise<any[]> {
           { content: "I got 99 problems but ____ ain't one.", pick: 1 },
           { content: "What ended my last relationship?", pick: 1 },
           { content: "What makes life worth living?", pick: 1 },
-          { content: "That’s a cute baby, but it’s no ____.", pick: 1 },
+          { content: "That's a cute baby, but it's no ____.", pick: 1 },
           { content: "What's the best way to get over a breakup?", pick: 1 },
           { content: "My love life is best described as ____.", pick: 1 },
-          { content: "What is Batman’s guilty pleasure?", pick: 1 },
+          { content: "What is Batman's guilty pleasure?", pick: 1 },
           { content: "What is the most uncomfortable thing to wear?", pick: 1 },
           { content: "I drink to forget ____.", pick: 1 },
           {
