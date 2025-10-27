@@ -1,5 +1,7 @@
 export interface CreateRoomResponse {
   id: string;
+  name: string;
+  hostId: string;
 }
 
 export interface RoomResponse {

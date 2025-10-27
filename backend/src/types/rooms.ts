@@ -23,4 +23,5 @@ export interface RoomResponse {
 export interface CreateRoomResponse {
   id: string;
   name: string;
+  hostId: string;
 }

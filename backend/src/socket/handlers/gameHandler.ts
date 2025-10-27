@@ -44,7 +44,6 @@ export const registerGameHandlers = (
   io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>,
   socket: GameSocket
 ) => {
-  /*
   // --- Connection/Disconnection ---
   socket.on("disconnect", async () => {
     if (!socket.data.currentRoomId) {
@@ -59,12 +58,20 @@ export const registerGameHandlers = (
     );
 
     try {
-      await roomService.handleUserDisconnect(
+      await roomService.leaveRoom(
         socket.data.userId,
         socket.data.currentRoomId
       );
 
+      socket.leave(socket.data.currentRoomId); // Remove socket from the Socket.IO room
+
+      socket.emit("info", {
+        message: `Left room '${socket.data.currentRoomId}'.`,
+      });
       emitRoomUpdate(io, socket.data.currentRoomId); // Update room for remaining users
+
+      delete socket.data.currentRoomId; // Clear current room ID from socket data
+      delete socket.data.isHost; // Clear current room ID from socket data
     } catch (error) {
       console.error(
         `Error handling disconnect for user ${socket.data.userId} in room ${socket.data.currentRoomId}:`,
@@ -72,7 +79,6 @@ export const registerGameHandlers = (
       );
     }
   });
-  */
 
   // --- Room Events ---
   socket.on("room:join", async (payload) => {
@@ -89,6 +95,7 @@ export const registerGameHandlers = (
 
       socket.join(payload.roomId); // Add socket to the Socket.IO room
       socket.data.currentRoomId = payload.roomId; // Store current room ID on socket data
+      socket.data.isHost = socket.data.userId === room.hostId;
 
       socket.emit("info", { message: `Joined room '${room.name}'.` });
 
@@ -111,15 +118,17 @@ export const registerGameHandlers = (
         `User ${socket.data.username} (${socket.data.userId}) leaving room ${payload.roomId}`
       );
 
-      await roomService.leaveRoom(payload.roomId, socket.data.userId);
+      await roomService.leaveRoom(socket.data.userId, payload.roomId);
+
       socket.leave(payload.roomId); // Remove socket from the Socket.IO room
       delete socket.data.currentRoomId; // Clear current room ID from socket data
+      delete socket.data.isHost; // Clear current room ID from socket data
 
       socket.emit("info", { message: `Left room '${payload.roomId}'.` });
       emitRoomUpdate(io, payload.roomId); // Notify all users in the room
-      emitGameStateUpdate(io, payload.roomId);
     } catch (error: any) {
       console.error(`Error leaving room ${payload.roomId}:`, error);
+
       socket.emit("error", {
         message: error.message || "Failed to leave room.",
       });

@@ -7,7 +7,8 @@ import { ClientToServerEvents, ServerToClientEvents } from "./events";
 export interface SocketData {
   userId: string;
   username: string;
-  currentRoomId: string; // The ID of the room the user is currently in
+  currentRoomId?: string; // The ID of the room the user is currently in
+  isHost?: boolean;
 }
 
 // Custom socket type that includes our specific client and server event types
