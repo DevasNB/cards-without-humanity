@@ -14,6 +14,6 @@
     "resolveJsonModule": true, // Allow importing .json files
     "sourceMap": true // Generate source maps for debugging
   },
-  "include": ["src/**/*.ts"], // Specify which files to include in compilation
+  "include": ["src/**/*.ts", "src/services"], // Specify which files to include in compilation
   "exclude": ["node_modules"] // Specify which files to exclude
 }

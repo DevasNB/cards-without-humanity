@@ -1,6 +1,5 @@
-const jwt = require("jsonwebtoken");
 import { UserRole } from "@prisma/client";
-import { extractUserFromJWT, generateToken } from "../../utils/jwt";
+import { extractUserFromJWT } from "../../utils/jwt";
 import { GameSocket } from "../types/socket";
 import { ExtendedError } from "socket.io";
 
@@ -22,3 +21,4 @@ export const socketAuthenticationMiddleware = async (
     next(new Error(`Authentication error: ${error.message}`));
   }
 };
+

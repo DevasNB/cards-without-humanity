@@ -101,7 +101,7 @@ model RoomUser {
   updatedAt DateTime @updatedAt
 
   isHost       Boolean        @default(false) // ATTENTION: duplication of hostId in Room, but rapid access
-  connectionId String // connection of WebSocket
+  connectionId String? // connection of WebSocket
   status       RoomUserStatus // status of the user inside the room
 
   userId String // It is a user

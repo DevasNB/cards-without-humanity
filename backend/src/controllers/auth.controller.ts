@@ -76,6 +76,6 @@ export class AuthController {
    */
   public async logout(req: Request, res: Response) {
     res.clearCookie("accessToken", jwtCookieConfig);
-    res.status(204).send()
+    res.status(204).send();
   }
 }

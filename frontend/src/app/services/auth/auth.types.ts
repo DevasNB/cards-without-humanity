@@ -1,4 +1,4 @@
-// src/app/auth/auth.types.ts
+// src/app/services/auth/auth.types.ts
 
 // Mirror backend's Zod schema for request bodies
 export interface CreateUserRequestBody {

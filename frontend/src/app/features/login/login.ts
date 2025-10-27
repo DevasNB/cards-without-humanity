@@ -1,9 +1,9 @@
 // src/app/auth/login/login.component.ts
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms'; // Required for ngModel
-import { AuthService } from '../../auth/auth.service';
+import { AuthService } from '../../services/auth/auth.service';
 import { CommonModule } from '@angular/common'; // For ngIf, etc.
-import { UserResponse } from '../../auth/auth.types';
+import { UserResponse } from '../../services/auth/auth.types';
 
 @Component({
   standalone: true,

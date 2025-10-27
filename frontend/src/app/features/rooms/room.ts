@@ -1,39 +1,48 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { SocketService } from '../../../services/socket.service';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { SocketService } from '../../services/socket.service';
 import { Subscription } from 'rxjs';
+import { RoomResponse } from '../../services/room/room.types';
 
 @Component({
   standalone: true,
-  selector: 'create-room',
+  selector: 'room',
   imports: [CommonModule, FormsModule, RouterLink],
-  templateUrl: './create-room.html',
-  styleUrl: './create-room.css',
+  templateUrl: './room.html',
+  styleUrl: './room.css',
 })
-export class CreateRoomComponent implements OnInit, OnDestroy {
+export class RoomComponent implements OnInit, OnDestroy {
   // Properties
 
   // Placeholder data
-  roomId = '12345';
-  roomName = 'Minha Sala';
-  isPublic = true;
-  winningRounds = 5;
-  maxPlayers = 8;
+  roomId: string | null = null;
+  room = signal<RoomResponse | null>(null);
 
   players: RoomUser[] = [];
 
   private readonly subscriptions: Subscription[] = [];
 
-  constructor(private readonly socketService: SocketService) {}
+  constructor(
+    private readonly socketService: SocketService,
+    private readonly route: ActivatedRoute,
+  ) {
+    this.roomId = this.route.snapshot.paramMap.get('roomId');
+  }
 
   ngOnInit() {
     // Entrar na sala
-    this.socketService.emit('room:joinRoom', { roomId: this.roomId, name: 'Jogador' });
+    this.socketService.emit('room:join', { roomId: this.roomId });
 
     // Ouvir eventos do servidor
     this.subscriptions.push(
+      this.socketService.listen<RoomResponse>('room:update').subscribe((room) => {
+        console.log(room, 14941);
+        this.room.set(room);
+      }),
+
+      /*
       this.socketService.listen<RoomUser[]>('room:playersUpdate').subscribe((players) => {
         this.players = players;
       }),
@@ -47,13 +56,14 @@ export class CreateRoomComponent implements OnInit, OnDestroy {
           player.isHost = player.id === hostId;
         }
       }),
+      */
     );
   }
 
   ngOnDestroy() {
     for (const s of this.subscriptions) s.unsubscribe();
 
-    this.socketService.emit('room:leaveRoom', { roomId: this.roomId });
+    this.socketService.emit('room:leave', { roomId: this.roomId });
   }
 
   // Getters
@@ -67,11 +77,17 @@ export class CreateRoomComponent implements OnInit, OnDestroy {
 
   // Toggles the privacy of the room
   togglePrivacy() {
-    this.isPublic = !this.isPublic;
+    const room = this.room();
+    if (!room) return;
+
+    this.room.update((current) => {
+      if (!current) return current; // handle null safely
+      return { ...current, isPublic: !current.isPublic };
+    });
 
     this.socketService.emit('room:updateSettings', {
       roomId: this.roomId,
-      isPublic: this.isPublic,
+      isPublic: room.isPublic,
     });
   }
 

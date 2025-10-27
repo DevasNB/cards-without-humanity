@@ -1,4 +1,4 @@
-// src/app/auth/auth.interceptor.ts (Functional Interceptor)
+// src/app/services/auth/auth.interceptor.ts (Functional Interceptor)
 import { HttpInterceptorFn } from '@angular/common/http';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {

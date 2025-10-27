@@ -4,6 +4,7 @@ import { Server as SocketIOServer } from "socket.io";
 import { GameSocket, SocketData } from "./types/socket";
 import { ClientToServerEvents, ServerToClientEvents } from "./types/events";
 import { socketAuthenticationMiddleware } from "./middlewares/authentication.middleware";
+import { registerGameHandlers } from "./handlers/gameHandler";
 
 // Declare a type alias for the full Socket.IO server instance
 export type IoInstance = SocketIOServer<
@@ -41,6 +42,7 @@ export const initializeSocketIO = (httpServer: HttpServer): IoInstance => {
     console.log(`A user connected: ${socket.data.username} (ID: ${socket.id})`);
 
     // Register all specific game event handlers for this connected socket
+    registerGameHandlers(io, socket);
 
     // Initial welcome message or state
     socket.emit("info", {
