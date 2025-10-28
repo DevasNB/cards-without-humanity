@@ -38,7 +38,6 @@ export class RoomComponent implements OnInit, OnDestroy {
     // Ouvir eventos do servidor
     this.subscriptions.push(
       this.socketService.listen<RoomResponse>('room:update').subscribe((room) => {
-        console.log(room, 14941);
         this.room.set(room);
       }),
 

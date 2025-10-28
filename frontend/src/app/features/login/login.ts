@@ -1,5 +1,5 @@
 // src/app/auth/login/login.component.ts
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms'; // Required for ngModel
 import { AuthService } from '../../services/auth/auth.service';
 import { CommonModule } from '@angular/common'; // For ngIf, etc.
@@ -15,41 +15,35 @@ import { UserResponse } from '../../services/auth/auth.types';
 export class LoginComponent {
   username: string = '';
 
-  errorMessage: string | null = null;
-  isLoading: boolean = false;
-  loginResponse: UserResponse | null = null;
+  errorMessage = signal<string | null>(null);
+  isLoading = signal<boolean>(false);
+  loginResponse = signal<UserResponse | null>(null);
 
-  constructor(
-    private readonly authService: AuthService,
-    private readonly cdr: ChangeDetectorRef,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   onLogin(): void {
-    this.errorMessage = null;
-    this.isLoading = true;
-    this.loginResponse = null;
+    this.errorMessage.set(null);
+    this.isLoading.set(true);
+    this.loginResponse.set(null);
 
     this.authService.login({ username: this.username }).subscribe({
       next: (response) => {
         // AuthService handles navigation on success
         console.log('Login successful!', response);
-        this.loginResponse = response;
-
-        this.isLoading = false;
-        this.cdr.markForCheck();
+        this.loginResponse.set(response);
+        this.isLoading.set(false);
       },
       error: (error) => {
-        this.errorMessage = error.message || 'Login failed.';
+        this.errorMessage.set(error.message || 'Login failed.');
         console.error('Login error:', error);
 
-        this.isLoading = false;
-        this.cdr.markForCheck();
+        this.isLoading.set(false);
       },
     });
   }
 
   changeUsername(event: string): void {
     this.username = event;
-    this.errorMessage = null;
+    this.errorMessage.set(null);
   }
 }
