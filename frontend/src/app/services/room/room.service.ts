@@ -1,11 +1,10 @@
 // src/app/services/room/room.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Router } from '@angular/router';
 import { Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { CreateRoomResponse } from './room.types';
+import { CreateRoomResponse, ListedRoom } from './room.types';
 
 @Injectable({
   providedIn: 'root',
@@ -13,26 +12,18 @@ import { CreateRoomResponse } from './room.types';
 export class RoomService {
   private readonly apiUrl = environment.backendApiUrl + '/rooms';
 
-  constructor(
-    private readonly http: HttpClient,
-    private readonly router: Router,
-  ) {}
+  constructor(private readonly http: HttpClient) {}
 
   // --- API Calls ---
 
   createRoom(): Observable<CreateRoomResponse> {
-    return this.http.post<CreateRoomResponse>(`${this.apiUrl}/new`, {}).pipe(
-      tap((room) => {
-        // Navigate directly to room page
-        this.joinRoom(room.id);
-      }),
-      catchError(this.handleError),
-    );
+    return this.http
+      .post<CreateRoomResponse>(`${this.apiUrl}/new`, {})
+      .pipe(catchError(this.handleError));
   }
 
-  joinRoom(roomId: string): void {
-    console.log("/room/" + roomId);
-    this.router.navigate(['/room', roomId]);
+  getRooms(): Observable<ListedRoom[]> {
+    return this.http.get<ListedRoom[]>(`${this.apiUrl}`).pipe(catchError(this.handleError));
   }
 
   // --- Error Handling ---

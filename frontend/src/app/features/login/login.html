@@ -10,9 +10,9 @@
       required
     />
   </div>
-  <button [disabled]="isLoading" type="submit">Entrar</button>
+  <button [disabled]="isLoading()" type="submit">Entrar</button>
 
-  @if (errorMessage) {
-    <div style="color: red">{{ errorMessage }}</div>
+  @if (errorMessage()) {
+    <div style="color: red">{{ errorMessage() }}</div>
   }
 </form>

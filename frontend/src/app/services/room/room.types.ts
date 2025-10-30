@@ -4,6 +4,19 @@ export interface CreateRoomResponse {
   hostId: string;
 }
 
+export interface SimplifiedUser {
+  id: string;
+  username: string;
+}
+
+export interface ListedRoom {
+  id: string;
+  name: string;
+  isPublic: boolean;
+  maxPlayers: number;
+  users: SimplifiedUser[];
+}
+
 export interface RoomResponse {
   id: string;
   name: string;
@@ -18,7 +31,7 @@ export interface RoomResponse {
 
 export interface RoomUser {
   id: string;
-  name: string;
+  username: string;
   isHost: boolean;
   status: 'DISCONNECTED' | 'WAITING' | 'READY' | 'IN_GAME';
 }

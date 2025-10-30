@@ -16,4 +16,7 @@ router.post(
   asyncHandler(roomsController.createRoom) // Then the controller logic
 );
 
+// GET /api/rooms - Get all rooms
+router.get("/", asyncHandler(roomsController.getAllRooms));
+
 export default router;

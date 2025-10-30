@@ -1,7 +1,7 @@
 // src/services/room.service.ts
 import prisma from "../utils/prisma";
 import { NotFoundError } from "../utils/errors";
-import { CreateRoomResponse, RoomResponse } from "../types/rooms";
+import { CreateRoomResponse, ListedRoom, RoomResponse } from "../types/rooms";
 import { RoomUserStatus } from "@prisma/client";
 
 export class RoomService {
@@ -46,6 +46,43 @@ export class RoomService {
     });
 
     return newRoom;
+  }
+
+  /**
+   * Lists all rooms in the database.
+   * @returns A promise that resolves to an array of all rooms in the database.
+   */
+  public async listRooms(): Promise<ListedRoom[]> {
+    const rooms = await prisma.room.findMany({
+      select: {
+        id: true,
+        name: true,
+        isPublic: true,
+        users: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const roomsListResponse: ListedRoom[] = rooms.map((updatedRoom) => ({
+      id: updatedRoom.id,
+      name: updatedRoom.name,
+      isPublic: updatedRoom.isPublic,
+      maxPlayers: MAX_PLAYERS,
+      users: updatedRoom.users.map((user) => ({
+        id: user.user.id,
+        username: user.user.username,
+      })),
+    }));
+
+    return roomsListResponse;
   }
 
   /**

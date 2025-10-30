@@ -1,5 +1,18 @@
 // src/types/rooms.d.ts
 
+export interface SimplifiedUser {
+  id: string;
+  username: string;
+}
+
+export interface ListedRoom {
+  id: string;
+  name: string;
+  isPublic: boolean;
+  maxPlayers: number;
+  users: SimplifiedUser[];
+}
+
 export interface RoomUserResponse {
   id: string;
   username: string;

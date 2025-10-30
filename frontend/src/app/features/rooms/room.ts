@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SocketService } from '../../services/socket.service';
 import { Subscription } from 'rxjs';
-import { RoomResponse } from '../../services/room/room.types';
+import { RoomResponse, RoomUser } from '../../services/room/room.types';
 
 @Component({
   standalone: true,
@@ -19,8 +19,6 @@ export class RoomComponent implements OnInit, OnDestroy {
   // Placeholder data
   roomId: string | null = null;
   room = signal<RoomResponse | null>(null);
-
-  players: RoomUser[] = [];
 
   private readonly subscriptions: Subscription[] = [];
 
@@ -38,6 +36,7 @@ export class RoomComponent implements OnInit, OnDestroy {
     // Ouvir eventos do servidor
     this.subscriptions.push(
       this.socketService.listen<RoomResponse>('room:update').subscribe((room) => {
+        console.log('Room update:', room, 4191);
         this.room.set(room);
       }),
 
@@ -66,6 +65,11 @@ export class RoomComponent implements OnInit, OnDestroy {
   }
 
   // Getters
+
+  get players(): RoomUser[] {
+    const room = this.room();
+    return room ? room.users : [];
+  }
 
   // Counts the total number of players that are ready
   get readyCount(): number {

@@ -8,6 +8,14 @@ const roomService = new RoomService();
 
 export class RoomsController {
   /**
+   * Handles an HTTP GET request to get all rooms
+   */
+  public async getAllRooms(req: Request, res: Response) {
+    const rooms = await roomService.listRooms();
+    res.json(rooms);
+  }
+
+  /**
    * Handles an HTTP POST request to create a new room
    */
   public async createRoom(

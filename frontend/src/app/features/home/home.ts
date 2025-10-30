@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { RoomService } from '../../services/room/room.service';
 
 @Component({
@@ -10,9 +10,14 @@ import { RoomService } from '../../services/room/room.service';
   styleUrl: './home.css',
 })
 export class Home {
-  constructor(private readonly roomService: RoomService) {}
+  constructor(
+    private readonly roomService: RoomService,
+    private readonly router: Router,
+  ) {}
 
   createRoom() {
-    this.roomService.createRoom().subscribe();
+    this.roomService.createRoom().subscribe((room) => {
+      this.router.navigate(['/room', room.id]);
+    });
   }
 }
