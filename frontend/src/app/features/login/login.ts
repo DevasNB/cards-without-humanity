@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms'; // Required for ngModel
 import { AuthService } from '../../services/auth/auth.service';
 import { CommonModule } from '@angular/common'; // For ngIf, etc.
 import { UserResponse } from '../../services/auth/auth.types';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -14,12 +15,19 @@ import { UserResponse } from '../../services/auth/auth.types';
 })
 export class LoginComponent {
   username: string = '';
+  returnUrl: string = '';
 
   errorMessage = signal<string | null>(null);
   isLoading = signal<boolean>(false);
   loginResponse = signal<UserResponse | null>(null);
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    protected readonly authService: AuthService,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+  ) {
+    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
+  }
 
   onLogin(): void {
     this.errorMessage.set(null);
@@ -32,6 +40,7 @@ export class LoginComponent {
         console.log('Login successful!', response);
         this.loginResponse.set(response);
         this.isLoading.set(false);
+        this.router.navigateByUrl(this.returnUrl);
       },
       error: (error) => {
         this.errorMessage.set(error.message || 'Login failed.');

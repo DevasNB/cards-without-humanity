@@ -14,29 +14,28 @@ export class RoomService {
     userId: string,
     username: string
   ): Promise<CreateRoomResponse> {
-    // Check if username already exists
-    const existingRoom: CreateRoomResponse | null =
-      await prisma.room.findUnique({
-        where: {
-          hostId: userId,
-        },
-        select: {
-          id: true,
-          name: true,
-          hostId: true,
-        },
-      });
+    const roomWhichUserIsHost = await prisma.room.findUnique({
+      where: {
+        hostId: userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        hostId: true,
+      },
+    });
 
     // Conflict: User already has an active room. Enter that room
-    if (existingRoom) {
+    if (roomWhichUserIsHost) {
+      const existingRoom: CreateRoomResponse = roomWhichUserIsHost;
       return existingRoom;
     }
 
     // Create the room
     const newRoom: CreateRoomResponse = await prisma.room.create({
       data: {
-        hostId: userId,
         name: username + "'s Room",
+        hostId: userId,
       },
       select: {
         id: true,
@@ -121,7 +120,7 @@ export class RoomService {
       users: updatedRoom.users.map((user) => ({
         id: user.id,
         username: user.user.username,
-        isHost: user.isHost,
+        isHost: user.userId === updatedRoom.hostId,
         connectionId: user.connectionId,
         status: user.status,
       })),
@@ -164,7 +163,6 @@ export class RoomService {
         roomId,
         userId,
         status: RoomUserStatus.WAITING,
-        isHost: room.hostId === userId,
         connectionId,
       },
       select: {

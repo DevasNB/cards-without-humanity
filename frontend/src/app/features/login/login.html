@@ -1,18 +1,22 @@
-<h2>Login</h2>
-<form (ngSubmit)="onLogin()">
-  <div>
-    <label for="username">Username:</label>
-    <input
-      id="username"
-      [(ngModel)]="username"
-      (ngModelChange)="changeUsername($event)"
-      name="username"
-      required
-    />
-  </div>
-  <button [disabled]="isLoading()" type="submit">Entrar</button>
+@if (authService.loadingAuth()) {
+  <p>Loading...</p>
+} @else {
+  <h2>Login</h2>
+  <form (ngSubmit)="onLogin()">
+    <div>
+      <label for="username">Username:</label>
+      <input
+        id="username"
+        [(ngModel)]="username"
+        (ngModelChange)="changeUsername($event)"
+        name="username"
+        required
+      />
+    </div>
+    <button [disabled]="isLoading()" type="submit">Entrar</button>
 
-  @if (errorMessage()) {
-    <div style="color: red">{{ errorMessage() }}</div>
-  }
-</form>
+    @if (errorMessage()) {
+      <div style="color: red">{{ errorMessage() }}</div>
+    }
+  </form>
+}

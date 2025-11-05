@@ -11,20 +11,16 @@ import { UserResponse } from '../services/auth/auth.types';
 })
 export class Header {
   constructor(
-    private readonly authService: AuthService,
+    protected readonly authService: AuthService,
     private readonly router: Router,
   ) {}
-
-  get isAuthenticated(): boolean {
-    return this.authService.isAuthenticated();
-  }
 
   get user(): UserResponse | null {
     return this.authService.currentUser();
   }
 
   toggleLogin(): void {
-    if (this.isAuthenticated) {
+    if (this.authService.isAuthenticated()) {
       this.authService.logout().subscribe();
     } else {
       this.router.navigate(['/login']);

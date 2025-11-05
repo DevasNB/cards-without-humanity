@@ -12,8 +12,16 @@
       <div class="mb-3 d-flex align-items-center justify-content-between">
         <div>
           <label for="privacy" class="form-label d-block">Privacidade</label>
-          <button name="privacy" class="btn btn-outline-secondary" (click)="togglePrivacy()">
-            {{ room.isPublic }}
+          <button
+            name="privacy"
+            class="btn"
+            [ngClass]="{
+              'btn-outline-primary': !room.isPublic,
+              'btn-outline-secondary': room.isPublic,
+            }"
+            (click)="togglePrivacy()"
+          >
+            {{ room.isPublic ? 'Público' : 'Privado' }}
           </button>
         </div>
 
@@ -75,6 +83,7 @@
                   'bg-secondary': player.status === 'WAITING',
                 }"
                 (click)="toggleStatus(player)"
+                (keydown)="toggleStatus(player)"
                 style="cursor: pointer"
               >
                 {{ player.status === 'READY' ? 'Pronto' : 'À Espera' }}

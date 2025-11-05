@@ -16,8 +16,15 @@ export class Home {
   ) {}
 
   createRoom() {
-    this.roomService.createRoom().subscribe((room) => {
-      this.router.navigate(['/room', room.id]);
+    this.roomService.createRoom().subscribe({
+      next: (room) => {
+        this.router.navigate(['/room', room.id]);
+      },
+
+      error: (error) => {
+        console.log(error, 1491)
+        this.router.navigate(['/login']);
+      },
     });
   }
 }

@@ -1,30 +1,31 @@
 // src/app/services/auth/auth.service.ts
-import { Injectable, signal, WritableSignal } from '@angular/core';
+import { inject, Injectable, signal, TransferState, WritableSignal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   CreateUserRequestBody,
   UserResponse, // Ensure these types match your backend's types
 } from './auth.types'; // Define these types in a local file, see step 2.1
+import { ME_STATE_KEY } from './auth.tokens';
 
 @Injectable({
   providedIn: 'root', // Makes the service a singleton available everywhere
 })
 export class AuthService {
   private readonly apiUrl = environment.backendApiUrl + '/auth';
+  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
 
   // Signals for reactive state management (modern Angular)
   currentUser: WritableSignal<UserResponse | null> = signal(null);
   isAuthenticated: WritableSignal<boolean> = signal(false);
+  loadingAuth: WritableSignal<boolean> = signal(true);
 
-  constructor(
-    private readonly http: HttpClient,
-    private readonly router: Router,
-  ) {
-    this.fetchCurrentUser();
+  constructor() {
+    this.checkAuth().subscribe();
   }
 
   // --- API Calls ---
@@ -53,25 +54,27 @@ export class AuthService {
   // Fetches current user info from backend (requires token in header)
   // This is typically called on app load or after a token refresh
   // Called on service initialization to check for existing token
-  fetchCurrentUser(): void {
-    this.http
-      .get<UserResponse>(`${this.apiUrl}/me`)
-      .pipe(
-        tap((user) => {
-          this.currentUser.set(user);
-          this.isAuthenticated.set(true);
-        }),
-        catchError((error) => {
-          // If /me fails (e.g., token expired/invalid), remove auth
-          this.logout().subscribe();
-          return throwError(() => error); // Re-throw the error
-        }),
-      )
-      .subscribe({
-        error: (err) => {
-          console.error('Failed to load user from token:', err);
-        },
-      });
+  checkAuth(): Observable<boolean> {
+    // If already authenticated, return immediately
+    if (this.isAuthenticated()) {
+      return of(true);
+    }
+
+    return this.http.get<UserResponse>(`${this.apiUrl}/me`).pipe(
+      tap((user) => {
+        this.currentUser.set(user);
+        this.isAuthenticated.set(true);
+      }),
+      map(() => true),
+      catchError(() => {
+        this.isAuthenticated.set(false);
+        this.currentUser.set(null);
+        return of(false);
+      }),
+      tap(() => {
+        this.loadingAuth.set(false);
+      }),
+    );
   }
 
   // --- Token Management ---

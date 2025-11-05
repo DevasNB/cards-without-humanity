@@ -71,7 +71,7 @@ export class AuthService {
     } else {
       user ??= await prisma.user.create({
         data: {
-          username: username.trim(),
+          username: username.trim(), // TODO: trimming shouldn't be there. should be in verification phase
           role: UserRole.ANONYMOUS, // Explicitly set the default role
         },
         select: {
