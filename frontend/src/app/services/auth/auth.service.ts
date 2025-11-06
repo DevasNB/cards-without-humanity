@@ -1,5 +1,5 @@
 // src/app/services/auth/auth.service.ts
-import { inject, Injectable, signal, TransferState, WritableSignal } from '@angular/core';
+import { inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
@@ -9,7 +9,6 @@ import {
   CreateUserRequestBody,
   UserResponse, // Ensure these types match your backend's types
 } from './auth.types'; // Define these types in a local file, see step 2.1
-import { ME_STATE_KEY } from './auth.tokens';
 
 @Injectable({
   providedIn: 'root', // Makes the service a singleton available everywhere

@@ -35,3 +35,10 @@ export interface RoomUser {
   isHost: boolean;
   status: 'DISCONNECTED' | 'WAITING' | 'READY' | 'IN_GAME';
 }
+
+export interface SocketError {
+  message: string;
+  type: string;
+}
+
+export type ErrorType = 'not-found' | 'unauthorized';

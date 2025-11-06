@@ -8,9 +8,11 @@ export interface ClientToServerEvents {
   "room:leave": (payload: { roomId: string }) => void;
 }
 
+export type ErrorType = "not-found" | "unauthorized";
+
 // --- Server-to-Client Events (Outgoing) ---
 export interface ServerToClientEvents {
-  error: (payload: { message: string }) => void; // Generic error messages
+  error: (payload: { message: string; type: ErrorType }) => void; // Generic error messages
   info: (payload: { message: string }) => void; // Generic info messages
   "room:update": (payload: RoomUpdatePayload) => void;
 }

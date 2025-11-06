@@ -22,7 +22,6 @@ export class Home {
       },
 
       error: (error) => {
-        console.log(error, 1491)
         this.router.navigate(['/login']);
       },
     });

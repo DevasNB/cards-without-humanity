@@ -101,6 +101,9 @@
       <button class="btn btn-success btn-lg me-3" (click)="startGame()">Iniciar Jogo</button>
       <a routerLink="/" class="btn btn-outline-secondary btn-lg">Voltar</a>
     </div>
+  } @else if (errorMessage()) {
+    <p class="text-center" style="color: red">{{ errorMessage() }}</p>
+    <loading-skeleton></loading-skeleton>
   } @else {
     <p class="text-center text-muted">Loading...</p>
   }

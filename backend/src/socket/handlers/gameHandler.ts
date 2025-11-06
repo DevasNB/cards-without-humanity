@@ -104,6 +104,7 @@ export const registerGameHandlers = (
       console.error(`Error joining room ${payload.roomId}:`, error);
       socket.emit("error", {
         message: error.message || "Failed to join room.",
+        type: "not-found",
       });
     }
   });
@@ -131,6 +132,7 @@ export const registerGameHandlers = (
 
       socket.emit("error", {
         message: error.message || "Failed to leave room.",
+        type: "not-found",
       });
     }
   });

@@ -58,6 +58,11 @@ export class RoomService {
         name: true,
         isPublic: true,
         users: {
+          where: {
+            status: {
+              not: RoomUserStatus.DISCONNECTED,
+            },
+          },
           select: {
             user: {
               select: {
@@ -97,6 +102,11 @@ export class RoomService {
       },
       include: {
         users: {
+          where: {
+            status: {
+              not: RoomUserStatus.DISCONNECTED,
+            },
+          },
           include: {
             user: true,
           },
@@ -126,6 +136,8 @@ export class RoomService {
       })),
     };
 
+    console.log(roomResponse, 4113);
+
     return roomResponse;
   }
 
@@ -153,6 +165,7 @@ export class RoomService {
       },
       update: {
         connectionId,
+        status: RoomUserStatus.WAITING,
         // TODO: if it is already in the room, how do we know its status?
         // if a game is in progress, the status should be IN_GAME
         //    but be careful: if the game is over, the status should be WAITING
@@ -202,21 +215,23 @@ export class RoomService {
     }
 
     console.log("Room exists: ", room);
-    // If user isn't host, mark it disconnect and return
+
+    // Mark the room user as disconnected
+    await prisma.roomUser.update({
+      where: {
+        userId_roomId: {
+          roomId,
+          userId,
+        },
+      },
+      data: {
+        status: RoomUserStatus.DISCONNECTED,
+      },
+    });
+
+    // If user isn't host, return
     if (room.hostId !== userId) {
       console.log("Room user is not host");
-
-      await prisma.roomUser.update({
-        where: {
-          userId_roomId: {
-            roomId,
-            userId,
-          },
-        },
-        data: {
-          status: RoomUserStatus.DISCONNECTED,
-        },
-      });
       return;
     }
 

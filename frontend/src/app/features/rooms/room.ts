@@ -1,15 +1,16 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SocketService } from '../../services/socket.service';
 import { Subscription } from 'rxjs';
-import { RoomResponse, RoomUser } from '../../services/room/room.types';
+import { RoomResponse, RoomUser, SocketError } from '../../services/room/room.types';
+import { LoadingSkeleton } from '../../loading-skeleton/loading-skeleton';
 
 @Component({
   standalone: true,
   selector: 'room',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, LoadingSkeleton],
   templateUrl: './room.html',
   styleUrl: './room.css',
 })
@@ -18,13 +19,15 @@ export class RoomComponent implements OnInit, OnDestroy {
 
   // Placeholder data
   roomId: string | null = null;
-  room = signal<RoomResponse | null>(null);
+  protected room = signal<RoomResponse | null>(null);
+  protected errorMessage = signal<string | null>(null);
 
   private readonly subscriptions: Subscription[] = [];
 
   constructor(
     private readonly socketService: SocketService,
     private readonly route: ActivatedRoute,
+    private readonly router: Router,
   ) {
     this.roomId = this.route.snapshot.paramMap.get('roomId');
   }
@@ -38,6 +41,20 @@ export class RoomComponent implements OnInit, OnDestroy {
       this.socketService.listen<RoomResponse>('room:update').subscribe((room) => {
         console.log('Room update:', room, 4191);
         this.room.set(room);
+      }),
+
+      this.socketService.listen<SocketError>('error').subscribe((error) => {
+        if (error.type === 'not-found') {
+          this.errorMessage.set(error.message + '. Redirecting...');
+
+          setTimeout(() => {
+            console.log("NAVIGATE", 1419)
+            this.router.navigate(['/home']);
+          }, 3000);
+        } else {
+          this.errorMessage.set(error.message);
+        }
+        console.log('Room error:', error.type, '\n', error.message);
       }),
 
       /*
