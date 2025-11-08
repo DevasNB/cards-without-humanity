@@ -53,7 +53,6 @@ export const initializeSocketIO = (httpServer: HttpServer): IoInstance => {
       console.log(
         `User disconnected: ${socket.data.username} (ID: ${socket.id})`
       );
-      // Additional cleanup or logging
     });
   });
 

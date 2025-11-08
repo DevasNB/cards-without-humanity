@@ -11,8 +11,8 @@ import {
 export interface ClientToServerEvents {
   "room:join": (payload: { roomId: string; username: string }) => void;
   "room:leave": (payload: { roomId: string }) => void;
-  "roomUser:update": (payload: EditableRoomUser) => void;
   "room:updateSettings": (payload: EditableRoom) => void;
+  "roomUser:update": (payload: EditableRoomUser) => void;
 }
 
 export type ErrorType = "not-found" | "unauthorized";
