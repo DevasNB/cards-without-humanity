@@ -11,7 +11,12 @@ import { RoomService } from "../../services/room.service"; // Placeholder for Ro
 import { AppError, UnauthorizedError } from "../../utils/errors";
 import { Server as SocketIOServer } from "socket.io";
 import { RoomUserService } from "../../services/roomUser.service";
-import { EditableRoomSchema, EditableRoomUserSchema } from "../../types/rooms";
+import {
+  EditableRoom,
+  EditableRoomSchema,
+  EditableRoomUser,
+  EditableRoomUserSchema,
+} from "../../types/rooms";
 
 const roomService = new RoomService();
 const roomUserService = new RoomUserService();
@@ -49,62 +54,43 @@ export const registerGameHandlers = (
 ) => {
   // --- Connection/Disconnection ---
   socket.on("disconnect", async () => {
-    if (!socket.data.currentRoomId) {
-      console.log(
-        `User ${socket.data.username} (${socket.data.userId}) disconnected.`
-      );
-      return;
-    }
-
     console.log(
-      `User ${socket.data.username} (${socket.data.userId}) disconnected from room ${socket.data.currentRoomId}`
+      `User ${socket.data.username} (${socket.data.userId}) disconnected.`
     );
-
-    try {
-      await roomService.leaveRoom(
-        socket.data.userId,
-        socket.data.currentRoomId
-      );
-
-      socket.leave(socket.data.currentRoomId); // Remove socket from the Socket.IO room
-
-      socket.emit("info", {
-        message: `Left room '${socket.data.currentRoomId}'.`,
-      });
-      emitRoomUpdate(io, socket.data.currentRoomId); // Update room for remaining users
-
-      delete socket.data.currentRoomId; // Clear current room ID from socket data
-      delete socket.data.isHost; // Clear current room ID from socket data
-    } catch (error) {
-      console.error(
-        `Error handling disconnect for user ${socket.data.userId} in room ${socket.data.currentRoomId}:`,
-        error
-      );
-    }
   });
 
   // --- Room Events ---
-  socket.on("room:join", async (payload) => {
+
+  // When a user asks to join a room
+  socket.on("room:join", async (payload: { roomId: string }) => {
     try {
       console.log(
         `User ${socket.data.username} (${socket.data.userId}) attempting to join room ${payload.roomId}`
       );
 
+      // Create the roomUser in database
       const room: CreateRoomPayload = await roomService.joinRoom(
         payload.roomId,
         socket.data.userId,
         socket.id
       );
 
-      socket.join(payload.roomId); // Add socket to the Socket.IO room
-      socket.data.currentRoomId = payload.roomId; // Store current room ID on socket data
+      // Add socket to the Socket.IO room
+      socket.join(payload.roomId);
+
+      // Store on socket data info about the roomId and if the user is host
+      socket.data.currentRoomId = payload.roomId;
       socket.data.isHost = socket.data.userId === room.hostId;
 
+      // Send join confirmation
       socket.emit("info", { message: `Joined room '${room.name}'.` });
 
-      emitRoomUpdate(io, payload.roomId); // Notify all users in the room
+      // Notify all users in the room with the new room state
+      emitRoomUpdate(io, payload.roomId);
     } catch (error: any) {
       console.error(`Error joining room ${payload.roomId}:`, error);
+
+      // Send not-found error
       socket.emit("error", {
         message: error.message || "Failed to join room.",
         type: "not-found",
@@ -112,27 +98,34 @@ export const registerGameHandlers = (
     }
   });
 
-  socket.on("roomUser:update", async (rawPayload) => {
+  // When a roomUser updates its state
+  socket.on("roomUser:update", async (rawPayload: EditableRoomUser) => {
     try {
+      // Check if user is in a room
       if (!socket.data.currentRoomId) {
         throw new AppError("Not currently in a room.", 400);
       }
 
+      // Validate payload with zod schema (ensures only the expected fields are present)
       const payload = EditableRoomUserSchema.parse(rawPayload);
 
       console.log(
         `User ${socket.data.username} (${socket.data.userId}) updating room ${socket.data.currentRoomId}`
       );
 
+      // Update roomUser in database
       await roomUserService.changeRoomUserStatus(
         socket.data.userId,
         socket.data.currentRoomId,
         payload
       );
 
-      emitRoomUpdate(io, socket.data.currentRoomId); // Notify all users in the room
+      // Notify all users in the room with the new room state
+      emitRoomUpdate(io, socket.data.currentRoomId);
     } catch (error: any) {
       console.error(`Error updating room user:`, error);
+
+      // Send not-found error
       socket.emit("error", {
         message: error.message || "Failed to update room user.",
         type: "not-found",
@@ -140,34 +133,46 @@ export const registerGameHandlers = (
     }
   });
 
-  socket.on("room:updateSettings", async (rawPayload) => {
+  // When a host updates the room settings
+  socket.on("room:updateSettings", async (rawPayload: EditableRoom) => {
     try {
+      // Check if user is in a room
       if (!socket.data.currentRoomId) {
         throw new AppError("Not currently in a room.", 400);
       }
 
+      // Check if user is host
       if (!socket.data.isHost) {
-        const errorMessage = "Only the host can update room settings.";
-        const error = new UnauthorizedError(errorMessage);
+        // Make sure only the host can update room settings
+        const error = new UnauthorizedError(
+          "Only the host can update room settings."
+        );
 
         console.error(`Error updating room settings:`, error);
+
+        // Send unauthorized error
         socket.emit("error", {
           message: error.message || "Failed to update room user.",
           type: "unauthorized",
         });
       }
 
+      // Validate payload with zod schema (ensures only the expected fields are present)
       const payload = EditableRoomSchema.parse(rawPayload);
 
       console.log(
         `User ${socket.data.username} (${socket.data.userId}) updating room ${socket.data.currentRoomId}`
       );
 
+      // Update room in database
       await roomService.updateRoomSettings(socket.data.currentRoomId, payload);
 
-      emitRoomUpdate(io, socket.data.currentRoomId); // Notify all users in the room
+      // Notify all users in the room with the new room state
+      emitRoomUpdate(io, socket.data.currentRoomId);
     } catch (error: any) {
       console.error(`Error updating room settings:`, error);
+
+      // Send not-found error
       socket.emit("error", {
         message: error.message || "Failed to update room settings.",
         type: "not-found",
@@ -175,8 +180,10 @@ export const registerGameHandlers = (
     }
   });
 
+  // When a user leaves a room
   socket.on("room:leave", async (payload) => {
     try {
+      // Check if user is in a room
       if (socket.data.currentRoomId !== payload.roomId) {
         throw new AppError("Not currently in this room.", 400);
       }
@@ -185,17 +192,25 @@ export const registerGameHandlers = (
         `User ${socket.data.username} (${socket.data.userId}) leaving room ${payload.roomId}`
       );
 
+      // Update database of roomUser disconnecting from room
       await roomService.leaveRoom(socket.data.userId, payload.roomId);
 
-      socket.leave(payload.roomId); // Remove socket from the Socket.IO room
-      delete socket.data.currentRoomId; // Clear current room ID from socket data
-      delete socket.data.isHost; // Clear current room ID from socket data
+      // Remove socket from the Socket.IO room
+      socket.leave(payload.roomId);
 
+      // Clear socket data info related to room
+      delete socket.data.currentRoomId;
+      delete socket.data.isHost;
+
+      // Send leave confirmation
       socket.emit("info", { message: `Left room '${payload.roomId}'.` });
-      emitRoomUpdate(io, payload.roomId); // Notify all users in the room
+
+      // Notify all users in the room with the new room state
+      emitRoomUpdate(io, payload.roomId);
     } catch (error: any) {
       console.error(`Error leaving room ${payload.roomId}:`, error);
 
+      // Send not-found error
       socket.emit("error", {
         message: error.message || "Failed to leave room.",
         type: "not-found",

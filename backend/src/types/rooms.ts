@@ -42,6 +42,7 @@ export interface CreateRoomResponse {
   hostId: string;
 }
 
+// zod schema for validating roomUser updates
 export const EditableRoomUserSchema = z
   .object({
     status: z
@@ -55,6 +56,7 @@ export const EditableRoomUserSchema = z
   })
   .strip();
 
+// zod schema for validating room updates
 export const EditableRoomSchema = z
   .object({
     name: z.string().optional(),
