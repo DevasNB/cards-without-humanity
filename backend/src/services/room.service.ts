@@ -1,7 +1,12 @@
 // src/services/room.service.ts
 import prisma from "../utils/prisma";
 import { NotFoundError } from "../utils/errors";
-import { CreateRoomResponse, ListedRoom, RoomResponse } from "../types/rooms";
+import {
+  CreateRoomResponse,
+  EditableRoom,
+  ListedRoom,
+  RoomResponse,
+} from "../types/rooms";
 import { RoomUserStatus } from "@prisma/client";
 
 export class RoomService {
@@ -136,9 +141,16 @@ export class RoomService {
       })),
     };
 
-    console.log(roomResponse, 4113);
-
     return roomResponse;
+  }
+
+  public async updateRoomSettings(roomId: string, payload: EditableRoom) {
+    await prisma.room.update({
+      where: {
+        id: roomId,
+      },
+      data: payload,
+    });
   }
 
   public async joinRoom(

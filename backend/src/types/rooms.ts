@@ -1,4 +1,6 @@
 // src/types/rooms.d.ts
+import { z } from "zod";
+import { RoomUserStatus } from "@prisma/client";
 
 export interface SimplifiedUser {
   id: string;
@@ -16,6 +18,7 @@ export interface ListedRoom {
 export interface RoomUserResponse {
   id: string;
   username: string;
+  connectionId: string | null;
   isHost: boolean;
   status: "DISCONNECTED" | "WAITING" | "READY" | "IN_GAME";
 }
@@ -38,3 +41,28 @@ export interface CreateRoomResponse {
   name: string;
   hostId: string;
 }
+
+export const EditableRoomUserSchema = z
+  .object({
+    status: z
+      .enum([
+        RoomUserStatus.DISCONNECTED,
+        RoomUserStatus.WAITING,
+        RoomUserStatus.READY,
+        RoomUserStatus.IN_GAME,
+      ])
+      .optional(),
+  })
+  .strip();
+
+export const EditableRoomSchema = z
+  .object({
+    name: z.string().optional(),
+    isPublic: z.boolean().optional(),
+    //winningRounds: z.number().optional(),
+    //maxPlayers: z.number().optional(),
+  })
+  .strip();
+
+export type EditableRoomUser = z.infer<typeof EditableRoomUserSchema>;
+export type EditableRoom = z.infer<typeof EditableRoomSchema>;

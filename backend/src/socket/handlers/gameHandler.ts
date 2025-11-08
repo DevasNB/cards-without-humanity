@@ -8,10 +8,13 @@ import {
   CreateRoomPayload,
 } from "../types/events";
 import { RoomService } from "../../services/room.service"; // Placeholder for Room-related logic
-import { AppError } from "../../utils/errors";
+import { AppError, UnauthorizedError } from "../../utils/errors";
 import { Server as SocketIOServer } from "socket.io";
+import { RoomUserService } from "../../services/roomUser.service";
+import { EditableRoomSchema, EditableRoomUserSchema } from "../../types/rooms";
 
-const roomService = new RoomService(); // Assuming this service exists
+const roomService = new RoomService();
+const roomUserService = new RoomUserService();
 
 /**
  * Emits a comprehensive room update to all clients in a specific room.
@@ -104,6 +107,69 @@ export const registerGameHandlers = (
       console.error(`Error joining room ${payload.roomId}:`, error);
       socket.emit("error", {
         message: error.message || "Failed to join room.",
+        type: "not-found",
+      });
+    }
+  });
+
+  socket.on("roomUser:update", async (rawPayload) => {
+    try {
+      if (!socket.data.currentRoomId) {
+        throw new AppError("Not currently in a room.", 400);
+      }
+
+      const payload = EditableRoomUserSchema.parse(rawPayload);
+
+      console.log(
+        `User ${socket.data.username} (${socket.data.userId}) updating room ${socket.data.currentRoomId}`
+      );
+
+      await roomUserService.changeRoomUserStatus(
+        socket.data.userId,
+        socket.data.currentRoomId,
+        payload
+      );
+
+      emitRoomUpdate(io, socket.data.currentRoomId); // Notify all users in the room
+    } catch (error: any) {
+      console.error(`Error updating room user:`, error);
+      socket.emit("error", {
+        message: error.message || "Failed to update room user.",
+        type: "not-found",
+      });
+    }
+  });
+
+  socket.on("room:updateSettings", async (rawPayload) => {
+    try {
+      if (!socket.data.currentRoomId) {
+        throw new AppError("Not currently in a room.", 400);
+      }
+
+      if (!socket.data.isHost) {
+        const errorMessage = "Only the host can update room settings.";
+        const error = new UnauthorizedError(errorMessage);
+
+        console.error(`Error updating room settings:`, error);
+        socket.emit("error", {
+          message: error.message || "Failed to update room user.",
+          type: "unauthorized",
+        });
+      }
+
+      const payload = EditableRoomSchema.parse(rawPayload);
+
+      console.log(
+        `User ${socket.data.username} (${socket.data.userId}) updating room ${socket.data.currentRoomId}`
+      );
+
+      await roomService.updateRoomSettings(socket.data.currentRoomId, payload);
+
+      emitRoomUpdate(io, socket.data.currentRoomId); // Notify all users in the room
+    } catch (error: any) {
+      console.error(`Error updating room settings:`, error);
+      socket.emit("error", {
+        message: error.message || "Failed to update room settings.",
         type: "not-found",
       });
     }

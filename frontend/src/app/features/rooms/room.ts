@@ -6,6 +6,7 @@ import { SocketService } from '../../services/socket.service';
 import { Subscription } from 'rxjs';
 import { RoomResponse, RoomUser, SocketError } from '../../services/room/room.types';
 import { LoadingSkeleton } from '../../loading-skeleton/loading-skeleton';
+import { AuthService } from '../../services/auth/auth.service';
 
 @Component({
   standalone: true,
@@ -28,6 +29,7 @@ export class RoomComponent implements OnInit, OnDestroy {
     private readonly socketService: SocketService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
+    private readonly authService: AuthService,
   ) {
     this.roomId = this.route.snapshot.paramMap.get('roomId');
   }
@@ -48,7 +50,7 @@ export class RoomComponent implements OnInit, OnDestroy {
           this.errorMessage.set(error.message + '. Redirecting...');
 
           setTimeout(() => {
-            console.log("NAVIGATE", 1419)
+            console.log('NAVIGATE', 1419);
             this.router.navigate(['/home']);
           }, 3000);
         } else {
@@ -83,6 +85,13 @@ export class RoomComponent implements OnInit, OnDestroy {
 
   // Getters
 
+  get myRoomUser(): RoomUser | null {
+    const room = this.room();
+    if (!room) return null;
+
+    return room.users.find((p) => p.username === this.authService.currentUser()?.username) || null;
+  }
+
   get players(): RoomUser[] {
     const room = this.room();
     return room ? room.users : [];
@@ -95,31 +104,72 @@ export class RoomComponent implements OnInit, OnDestroy {
 
   // Methods
 
+  // Changes the name of the room
+  changeName(name: string) {
+    const room = this.room();
+    const myRoomUser = this.myRoomUser;
+    if (!room || !myRoomUser?.isHost) return;
+
+    this.room.update((current) => {
+      if (!current) return current; // handle null safely
+      return { ...current, name };
+    });
+
+    this.updateSettings();
+  }
+
   // Toggles the privacy of the room
   togglePrivacy() {
     const room = this.room();
-    if (!room) return;
+    const myRoomUser = this.myRoomUser;
+    if (!room || !myRoomUser?.isHost) return;
 
     this.room.update((current) => {
       if (!current) return current; // handle null safely
       return { ...current, isPublic: !current.isPublic };
     });
 
-    this.socketService.emit('room:updateSettings', {
-      roomId: this.roomId,
-      isPublic: room.isPublic,
-    });
+    this.updateSettings();
+  }
+
+  updateSettings() {
+    const room = this.room();
+    const myRoomUser = this.myRoomUser;
+    if (!room || !myRoomUser?.isHost) return;
+
+    this.socketService.emit('room:updateSettings', room);
+  }
+
+  updateUser() {
+    const user = this.myRoomUser;
+    if (!user) return;
+
+    this.socketService.emit('roomUser:update', user);
   }
 
   // Toggles the status of a player
-  toggleStatus(player: RoomUser) {
-    const newStatus = player.status === 'READY' ? 'WAITING' : 'READY';
-    player.status = newStatus;
+  toggleStatus() {
+    const player = this.myRoomUser;
+    if (!player) return;
 
-    this.socketService.emit('room:updateStatus', {
-      playerId: player.id,
-      status: newStatus,
+    const newStatus = player.status === 'READY' ? 'WAITING' : 'READY';
+
+    this.room.update((current) => {
+      if (!current) return current; // handle null safely
+
+      return {
+        ...current,
+        users: [...current.users].map((p) => {
+          if (p.id !== player.id) return p;
+          return {
+            ...p,
+            status: newStatus,
+          };
+        }),
+      };
     });
+
+    this.updateUser();
   }
 
   // Starts the game
