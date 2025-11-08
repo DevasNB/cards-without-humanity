@@ -50,20 +50,27 @@ jobs:
             # Cria volumes se não existirem
             mkdir -p ./data/certbot/www ./data/certbot/conf ./nginx/ssl-enabled
 
-            # Start nginx apenas com HTTP
+            # Garante que os ficheiros necessários do Certbot existem
+            if [ ! -f ./data/certbot/conf/options-ssl-nginx.conf ]; then
+              echo "⚙️ Criando options-ssl-nginx.conf padrão..."
+              cat > ./data/certbot/conf/options-ssl-nginx.conf <<'EOF'
+            ssl_session_cache shared:le_nginx_SSL:10m;
+            ssl_session_timeout 1440m;
+            ssl_protocols TLSv1.2 TLSv1.3;
+            ssl_prefer_server_ciphers off;
+            EOF
+            fi
+
+            if [ ! -f ./data/certbot/conf/ssl-dhparams.pem ]; then
+              echo "⚙️ Criando ssl-dhparams.pem..."
+              openssl dhparam -out ./data/certbot/conf/ssl-dhparams.pem 2048
+            fi
+
+            # Start nginx apenas com HTTP para servir desafios ACME
             docker compose up -d --build nginx
             sleep 5
 
-            # Roda certbot para gerar os certificados reais
-            # docker compose run --rm certbot certonly \
-            #   --webroot -w /var/www/certbot \
-            #   -d cards.devas.pt -d cardsapi.devas.pt \
-            #   --email joaodevesa212@gmail.com \
-            #   --agree-tos \
-            #   --no-eff-email \
-            #   --non-interactive \
-            #   --force-renewal
-
+            # Roda certbot em staging (não conta para rate limit)
             docker compose run --rm certbot certonly \
               --staging \
               --webroot -w /var/www/certbot \
@@ -73,7 +80,7 @@ jobs:
               --non-interactive \
               --keep-until-expiring || echo "⚠️ Falhou emissão staging, mantendo certificados antigos."
 
-            # Copia ficheiros HTTPS apenas se os certificados foram criados
+            # Copia ficheiros HTTPS apenas se os certificados staging foram criados
             if [ -f ./data/certbot/conf/live/cards.devas.pt/fullchain.pem ]; then
                 cp ./nginx/ssl-cards.conf ./nginx/ssl-enabled/
             fi
@@ -81,7 +88,7 @@ jobs:
                 cp ./nginx/ssl-cardsapi.conf ./nginx/ssl-enabled/
             fi
 
-            # Restart nginx para carregar HTTPS se existir
+            # Reinicia nginx para carregar os certificados HTTPS (mesmo staging)
             docker compose restart nginx
 
             # Start do container certbot para renovações automáticas
