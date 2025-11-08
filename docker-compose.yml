@@ -1,0 +1,48 @@
+version: "3.9"
+
+volumes:
+  frontend-build:
+
+services:
+  # ==========================
+  # Angular SSR (Frontend)
+  # ==========================
+  frontend-ssr:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.ssr
+    container_name: cards-frontend-ssr
+    restart: always
+    expose:
+      - "4000"
+    volumes:
+      - frontend-build:/app/dist/frontend
+
+  # ==========================
+  # Backend (Node.js)
+  # ==========================
+  backend:
+    build: ./backend
+    container_name: cards-backend
+    restart: always
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+
+  # ==========================
+  # Nginx (Reverse Proxy + HTTP)
+  # ==========================
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: cards-nginx
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend-ssr
+      - backend
+    volumes:
+      - frontend-build:/usr/share/nginx/html
