@@ -13,8 +13,8 @@ services:
       dockerfile: Dockerfile.ssr
     container_name: cards-frontend-ssr
     restart: always
-    expose:
-      - "4000"
+    ports:
+    - "4000:4000"   
     volumes:
       - frontend-build:/app/dist/frontend
 
