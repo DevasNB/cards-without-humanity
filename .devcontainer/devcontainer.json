@@ -1,0 +1,24 @@
+{
+    "name": "Cards Without Humanity Dev",
+    "dockerComposeFile": [
+        "docker-compose.yml"
+    ],
+    "service": "workspace",
+    "workspaceFolder": "/workspace",
+    "shutdownAction": "stopCompose",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash"
+            },
+            "extensions": [
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "angular.ng-template",
+                "ms-azuretools.vscode-docker",
+                "ms-vscode.vscode-typescript-next"
+            ]
+        }
+    },
+    "postCreateCommand": "npm install --prefix frontend && npm install --prefix backend"
+}
