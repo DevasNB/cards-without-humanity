@@ -3,7 +3,7 @@ name: Deploy to Raspberry PI
 on:
   push:
     branches:
-      - main
+      - feat/docker-deploy
 
 jobs:
   deploy:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          ref: main  
+          ref: feat/docker-deploy  
 
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v0.1.10
@@ -31,11 +31,10 @@ jobs:
             mkdir -p /home/devas/www
 
             if [ ! -d "$APP_DIR/.git" ]; then
-              echo "Repository found, cloning..."
-              rm -rf "$APP_DIR"
+              echo "Cloning repository..."
               git clone -b $BRANCH $REPO_URL "$APP_DIR"
             else
-              echo "Repository found, updating..."
+              echo "Updating repository..."
               cd "$APP_DIR"
               git fetch origin
               git checkout $BRANCH
@@ -47,3 +46,5 @@ jobs:
             echo "Restarting containers..."
             docker compose down
             docker compose up -d --build
+
+            echo "Deployment completed successfully!"
