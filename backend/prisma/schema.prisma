@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -65,9 +65,9 @@ model User {
   updatedAt DateTime @updatedAt
 
   username String   @unique // Each user for now only has a username
-  role     UserRole // Each user has an authentication role
+  role     UserRole @default(ANONYMOUS) // Each user has an authentication role
+  roomAsHost Room? @relation("host") // One user can only be the host of one room
 
-  roomAsHost Room? // One user can only be the host of one room
   rooms      RoomUser[] // The rooms the user is present in
 }
 
@@ -84,13 +84,15 @@ model Room {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name     String  @unique // A room has a unique name that can be found
+  name     String  // A room has a unique name that can be found
   hostId   String  @unique // A user can only be the host of one open room. If they leave, the ownership must change
   isPublic Boolean @default(true) // A room can be public or private
 
-  host User @relation(fields: [hostId], references: [id], onDelete: Restrict) // The host of the room. If a user is the host of a game and the user is deleted, the Room should restrict it
+  host User @relation("host", fields: [hostId], references: [id], onDelete: Restrict) // The host of the room. If a user is the host of a game and the user is deleted, the Room should restrict it
+  // Can't be to RoomUser, because it's the User that can't actually be the host of two rooms
+  // The RoomUser is respective to a room, so of course it cna't be respective to that
 
-  users RoomUser[] // A room has many users
+  users RoomUser[] @relation("users") // A room has many users
   games Game[] // A room has many games - In this way, if the game ends, the users can return to the lobby
 }
 
@@ -100,16 +102,15 @@ model RoomUser {
   createdAt DateTime @default(now()) // joinedAt
   updatedAt DateTime @updatedAt
 
-  isHost       Boolean        @default(false) // ATTENTION: duplication of hostId in Room, but rapid access
-  connectionId String // connection of WebSocket
+  connectionId String? // connection of WebSocket
   status       RoomUserStatus // status of the user inside the room
 
   userId String // It is a user
   roomId String // And it is in a room
 
   players Player[] // One RoomUser can be many players (because there might be many games)
-
-  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade) // One room can hold multiple users. If the room gets deleted, so do the RoomUsers
+  
+  room Room @relation("users", fields: [roomId], references: [id], onDelete: Cascade) // One room can hold multiple users. If the room gets deleted, so do the RoomUsers
   user User @relation(fields: [userId], references: [id], onDelete: Restrict) // And one user can be in multiple rooms - It is only present on one, but can hold the data for many. If a user is inside a room and it is deleted, the RoomUser should restrict it
 
   @@unique([userId, roomId]) // But one user can only be in a room once

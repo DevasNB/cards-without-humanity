@@ -3,7 +3,7 @@ name: Deploy to Raspberry PI
 on:
   push:
     branches:
-      - main
+      - feat/docker-deploy
 
 jobs:
   deploy:
