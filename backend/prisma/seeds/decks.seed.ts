@@ -7,6 +7,7 @@ export async function seedDecks(prisma: PrismaClient): Promise<any[]> {
   // --- Create Base Game Deck ---
   const baseDeck = await prisma.deck.create({
     data: {
+      isPublic: true,
       name: "Base Game",
       promptCards: {
         create: [
@@ -66,6 +67,7 @@ export async function seedDecks(prisma: PrismaClient): Promise<any[]> {
   // --- Create another simple deck for variety (optional) ---
   const memesDeck = await prisma.deck.create({
     data: {
+      isPublic: true,
       name: "Fresh Memes Expansion",
       promptCards: {
         create: [
