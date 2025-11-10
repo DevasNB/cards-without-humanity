@@ -4,6 +4,8 @@ import cors from "cors";
 
 import authRoutes from "./routes/auth.routes";
 import roomsRoutes from "./routes/rooms.routes";
+import decksRoutes from "./routes/decks.routes";
+
 import { AppError } from "./utils/errors";
 import { PORT } from "./configs/constants";
 import { corsMiddleware, corsOptions } from "./configs/corsOptions";
@@ -25,6 +27,7 @@ app.use(cors(corsOptions));
 // --- Routes ---
 app.use("/api/auth", authRoutes); // Mount authentication routes
 app.use("/api/rooms", roomsRoutes); // Mount rooms routes
+app.use("/api/decks", decksRoutes); // Mount decks routes
 
 // You can also add a simple route to verify API is running
 app.get("/api/health", (req, res) => {
