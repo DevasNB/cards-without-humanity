@@ -1,0 +1,164 @@
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <a routerLink="/" class="link-home"> <i class="bi bi-house-door-fill"></i> Voltar ao Início </a>
+    <h3 class="text-center mb-0">{{ stepTitle }}</h3>
+    <div style="width: 150px"></div>
+    <!-- Espaçador para manter o título centrado -->
+  </div>
+
+  <div class="row">
+    <!-- ======================= PASSO 1: DETALHES DO BARALHO ======================= -->
+    <ng-container *ngIf="stepIndex === 1">
+      <form [formGroup]="createDeckForm">
+        <div class="col-lg-6 offset-lg-3">
+          <div class="mb-3">
+            <label for="name" class="form-label">Nome do Baralho</label
+            ><input type="text" class="form-control" id="name" formControlName="name" required />
+          </div>
+          <div class="mb-3">
+            <label for="isPublic" class="form-label">Baralho Público</label
+            ><select class="form-select" id="isPublic" formControlName="isPublic" required>
+              <option [value]="true">Sim</option>
+              <option [value]="false">Não</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label">Descrição do Baralho</label
+            ><textarea
+              class="form-control"
+              id="description"
+              rows="4"
+              formControlName="description"
+              required
+            ></textarea>
+          </div>
+          <div class="d-flex justify-content-end">
+            <button
+              class="btn btn-primary"
+              [disabled]="createDeckForm.invalid"
+              (click)="nextStep()"
+            >
+              Continuar
+            </button>
+          </div>
+        </div>
+      </form>
+    </ng-container>
+
+    <!-- ======================= PASSO 2: ADICIONAR CARTAS ======================= -->
+    <ng-container *ngIf="stepIndex === 2">
+      <div class="col-12">
+        <div class="d-flex justify-content-center mb-4">
+          <div class="round-box d-flex flex-wrap justify-content-center gap-2">
+            <button type="button" class="btn btn-dark" (click)="addCard('prompt')">
+              Adicionar Carta Preta
+            </button>
+            <button type="button" class="btn btn-light border" (click)="addCard('response')">
+              Adicionar Carta Branca
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="addWhiteSpace()"
+              [disabled]="allCards[currentIndex]?.type !== 'prompt'"
+            >
+              Espaço em Branco
+            </button>
+          </div>
+        </div>
+
+        <div class="carousel-viewport">
+          <button
+            type="button"
+            class="carousel-arrow left"
+            (click)="navigate('prev')"
+            [disabled]="currentIndex === 0"
+          >
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <div class="carousel-track">
+            <!-- O *ngFor agora itera sobre o array único 'allCards' -->
+            <div
+              #carouselCard
+              class="card"
+              *ngFor="let card of allCards; let i = index"
+              (click)="selectedCard(i)"
+              [ngClass]="{
+                'active-card': i === currentIndex,
+                'adjacent-card': i === currentIndex - 1 || i === currentIndex + 1,
+                'black-card': card.type === 'prompt',
+                'white-card': card.type === 'response',
+              }"
+            >
+              <div class="card-body">
+                <textarea
+                  class="form-control invisible-textarea"
+                  rows="10"
+                  [value]="card.content"
+                  (input)="updateCardText(i, $event)"
+                ></textarea>
+              </div>
+
+              <!-- Footer Condicional: mostra coisas diferentes para cartas pretas e brancas -->
+              <div class="card-footer">
+                <ng-container *ngIf="card.type === 'prompt'">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <p class="mb-0">Nº repostas: {{ card.numResponses }}</p>
+                    <button
+                      class="btn btn-outline-danger btn-sm"
+                      type="button"
+                      (click)="removeCard(i, $event)"
+                    >
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                </ng-container>
+                <ng-container *ngIf="card.type === 'response'">
+                  <div class="d-flex justify-content-end">
+                    <button
+                      class="btn btn-outline-danger btn-sm"
+                      type="button"
+                      (click)="removeCard(i, $event)"
+                    >
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="carousel-arrow right"
+            (click)="navigate('next')"
+            [disabled]="currentIndex >= allCards.length - 1"
+          >
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+
+        <div class="d-flex justify-content-center my-5">
+          <div class="round-box d-flex gap-2">
+            <button
+              type="button"
+              class="btn btn-info"
+              (click)="undo()"
+              [disabled]="historyStack.length === 0"
+            >
+              Desfazer
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="previousStep()">Voltar</button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="submitDeck()"
+              [disabled]="!validatePromptCards() || !validateResponseCards()"
+            >
+              Criar Deck
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
