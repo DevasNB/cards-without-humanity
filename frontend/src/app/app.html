@@ -1,1 +1,10 @@
-<router-outlet />
+<div class="layout">
+  <app-header></app-header>
+  <main class="content">
+    @if (!authService.loadingAuth()) {
+      <router-outlet></router-outlet>
+    } @else {
+      <loading-skeleton></loading-skeleton>
+    }
+  </main>
+</div>

@@ -1,0 +1,17 @@
+<header class="app-header">
+  @if (authService.loadingAuth()) {
+    <p>Loading...</p>
+  } @else if (user) {
+    <p>Welcome, {{ user.username }}</p>
+  } @else {
+    <p>Please login to continue</p>
+  }
+
+  <button type="submit" (click)="toggleLogin()">
+    @if (!authService.isAuthenticated()) {
+      Login
+    } @else {
+      Logout
+    }
+  </button>
+</header>
