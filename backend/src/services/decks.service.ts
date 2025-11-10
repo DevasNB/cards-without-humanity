@@ -48,7 +48,7 @@ export class DecksService {
         content: answerCard.content,
       })),
     }));
-    console.log(DecksListResponse);
+
     return DecksListResponse;
   }
 }
