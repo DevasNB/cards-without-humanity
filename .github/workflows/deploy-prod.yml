@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          ref: feat/docker-deploy  
+          ref: main
 
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v0.1.10
@@ -26,7 +26,7 @@ jobs:
 
             APP_DIR="/home/devas/www/cards-without-humanity"
             REPO_URL="https://github.com/DevasNB/cards-without-humanity.git"
-            BRANCH="feat/docker-deploy"
+            BRANCH="main"
 
             mkdir -p /home/devas/www
 
@@ -36,9 +36,9 @@ jobs:
             else
               echo "Updating repository..."
               cd "$APP_DIR"
-              git fetch origin
-              git checkout $BRANCH
-              git pull origin $BRANCH
+              git fetch origin $BRANCH
+              git reset --hard origin/$BRANCH
+              git clean -fd
             fi
 
             cd "$APP_DIR"
@@ -46,3 +46,5 @@ jobs:
             echo "Restarting containers..."
             docker compose down
             docker compose up -d --build
+
+            echo "Deployment completed successfully!"
