@@ -20,7 +20,10 @@ model Deck {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name String // A deck as a name
+  isPublic Boolean @default(false)
+
+  name        String // A deck as a name
+  description String? // A short description of the deck
 
   promptCards PromptCard[] // All the PromptCards of that Deck
   answerCards AnswerCard[] // All the AnswerCards of that Deck
@@ -64,11 +67,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  username String   @unique // Each user for now only has a username
-  role     UserRole @default(ANONYMOUS) // Each user has an authentication role
-  roomAsHost Room? @relation("host") // One user can only be the host of one room
+  username   String   @unique // Each user for now only has a username
+  role       UserRole @default(ANONYMOUS) // Each user has an authentication role
+  roomAsHost Room?    @relation("host") // One user can only be the host of one room
 
-  rooms      RoomUser[] // The rooms the user is present in
+  rooms RoomUser[] // The rooms the user is present in
 }
 
 // Enabling the ANONYMOUS role - still receives auth to enter games, but must be identified as such
@@ -84,7 +87,7 @@ model Room {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name     String  // A room has a unique name that can be found
+  name     String // A room has a unique name that can be found
   hostId   String  @unique // A user can only be the host of one open room. If they leave, the ownership must change
   isPublic Boolean @default(true) // A room can be public or private
 
@@ -109,7 +112,7 @@ model RoomUser {
   roomId String // And it is in a room
 
   players Player[] // One RoomUser can be many players (because there might be many games)
-  
+
   room Room @relation("users", fields: [roomId], references: [id], onDelete: Cascade) // One room can hold multiple users. If the room gets deleted, so do the RoomUsers
   user User @relation(fields: [userId], references: [id], onDelete: Restrict) // And one user can be in multiple rooms - It is only present on one, but can hold the data for many. If a user is inside a room and it is deleted, the RoomUser should restrict it
 
