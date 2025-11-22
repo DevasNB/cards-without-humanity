@@ -11,7 +11,6 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 // The pack of cards
@@ -134,7 +133,6 @@ model Game {
 
   status       GameStatus @default(WAITING_FOR_PLAYERS) // The status of the game
   round        Int        @default(1) // The number of the round the game is in
-  winningScore Int // The max points a person can have
 
   players Player[] // The game has many players playing
   rounds  Round[] // A game has many rounds
