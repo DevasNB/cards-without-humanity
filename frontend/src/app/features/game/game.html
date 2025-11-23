@@ -1,0 +1,32 @@
+<div class="page">
+  <!-- CURRENT BLACK CARD -->
+  <div class="black-card">
+    <p>{{ currentBlack()?.text }}</p>
+  </div>
+
+  <!-- SELECTED WHITE CARD DISPLAY -->
+  @if (selectedWhite()) {
+    <div class="selected-white">
+      <h3>Jogaste:</h3>
+      <div class="white-card selected">
+        {{ selectedWhite()?.text }}
+      </div>
+    </div>
+  }
+
+  <!-- WHITE CARDS GRID -->
+  <div class="white-grid">
+    @for (card of whiteCards; track $index) {
+      <button
+        class="white-card"
+        [class.chosen]="selectedWhite()?.id === card.id"
+        (click)="selectWhiteCard(card)"
+        onKeyPress="selectWhiteCard(card)"
+      >
+        {{ card.text }}
+      </button>
+    }
+  </div>
+
+  <button class="next-btn" (click)="nextRound()">Próxima ronda</button>
+</div>

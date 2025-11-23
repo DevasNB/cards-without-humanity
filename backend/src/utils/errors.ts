@@ -40,6 +40,13 @@ export class UnauthorizedError extends AppError {
   }
 }
 
+// Specific error for bad request errors
+export class BadRequestError extends AppError {
+  constructor(message: string = "Bad request error") {
+    super(message, 400); // Bad Request Error
+  }
+}
+
 // Specific error for authorization issues (permissions)
 export class ForbiddenError extends AppError {
   constructor(message: string = "Forbidden access") {

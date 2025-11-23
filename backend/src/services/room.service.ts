@@ -1,6 +1,6 @@
 // src/services/room.service.ts
 import prisma from "../utils/prisma";
-import { NotFoundError } from "../utils/errors";
+import { BadRequestError, NotFoundError } from "../utils/errors";
 import {
   CreateRoomResponse,
   EditableRoom,
@@ -315,6 +315,98 @@ export class RoomService {
     await prisma.room.delete({
       where: {
         id: roomId,
+      },
+    });
+  }
+
+  public async startGame(roomId: string): Promise<void> {
+    // Find the room
+    const room = await prisma.room.findUnique({
+      where: {
+        id: roomId,
+      },
+      select: {
+        users: {
+          select: {
+            id: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    // Check if room exists
+    if (!room) {
+      throw new NotFoundError("Room not found");
+    }
+
+    // Validations (all users are ready, and no less than 3 users are in the room)
+    const usersStatus = room.users.map((user) => user.status);
+
+    const waitingCount = usersStatus.filter(
+      (status) => status === RoomUserStatus.WAITING
+    ).length;
+
+    if (waitingCount > 0) {
+      throw new BadRequestError("Not everyone in the room is ready");
+    }
+
+    const readyCount = usersStatus.filter(
+      (status) => status === RoomUserStatus.READY
+    ).length;
+
+    if (readyCount < 3) {
+      throw new BadRequestError("Not enough players to start the game");
+    }
+
+    // Get the ids of the decks for the game
+    const gameDecks = await prisma.deck.findMany({
+      // TODO: where the user has selected them, it must come from the payload
+      select: {
+        id: true,
+      },
+    });
+
+    // Delete all the room users that have been disconnected
+    await prisma.roomUser.deleteMany({
+      where: {
+        AND: [{ roomId }, { status: RoomUserStatus.DISCONNECTED }],
+      },
+    });
+
+    // Find only the online users.
+    // ! Attention: This is probably not needed. We could just use the room.users, as there's no one waiting, disconnected or in game
+    const onlineUsers = room.users.filter(
+      (user) => user.status === RoomUserStatus.READY
+    );
+
+    // Create the game
+    await prisma.game.create({
+      data: {
+        // Associated to the room
+        roomId,
+
+        // Create all the players; Only related to the room users
+        // ! Attention: Additional data will be created and updated once they join the game
+        // Wrong! All the associated data should be created/updated, and when the user arrives, it's simply handed to them
+        players: {
+          createMany: {
+            data: onlineUsers.map((user) => ({
+              roomUserId: user.id,
+            })),
+          },
+        },
+
+        // Associate all the decks by id
+        decks: {
+          connect: gameDecks.map((deck) => ({ id: deck.id })),
+        },
+
+        // Not creating rounds - only when they all join the game, should the round be created.
+        // Wrong! The round should be created when the game starts, or when the host joins
+      },
+      select: {
+        id: true,
       },
     });
   }

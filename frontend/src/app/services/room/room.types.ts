@@ -29,6 +29,8 @@ export interface RoomResponse {
   users: RoomUser[];
 }
 
+export interface GameResponse {}
+
 export interface RoomUser {
   id: string;
   username: string;

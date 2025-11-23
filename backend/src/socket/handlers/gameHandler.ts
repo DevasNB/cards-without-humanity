@@ -6,11 +6,13 @@ import {
   ServerToClientEvents,
   RoomUpdatePayload,
   CreateRoomPayload,
+  GameUpdatePayload,
 } from "../types/events";
 import { RoomService } from "../../services/room.service"; // Placeholder for Room-related logic
 import { AppError, UnauthorizedError } from "../../utils/errors";
 import { Server as SocketIOServer } from "socket.io";
 import { RoomUserService } from "../../services/roomUser.service";
+import { GameService } from "../../services/game.service";
 import {
   EditableRoom,
   EditableRoomSchema,
@@ -20,6 +22,7 @@ import {
 
 const roomService = new RoomService();
 const roomUserService = new RoomUserService();
+const gameService = new GameService();
 
 /**
  * Emits a comprehensive room update to all clients in a specific room.
@@ -31,10 +34,28 @@ const emitRoomUpdate = async (
   roomId: string
 ): Promise<void> => {
   try {
+    // TODO: Do not send the whole object at once
     const roomState: RoomUpdatePayload = await roomService.getRoomState(roomId); // Get latest room data from service
 
     if (roomState) {
       io.to(roomId).emit("room:update", roomState);
+      console.log(`Room ${roomId} updated: ${JSON.stringify(roomState)}`);
+    }
+  } catch (error: any) {
+    console.error(`Failed to emit room update for ${roomId}:`, error);
+    // Consider emitting a general error or specific room error to clients if critical
+  }
+};
+
+const emitGameUpdate = async (
+  io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>,
+  roomId: string
+): Promise<void> => {
+  try {
+    const roomState: GameUpdatePayload = await gameService.getGameState(roomId); // Get latest room data from service
+
+    if (roomState) {
+      io.to(roomId).emit("game:update", roomState);
       console.log(`Room ${roomId} updated: ${JSON.stringify(roomState)}`);
     }
   } catch (error: any) {
@@ -213,6 +234,41 @@ export const registerGameHandlers = (
       // Send not-found error
       socket.emit("error", {
         message: error.message || "Failed to leave room.",
+        type: "not-found",
+      });
+    }
+  });
+
+  // When a user starts the game
+  socket.on("room:startGame", async () => {
+    try {
+      // Check if user is in a room
+      if (!socket.data.currentRoomId) {
+        throw new AppError("Not currently in a room.", 400);
+      }
+
+      if (!socket.data.isHost) {
+        throw new UnauthorizedError("Only the host can start the game.");
+      }
+
+      console.log(
+        `User ${socket.data.username} (${socket.data.userId}) starting game in room ${socket.data.currentRoomId}`
+      );
+
+      // Update room in database
+      await roomService.startGame(socket.data.currentRoomId);
+
+      // Notify all users in the room with the new room state
+      emitGameUpdate(io, socket.data.currentRoomId);
+    } catch (error: any) {
+      console.error(
+        `Error starting game in room ${socket.data.currentRoomId}:`,
+        error
+      );
+
+      // Send not-found error
+      socket.emit("error", {
+        message: error.message || "Failed to start game.",
         type: "not-found",
       });
     }
