@@ -17,14 +17,7 @@ interface WhiteCard {
   styleUrl: './game.css',
 })
 export class Game implements OnInit {
-  // --- HARD CODED CARDS ---
-  blackCards: BlackCard[] = [
-    { id: 1, text: 'O próximo grande lançamento da Apple: ____.' },
-    { id: 2, text: 'A melhor forma de surpreender os teus avós é ____.' },
-    { id: 3, text: "Nada diz 'amor verdadeiro' como ____." },
-  ];
-
-  whiteCards: WhiteCard[] = [
+  handPick: WhiteCard[] = [
     { id: 1, text: 'Um croissant radioativo' },
     { id: 2, text: 'Dançar o samba num funeral' },
     { id: 3, text: 'Um pato com uma missão' },
@@ -41,8 +34,8 @@ export class Game implements OnInit {
   }
 
   drawBlackCard() {
-    const random = Math.floor(Math.random() * this.blackCards.length);
-    this.currentBlack.set(this.blackCards[random]);
+    const nextCard = { id: 1, text: 'O próximo grande lançamento da Apple: ____.' };
+    this.currentBlack.set(nextCard);
     this.selectedWhite.set(null);
   }
 
@@ -53,4 +46,6 @@ export class Game implements OnInit {
   nextRound() {
     this.drawBlackCard();
   }
+
+  confirmSelection() {}
 }

@@ -120,7 +120,6 @@
             'btn-primary bg-secondary': user.status === 'WAITING',
           }"
           (click)="toggleStatus()"
-          (keydown)="toggleStatus()"
         >
           {{ user.status === 'READY' ? 'Pronto' : 'À Espera' }}
         </button>

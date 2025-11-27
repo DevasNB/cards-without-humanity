@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, Output, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, Output, signal, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -7,7 +7,6 @@ import { Subscription } from 'rxjs';
 import { GameResponse, RoomResponse, RoomUser, SocketError } from '../../services/room/room.types';
 import { LoadingSkeleton } from '../../loading-skeleton/loading-skeleton';
 import { AuthService } from '../../services/auth/auth.service';
-import { EventEmitter } from '@angular/core';
 
 @Component({
   selector: 'app-lobby',
@@ -211,6 +210,9 @@ export class Lobby implements OnInit, OnDestroy {
    * @returns {void}
    */
   protected startGame(): void {
+    this.notifyGameStarted.emit(true);
+    return;
+
     if (this.readyCount < this.players.length) {
       alert('Nem todos os jogadores estão prontos!');
       return;

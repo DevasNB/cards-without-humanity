@@ -1,24 +1,23 @@
 <div class="page">
   <!-- CURRENT BLACK CARD -->
-  <div class="black-card">
-    <p>{{ currentBlack()?.text }}</p>
+
+  <div class="top-flex">
+    <div class="card black-card">
+      {{ currentBlack()?.text }}
+    </div>
+
+    @for (card of handPick; track $index) {
+      <div class="card white-card"></div>
+    }
   </div>
 
-  <!-- SELECTED WHITE CARD DISPLAY -->
-  @if (selectedWhite()) {
-    <div class="selected-white">
-      <h3>Jogaste:</h3>
-      <div class="white-card selected">
-        {{ selectedWhite()?.text }}
-      </div>
-    </div>
-  }
+  <button (click)="confirmSelection()">Confirm Selection</button>
 
-  <!-- WHITE CARDS GRID -->
+  <!-- SELECTED WHITE CARD DISPLAY -->
   <div class="white-grid">
-    @for (card of whiteCards; track $index) {
+    @for (card of handPick; track $index) {
       <button
-        class="white-card"
+        class="card small white-card hand-pick"
         [class.chosen]="selectedWhite()?.id === card.id"
         (click)="selectWhiteCard(card)"
         onKeyPress="selectWhiteCard(card)"
@@ -27,6 +26,9 @@
       </button>
     }
   </div>
+
+  <!-- WHITE CARDS GRID -->
+  <div class="white-grid"></div>
 
   <button class="next-btn" (click)="nextRound()">Próxima ronda</button>
 </div>
