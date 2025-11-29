@@ -8,6 +8,7 @@ import {
   RoomResponse,
 } from "../types/rooms";
 import { RoomUserStatus } from "@prisma/client";
+import { GameResponse } from "../types/games";
 
 export class RoomService {
   /**
@@ -319,7 +320,7 @@ export class RoomService {
     });
   }
 
-  public async startGame(roomId: string): Promise<void> {
+  public async startGame(roomId: string): Promise<GameResponse> {
     // Find the room
     const room = await prisma.room.findUnique({
       where: {
@@ -381,7 +382,7 @@ export class RoomService {
     );
 
     // Create the game
-    await prisma.game.create({
+    const newGame = await prisma.game.create({
       data: {
         // Associated to the room
         roomId,
@@ -397,9 +398,11 @@ export class RoomService {
           },
         },
 
-        // Associate all the decks by id
+        // Create all the GameDecks - The decks associated to the game
         decks: {
-          connect: gameDecks.map((deck) => ({ id: deck.id })),
+          createMany: {
+            data: gameDecks.map((deck) => ({ deckId: deck.id })),
+          },
         },
 
         // Not creating rounds - only when they all join the game, should the round be created.
@@ -407,8 +410,37 @@ export class RoomService {
       },
       select: {
         id: true,
+        status: true,
+        players: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                id: true,
+                user: {
+                  select: {
+                    username: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
+
+    // Map the game to a response
+    const gameResponse: GameResponse = {
+      id: newGame.id,
+      status: newGame.status,
+      players: newGame.players.map((player) => ({
+        id: player.id,
+        roomUserId: player.user.id,
+        username: player.user.user.username,
+      })),
+    };
+
+    return gameResponse;
   }
 }
 
