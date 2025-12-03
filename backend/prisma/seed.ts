@@ -1,13 +1,15 @@
 // prisma/seed.ts
 import { PrismaClient } from "@prisma/client";
-import { seedUsers } from "./seeds/users.seed";
-import { seedDecks } from "./seeds/decks.seed";
+import { seedUsers } from "./seeds/users.seed.ts";
+import { seedDecks } from "./seeds/decks.seed.ts";
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log("Starting seeding...");
 
+  await prisma.game.deleteMany({});
+  await prisma.room.deleteMany({});
   await prisma.user.deleteMany({});
   await prisma.deck.deleteMany({});
 
