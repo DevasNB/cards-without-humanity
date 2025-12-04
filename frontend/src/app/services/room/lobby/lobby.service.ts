@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { SocketService } from '../../socket.service';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, map, Observable } from 'rxjs';
 import { RoomResponse, RoomUser, SocketError, StartingGamePayload } from '../room.types';
+import { AuthService } from '../../auth/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class LobbyService {
@@ -14,7 +15,17 @@ export class LobbyService {
   private readonly errorSubject = new BehaviorSubject<SocketError | null>(null);
   error$ = this.errorSubject.asObservable();
 
-  constructor(private readonly socketService: SocketService) {
+  currentUser$: Observable<RoomUser | null> = this.room$.pipe(
+    map((room) => {
+      const auth = this.authService.currentUser();
+      if (!room || !auth) return null;
+      return room.users.find((u) => u.username === auth.username) || null;
+    }),
+  );
+  constructor(
+    private readonly socketService: SocketService,
+    private readonly authService: AuthService,
+  ) {
     this.socketService
       .listen<RoomResponse>('room:update')
       .subscribe((room) => this.roomSubject.next(room));
@@ -54,27 +65,25 @@ export class LobbyService {
   /**
    * Toggle current user's ready status
    */
-  toggleCurrentUserStatus(user: RoomUser): void {
+  toggleCurrentUserStatus(): void {
     const room = this.roomSubject.getValue();
-    if (!room || !user) return;
+    const auth = this.authService.currentUser();
+    if (!room || !auth) return;
+
+    const user = room.users.find((u) => u.username === auth.username);
+    if (!user) return;
 
     const newStatus = user.status === 'READY' ? 'WAITING' : 'READY';
 
-    // Update local signal
+    // Update local state immediately
     const updatedRoom: RoomResponse = {
       ...room,
-      users: room.users.map((u) => {
-        if (u.id !== user.id) {
-          return u;
-        }
-        return { ...u, status: newStatus };
-      }),
+      users: room.users.map((u) => (u.id !== user.id ? u : { ...u, status: newStatus })),
     };
-
     this.roomSubject.next(updatedRoom);
 
-    // Emit to server
-    this.socketService.emit('room:user:update', { status: newStatus });
+    // Send update to server
+    this.socketService.emit('room:user:update', { ...user, status: newStatus });
   }
 
   updateRoomSettings(changes: Partial<RoomResponse>) {

@@ -1,18 +1,8 @@
-import {
-  Component,
-  computed,
-  EventEmitter,
-  Input,
-  OnDestroy,
-  OnInit,
-  Output,
-  signal,
-} from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { RoomResponse } from '../../../services/room/room.types';
-import { AuthService } from '../../../services/auth/auth.service';
+import { RoomResponse, RoomUser } from '../../../services/room/room.types';
 import { LobbyService } from '../../../services/room/lobby/lobby.service';
 import { LobbySettings } from './lobby-settings/lobby-settings';
 import { PlayerList } from './player-list/player-list';
@@ -27,7 +17,18 @@ import { LobbyActions } from './lobby-actions/lobby-actions';
 export class Lobby implements OnInit, OnDestroy {
   // Properties
   // Room from parent
-  @Input() room!: RoomResponse;
+  private _room!: RoomResponse;
+  @Input()
+  set room(value: RoomResponse) {
+    this._room = value;
+    this.users.set(this._room?.users ?? []);
+    this.allReady.set(this._room?.users.every((u) => u.status === 'READY'));
+  }
+  get room() {
+    return this._room;
+  }
+
+  currentUser = signal<RoomUser | null>(null);
 
   // Local editable copy of the room fields
   protected editableRoom = signal<Partial<RoomResponse>>({});
@@ -42,21 +43,10 @@ export class Lobby implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   // Derived Signals
+  protected readonly users = signal<RoomUser[]>([]);
+  protected readonly allReady = signal<boolean>(false);
 
-  protected readonly users = computed(() => this.room?.users ?? []);
-
-  protected readonly user = computed(
-    () => this.users().find((u) => u.username === this.authService.currentUser()?.username) || null,
-  );
-
-  protected readonly isHost = computed(() => this.user()?.isHost ?? false);
-
-  protected readonly allReady = computed(() => this.users().every((u) => u.status === 'READY'));
-
-  constructor(
-    private readonly authService: AuthService,
-    private readonly lobbyService: LobbyService,
-  ) {}
+  constructor(protected readonly lobbyService: LobbyService) {}
 
   // Lifecycle Hooks
   ngOnInit() {
@@ -64,6 +54,9 @@ export class Lobby implements OnInit, OnDestroy {
     this.lobbyService.error$
       .pipe(takeUntil(this.destroy$))
       .subscribe((error) => this.socketErrorHandler(error));
+
+    // update whenever room changes
+    this.lobbyService.currentUser$.subscribe((user) => this.currentUser.set(user));
   }
 
   ngOnDestroy(): void {

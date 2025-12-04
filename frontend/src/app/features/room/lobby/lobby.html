@@ -4,17 +4,16 @@
   <app-lobby-settings
     [room]="room"
     (fieldChange)="handleRoomChange($event)"
-    [isHost]="isHost()"
+    [isHost]="currentUser()?.isHost ?? false"
   ></app-lobby-settings>
 
   <app-player-list [room]="room" [users]="users()"></app-player-list>
 
-  <!--
   <app-lobby-actions
-    [user]="user()"
+    [user]="currentUser()!"
     [allReady]="allReady()"
-    (startGame)="lobbyService.startGame()"
-    (toggleStatus)="lobbyService.toggleCurrentUserStatus()"
+    (statusToggle)="lobbyService.toggleCurrentUserStatus()"
+    (start)="lobbyService.startGame()"
+    (leave)="lobbyService.leaveRoom()"
   ></app-lobby-actions>
-  -->
 </div>

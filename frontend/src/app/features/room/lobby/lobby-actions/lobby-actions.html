@@ -1,1 +1,23 @@
+<!-- Action Buttons -->
+<div class="text-center">
+  <!-- Toggle status -->
+  <button
+    class="btn btn-lg me-3"
+    [ngClass]="{
+      'bg-success': user.status === 'READY',
+      'btn-primary bg-secondary': user.status === 'WAITING',
+    }"
+    (click)="statusToggle.emit()"
+  >
+    {{ user.status === 'READY' ? 'Pronto' : 'À Espera' }}
+  </button>
 
+  @if (user.isHost) {
+    <button class="btn btn-primary btn-lg me-3" (click)="startGame.emit()" [disabled]="!allReady">
+      Iniciar Jogo
+    </button>
+  }
+
+  <!-- Leave Room -->
+  <button class="btn btn-outline-secondary btn-lg" (click)="leaveRoom.emit()">Voltar</button>
+</div>

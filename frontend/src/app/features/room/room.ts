@@ -1,7 +1,6 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RoomResponse } from '../../services/room/room.types';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LobbyService } from '../../services/room/lobby/lobby.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -18,13 +17,11 @@ import { Lobby } from './lobby/lobby';
 export class RoomComponent implements OnInit, OnDestroy {
   // Properties
   roomId: string | null = null;
-  protected room = signal<RoomResponse | null>(null);
-
   private readonly destroy$ = new Subject<void>();
 
   constructor(
     private readonly route: ActivatedRoute,
-    private readonly lobbyService: LobbyService,
+    protected readonly lobbyService: LobbyService,
     private readonly router: Router,
   ) {}
 
@@ -33,6 +30,7 @@ export class RoomComponent implements OnInit, OnDestroy {
     this.roomId = this.route.snapshot.paramMap.get('roomId');
     if (!this.roomId) {
       // TODO: Handle error
+      this.redirectHome();
       return;
     }
 
@@ -41,7 +39,7 @@ export class RoomComponent implements OnInit, OnDestroy {
 
     // Subscribe to room updates (from service-managed stream)
     this.lobbyService.room$.pipe(takeUntil(this.destroy$)).subscribe((room) => {
-      this.room.set(room);
+      console.log(room, 1441);
     });
   }
 
