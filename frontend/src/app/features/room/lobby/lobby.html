@@ -1,5 +1,24 @@
 <div class="container my-5">
   <h2 class="text-center mb-4">Configurar Sala</h2>
 
-  <app-lobby-settings [room]="room" (fieldChange)="roomChange.emit($event)"></app-lobby-settings>
+  <app-lobby-settings
+    [room]="room"
+    (fieldChange)="handleRoomChange($event)"
+    [isHost]="isHost()"
+  ></app-lobby-settings>
+
+  <!--
+  <app-player-list
+    [users]="room.users"
+    [currentUser]="user()"
+    (toggleStatus)="lobbyService.toggleCurrentUserStatus()"
+  ></app-player-list>
+
+  <app-lobby-actions
+    [user]="user()"
+    [allReady]="allReady()"
+    (startGame)="lobbyService.startGame()"
+    (toggleStatus)="lobbyService.toggleCurrentUserStatus()"
+  ></app-lobby-actions>
+  -->
 </div>

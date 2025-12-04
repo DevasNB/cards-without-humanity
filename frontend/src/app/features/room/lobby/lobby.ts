@@ -28,7 +28,6 @@ export class Lobby implements OnInit, OnDestroy {
   // Properties
   // Room from parent
   @Input() room!: RoomResponse;
-  @Output() roomChange = new EventEmitter<Partial<RoomResponse>>();
 
   // Local editable copy of the room fields
   protected editableRoom = signal<Partial<RoomResponse>>({});
@@ -94,52 +93,11 @@ export class Lobby implements OnInit, OnDestroy {
 
     console.log('Room error:', error.type, '\n', error.message);
   }
-
   /**
-   * Changes the name of the room if the current user is the host.
-   * @param name - The new name of the room.
+   * Updates the room settings based on the given changes.
+   * @param changes - The object containing the changes to the room's settings.
    */
-  protected changeName(name: string) {
-    if (!this.isHost()) return;
-
-    this.lobbyService.updateRoomName(name.trim());
+  handleRoomChange(changes: Partial<RoomResponse>) {
+    this.lobbyService.updateRoomSettings(changes);
   }
-
-  /**
-   * Toggles the privacy of the room if the current user is the host.
-   * This method updates the room settings and sends an event to the server.
-   * If the current user is not the host, the method does nothing.
-   * @returns {void}
-   */
-  protected togglePrivacy(): void {
-    if (!this.isHost()) return;
-
-    this.lobbyService.togglePrivacy();
-  }
-
-  /**
-   * Toggles the status of the current user in the room.
-   * If the current user is not in the room, this method does nothing.
-   * @returns {void}
-   */
-  protected toggleStatus(): void {
-    const user = this.user();
-    if (!user) return;
-
-    this.lobbyService.toggleCurrentUserStatus(user);
-  }
-
-  /**
-   * Starts the game if all players are ready.
-   * If not all players are ready, shows an alert with a message.
-   * @returns {void}
-   */
-  protected startGame(): void {
-    if (!this.isHost()) return;
-
-    // LobbyService handles validation & emits socket event
-    this.lobbyService.startGame();
-  }
-
-  
 }

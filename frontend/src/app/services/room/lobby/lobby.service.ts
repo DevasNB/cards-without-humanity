@@ -77,31 +77,14 @@ export class LobbyService {
     this.socketService.emit('room:user:update', { status: newStatus });
   }
 
-  /**
-   * Update room name (host only)
-   */
-  updateRoomName(name: string): void {
+  updateRoomSettings(changes: Partial<RoomResponse>) {
     const room = this.roomSubject.getValue();
     if (!room) return;
 
-    const updatedRoom = { ...room, name };
-    this.roomSubject.next(updatedRoom);
+    const updatedRoom = { ...room, ...changes };
+    this.roomSubject.next(updatedRoom); // update local signal immediately
 
-    // Emit to server
-    this.socketService.emit('room:host:updateSettings', updatedRoom);
-  }
-
-  /**
-   * Toggle room privacy (host only)
-   */
-  togglePrivacy(): void {
-    const room = this.roomSubject.getValue();
-    if (!room) return;
-
-    const updatedRoom = { ...room, isPublic: !room.isPublic };
-    this.roomSubject.next(updatedRoom);
-
-    // Emit to server
+    // send to backend
     this.socketService.emit('room:host:updateSettings', updatedRoom);
   }
 
