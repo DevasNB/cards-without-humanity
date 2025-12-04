@@ -29,7 +29,46 @@ export interface RoomResponse {
   users: RoomUser[];
 }
 
-export interface GameResponse {}
+export interface GameResponse {
+  id: string;
+  players: PlayerResponse[];
+  status: GameStatus;
+}
+
+export interface StartingGamePayload {
+  game: GameResponse;
+  handPick: WhiteCard[];
+}
+
+export interface MiddleGamePayload {
+  round: RoundResponse;
+  newCards: WhiteCard[];
+}
+
+export interface BlackCard {
+  id: number;
+  text: string;
+}
+
+export interface WhiteCard {
+  id: number;
+  text: string;
+}
+
+export enum GameStatus {
+  WAITING_FOR_PLAYERS = 'WAITING_FOR_PLAYERS', // When in lobby
+  PLAYING = 'PLAYING', // When playing a round
+  ROUND_ENDED = 'ROUND_ENDED', // When a round has ended
+  GAME_ENDED = 'GAME_ENDED', // When the game ended
+}
+
+export interface PlayerResponse {
+  id: string;
+  roomUserId: string;
+  username: string;
+}
+
+export interface RoundResponse {}
 
 export interface RoomUser {
   id: string;

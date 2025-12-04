@@ -1,0 +1,66 @@
+<!-- Lobby Settings -->
+<div class="card mb-4 p-4 shadow-sm">
+  <!-- Room Name -->
+  <div class="mb-3">
+    <label class="form-label" for="room-name">Nome da Sala</label>
+    <input
+      name="room-name"
+      class="form-control"
+      [value]="editableRoom().name"
+      [disabled]="!isHost"
+      (input)="updateField('name', $event.target.value)"
+    />
+  </div>
+
+  <!-- Privacy -->
+  <div class="mb-3 d-flex align-items-center justify-content-between">
+    <label for="privacy" class="form-label d-block">Privacidade</label>
+    <button
+      name="privacy"
+      class="btn"
+      [ngClass]="{
+        'btn-outline-primary': !editableRoom().isPublic,
+        'btn-outline-secondary': editableRoom().isPublic,
+      }"
+      [disabled]="!isHost"
+      (click)="togglePrivacy()"
+    >
+      {{ editableRoom().isPublic ? 'Público' : 'Privado' }}
+    </button>
+
+    @if (!room.isPublic) {
+      <div>
+        <button class="btn btn-outline-primary" (click)="copyInviteLink()">
+          <i class="bi bi-link-45deg"></i> Copiar link de convite
+        </button>
+      </div>
+    }
+  </div>
+
+  <div class="row">
+    <!-- Winning Rounds -->
+    <div class="col-md-6 mb-3">
+      <label for="winning-rounds" class="form-label">Rondas para Vencer</label>
+      <input
+        type="number"
+        name="winning-rounds"
+        class="form-control"
+        [value]="editableRoom().winningRounds"
+        min="1"
+        [disabled]="true"
+      />
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <label for="max-players" class="form-label">Máximo de Jogadores</label>
+      <input
+        type="number"
+        name="max-players"
+        class="form-control"
+        [value]="editableRoom().maxPlayers"
+        min="3"
+        [disabled]="true"
+      />
+    </div>
+  </div>
+</div>

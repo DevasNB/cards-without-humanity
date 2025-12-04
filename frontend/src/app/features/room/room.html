@@ -1,0 +1,7 @@
+<!-- LOBBY VIEW -->
+@if (room(); as room) {
+  <app-lobby [room]="room" (roomNotFound)="redirectHome()"></app-lobby>
+} @else {
+  <loading-skeleton></loading-skeleton>
+  <!-- (roomChange)="handleRoomChange($event)" -->
+}
