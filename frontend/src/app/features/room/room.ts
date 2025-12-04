@@ -40,7 +40,9 @@ export class RoomComponent implements OnInit, OnDestroy {
     this.lobbyService.joinRoom(this.roomId);
 
     // Subscribe to room updates (from service-managed stream)
-    this.lobbyService.room$.pipe(takeUntil(this.destroy$)).subscribe((room) => this.room.set(room));
+    this.lobbyService.room$.pipe(takeUntil(this.destroy$)).subscribe((room) => {
+      this.room.set(room);
+    });
   }
 
   /**

@@ -51,10 +51,6 @@ export class Lobby implements OnInit, OnDestroy {
 
   protected readonly isHost = computed(() => this.user()?.isHost ?? false);
 
-  protected readonly readyCount = computed(
-    () => this.users().filter((u) => u.status === 'READY').length,
-  );
-
   protected readonly allReady = computed(() => this.users().every((u) => u.status === 'READY'));
 
   constructor(
@@ -93,6 +89,7 @@ export class Lobby implements OnInit, OnDestroy {
 
     console.log('Room error:', error.type, '\n', error.message);
   }
+
   /**
    * Updates the room settings based on the given changes.
    * @param changes - The object containing the changes to the room's settings.
