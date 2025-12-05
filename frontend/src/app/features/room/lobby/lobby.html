@@ -13,7 +13,7 @@
     [user]="currentUser()!"
     [allReady]="allReady()"
     (statusToggle)="lobbyService.toggleCurrentUserStatus()"
-    (start)="lobbyService.startGame()"
-    (leave)="lobbyService.leaveRoom()"
+    (startGame)="lobbyService.startGame()"
+    (leaveRoom)="lobbyService.leaveRoom()"
   ></app-lobby-actions>
 </div>

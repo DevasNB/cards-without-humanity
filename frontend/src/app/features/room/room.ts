@@ -39,7 +39,6 @@ export class RoomComponent implements OnInit, OnDestroy {
 
     // Subscribe to room updates (from service-managed stream)
     this.lobbyService.room$.pipe(takeUntil(this.destroy$)).subscribe((room) => {
-      console.log(room, 1441);
     });
   }
 
