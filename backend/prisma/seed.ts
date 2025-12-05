@@ -1,7 +1,7 @@
 // prisma/seed.ts
 import { PrismaClient } from "@prisma/client";
-import { seedUsers } from "./seeds/users.seed.ts";
-import { seedDecks } from "./seeds/decks.seed.ts";
+import { seedUsers } from "./seeds/users.seed";
+import { seedDecks } from "./seeds/decks.seed";
 
 const prisma = new PrismaClient();
 
