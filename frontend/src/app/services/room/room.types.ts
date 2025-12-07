@@ -37,20 +37,20 @@ export interface GameResponse {
 
 export interface StartingGamePayload {
   game: GameResponse;
-  handPick: WhiteCard[];
+  handPick: AnswerCard[];
 }
 
 export interface MiddleGamePayload {
   round: RoundResponse;
-  newCards: WhiteCard[];
+  newCards: AnswerCard[];
 }
 
-export interface BlackCard {
+export interface PromptCard {
   id: number;
   text: string;
 }
 
-export interface WhiteCard {
+export interface AnswerCard {
   id: number;
   text: string;
 }
@@ -66,9 +66,14 @@ export interface PlayerResponse {
   id: string;
   roomUserId: string;
   username: string;
+  points: number;
 }
 
-export interface RoundResponse {}
+export interface RoundResponse {
+  id: string;
+  promptCard: PromptCard;
+  cardCzar: string;
+}
 
 export interface RoomUser {
   id: string;

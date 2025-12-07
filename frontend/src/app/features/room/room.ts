@@ -6,11 +6,13 @@ import { LobbyService } from '../../services/room/lobby/lobby.service';
 import { Subject, takeUntil } from 'rxjs';
 import { LoadingSkeleton } from '../../loading-skeleton/loading-skeleton';
 import { Lobby } from './lobby/lobby';
+import { Game } from './game/game';
+import { GameService } from '../../services/room/game/game.service';
 
 @Component({
   standalone: true,
   selector: 'room',
-  imports: [CommonModule, FormsModule, Lobby, LoadingSkeleton],
+  imports: [CommonModule, FormsModule, Lobby, Game, LoadingSkeleton],
   templateUrl: './room.html',
   styleUrl: './room.css',
 })
@@ -21,8 +23,9 @@ export class RoomComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly route: ActivatedRoute,
-    protected readonly lobbyService: LobbyService,
     private readonly router: Router,
+    protected readonly lobbyService: LobbyService,
+    protected readonly gameService: GameService,
   ) {}
 
   ngOnInit() {
@@ -38,8 +41,7 @@ export class RoomComponent implements OnInit, OnDestroy {
     this.lobbyService.joinRoom(this.roomId);
 
     // Subscribe to room updates (from service-managed stream)
-    this.lobbyService.room$.pipe(takeUntil(this.destroy$)).subscribe((room) => {
-    });
+    this.lobbyService.room$.pipe(takeUntil(this.destroy$)).subscribe((room) => {});
   }
 
   /**

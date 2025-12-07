@@ -1,0 +1,18 @@
+<div class="players-list">
+  @for (player of leaderboard(); track player.username) {
+    <div
+      class="player-row"
+      [class.me]="isCurrentUser(player.username)"
+      [class.czar]="isCardCzar(player.username)"
+    >
+      <div class="name">
+        {{ player.username }}
+        @if (isCardCzar(player.username)) {
+          <span class="czar-tag">👑 Czar</span>
+        }
+      </div>
+
+      <div class="points">{{ player.points }} pts</div>
+    </div>
+  }
+</div>

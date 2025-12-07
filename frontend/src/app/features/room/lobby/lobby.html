@@ -7,13 +7,13 @@
     [isHost]="currentUser()?.isHost ?? false"
   ></app-lobby-settings>
 
-  <app-player-list [room]="room" [users]="users()"></app-player-list>
+  <app-lobby-player-list [room]="room" [users]="users()"></app-lobby-player-list>
 
   <app-lobby-actions
     [user]="currentUser()!"
     [allReady]="allReady()"
     (statusToggle)="lobbyService.toggleCurrentUserStatus()"
     (startGame)="lobbyService.startGame()"
-    (leaveRoom)="lobbyService.leaveRoom()"
+    (leaveRoom)="leaveRoom()"
   ></app-lobby-actions>
 </div>

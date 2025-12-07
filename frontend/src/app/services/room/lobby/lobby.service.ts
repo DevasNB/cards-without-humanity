@@ -1,16 +1,13 @@
 import { Injectable } from '@angular/core';
 import { SocketService } from '../../socket.service';
 import { BehaviorSubject, map, Observable } from 'rxjs';
-import { RoomResponse, RoomUser, SocketError, StartingGamePayload } from '../room.types';
+import { RoomResponse, RoomUser, SocketError } from '../room.types';
 import { AuthService } from '../../auth/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class LobbyService {
   private readonly roomSubject = new BehaviorSubject<RoomResponse | null>(null);
   room$ = this.roomSubject.asObservable();
-
-  private readonly gameStartSubject = new BehaviorSubject<any>(null);
-  gameStart$ = this.gameStartSubject.asObservable();
 
   private readonly errorSubject = new BehaviorSubject<SocketError | null>(null);
   error$ = this.errorSubject.asObservable();
@@ -29,10 +26,6 @@ export class LobbyService {
     this.socketService
       .listen<RoomResponse>('room:update')
       .subscribe((room) => this.roomSubject.next(room));
-
-    this.socketService
-      .listen<StartingGamePayload>('room:initGame')
-      .subscribe((game) => this.gameStartSubject.next(game));
 
     this.socketService
       .listen<SocketError>('error')
@@ -78,7 +71,7 @@ export class LobbyService {
     // Update local state immediately
     const updatedRoom: RoomResponse = {
       ...room,
-      users: room.users.map((u) => (u.id !== user.id ? u : { ...u, status: newStatus })),
+      users: room.users.map((u) => (u.id === user.id ? { ...u, status: newStatus } : u)),
     };
     this.roomSubject.next(updatedRoom);
 
@@ -105,21 +98,24 @@ export class LobbyService {
     if (!room) return;
 
     // Optional validations (all ready + minimum players)
-    const allReady = room.users.every((u) => u.status === 'READY');
-    if (!allReady) {
-      this.errorSubject.next({
-        type: 'not-ready',
-        message: 'Nem todos os jogadores estão prontos!',
-      });
-      return;
-    }
 
-    if (room.users.length < 3) {
-      this.errorSubject.next({
-        type: 'min-players',
-        message: 'O jogo precisa de pelo menos 3 jogadores!',
-      });
-      return;
+    if (false) {
+      const allReady = room?.users.every((u) => u.status === 'READY');
+      if (!allReady) {
+        this.errorSubject.next({
+          type: 'not-ready',
+          message: 'Nem todos os jogadores estão prontos!',
+        });
+        return;
+      }
+
+      if ((room?.users?.length || 0) < 3) {
+        this.errorSubject.next({
+          type: 'min-players',
+          message: 'O jogo precisa de pelo menos 3 jogadores!',
+        });
+        return;
+      }
     }
 
     // Emit start game

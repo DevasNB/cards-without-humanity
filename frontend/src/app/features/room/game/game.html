@@ -1,0 +1,37 @@
+<div class="page">
+  <div class="top-flex">
+    <div class="card black-card">{{ currentRound()?.promptCard?.text }}</div>
+
+    @for (card of handPick(); track $index) {
+      <div class="card white-card"></div>
+    }
+  </div>
+
+  <button (click)="handleAnswerCardSubmit()" [disabled]="!selectedAnswerCard()">
+    Confirm Selection
+  </button>
+
+  <!-- SELECTED WHITE CARD DISPLAY -->
+  <div class="white-grid">
+    @for (card of handPick(); track $index) {
+      <button
+        class="card small white-card hand-pick"
+        [class.chosen]="selectedAnswerCard()?.id === card.id"
+        (click)="selectAnswerCard(card)"
+      >
+        {{ card.text }}
+      </button>
+    }
+  </div>
+
+  <!-- WHITE CARDS GRID -->
+  <div class="white-grid"></div>
+
+  <app-game-player-list
+    [players]="game()?.players ?? []"
+    [currentUser]="currentPlayer()?.username ?? null"
+    [cardCzar]="currentRound()?.cardCzar ?? null"
+  ></app-game-player-list>
+
+  <button class="next-btn">Próxima ronda</button>
+</div>

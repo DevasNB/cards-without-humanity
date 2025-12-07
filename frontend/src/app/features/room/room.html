@@ -1,7 +1,9 @@
 <!-- LOBBY VIEW -->
-@if (lobbyService.room$ | async; as room) {
+
+@if (gameService.game$ | async; as game) {
+  <app-game></app-game>
+} @else if (lobbyService.room$ | async; as room) {
   <app-lobby [room]="room" (roomNotFound)="redirectHome()"></app-lobby>
 } @else {
   <loading-skeleton></loading-skeleton>
-  <!-- (roomChange)="handleRoomChange($event)" -->
 }

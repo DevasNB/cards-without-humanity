@@ -7,6 +7,7 @@ import { LobbyService } from '../../../services/room/lobby/lobby.service';
 import { LobbySettings } from './lobby-settings/lobby-settings';
 import { PlayerList } from './player-list/player-list';
 import { LobbyActions } from './lobby-actions/lobby-actions';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-lobby',
@@ -28,7 +29,10 @@ export class Lobby implements OnInit, OnDestroy {
     return this._room;
   }
 
+  // Derived Signals
   currentUser = signal<RoomUser | null>(null);
+  protected readonly users = signal<RoomUser[]>([]);
+  protected readonly allReady = signal<boolean>(false);
 
   // Local editable copy of the room fields
   protected editableRoom = signal<Partial<RoomResponse>>({});
@@ -42,11 +46,10 @@ export class Lobby implements OnInit, OnDestroy {
   // Unsubscribing observables
   private readonly destroy$ = new Subject<void>();
 
-  // Derived Signals
-  protected readonly users = signal<RoomUser[]>([]);
-  protected readonly allReady = signal<boolean>(false);
-
-  constructor(protected readonly lobbyService: LobbyService) {}
+  constructor(
+    protected readonly lobbyService: LobbyService,
+    private readonly router: Router,
+  ) {}
 
   // Lifecycle Hooks
   ngOnInit() {
@@ -89,5 +92,19 @@ export class Lobby implements OnInit, OnDestroy {
    */
   handleRoomChange(changes: Partial<RoomResponse>) {
     this.lobbyService.updateRoomSettings(changes);
+  }
+
+  protected leaveRoom(): void {
+    try {
+      this.lobbyService.leaveRoom();
+    } catch (err) {
+      console.log(err);
+    } finally {
+      this.redirectHome();
+    }
+  }
+
+  protected redirectHome(): void {
+    this.router.navigate(['/home']);
   }
 }

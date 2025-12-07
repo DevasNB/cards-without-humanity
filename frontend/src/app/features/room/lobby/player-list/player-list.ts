@@ -3,7 +3,7 @@ import { RoomResponse, RoomUser } from '../../../../services/room/room.types';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-player-list',
+  selector: 'app-lobby-player-list',
   imports: [CommonModule],
   templateUrl: './player-list.html',
   styleUrl: './player-list.css',
