@@ -58,16 +58,11 @@ export class GameService {
     const gameResponse: GameResponse = {
       id: updatedGame.id,
       status: updatedGame.status,
-      decks: updatedGame.decks,
       players: updatedGame.players.map((player) => ({
         id: player.id,
         roomUserId: player.user.id,
         username: player.user.user.username,
       })),
-      currentRoundIndex: 0,
-      // rounds: updatedGame.rounds,
-      rounds: [],
-      initialCards: [],
     };
 
     return gameResponse;

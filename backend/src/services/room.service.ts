@@ -7,7 +7,7 @@ import {
   ListedRoom,
   RoomResponse,
 } from "../types/rooms";
-import { RoomUserStatus } from "@prisma/client";
+import { GameStatus, RoomUserStatus } from "@prisma/client";
 import { GameResponse } from "../types/games";
 
 export class RoomService {
@@ -320,6 +320,13 @@ export class RoomService {
     });
   }
 
+  /**
+   * Starts a game in the given room.
+   * @param {string} roomId - The ID of the room to start the game in.
+   * @returns {Promise<GameResponse>} A promise that resolves to the created game's data.
+   * @throws {NotFoundError} If the room is not found.
+   * @throws {BadRequestError} If not everyone in the room is ready, or if there are not enough players to start the game.
+   */
   public async startGame(roomId: string): Promise<GameResponse> {
     // Find the room
     const room = await prisma.room.findUnique({
@@ -341,6 +348,7 @@ export class RoomService {
       throw new NotFoundError("Room not found");
     }
 
+    /*
     // Validations (all users are ready, and no less than 3 users are in the room)
     const usersStatus = room.users.map((user) => user.status);
 
@@ -359,9 +367,10 @@ export class RoomService {
     if (readyCount < 3) {
       throw new BadRequestError("Not enough players to start the game");
     }
+      */
 
     // Get the ids of the decks for the game
-    const gameDecks = await prisma.deck.findMany({
+    const selectedDecks = await prisma.deck.findMany({
       // TODO: where the user has selected them, it must come from the payload
       select: {
         id: true,
@@ -381,52 +390,68 @@ export class RoomService {
       (user) => user.status === RoomUserStatus.READY
     );
 
-    // Create the game
-    const newGame = await prisma.game.create({
-      data: {
-        // Associated to the room
-        roomId,
-
-        // Create all the players; Only related to the room users
-        // ! Attention: Additional data will be created and updated once they join the game
-        // Wrong! All the associated data should be created/updated, and when the user arrives, it's simply handed to them
-        players: {
-          createMany: {
-            data: onlineUsers.map((user) => ({
-              roomUserId: user.id,
-            })),
-          },
+    // Get a new game
+    const newGame = await prisma.$transaction(async (prisma) => {
+      // Mark all players to be IN_GAME
+      await prisma.roomUser.updateMany({
+        where: {
+          AND: [{ roomId }, { status: RoomUserStatus.READY }],
         },
-
-        // Create all the GameDecks - The decks associated to the game
-        decks: {
-          createMany: {
-            data: gameDecks.map((deck) => ({ deckId: deck.id })),
-          },
+        data: {
+          status: RoomUserStatus.IN_GAME,
         },
+      });
 
-        // Not creating rounds - only when they all join the game, should the round be created.
-        // Wrong! The round should be created when the game starts, or when the host joins
-      },
-      select: {
-        id: true,
-        status: true,
-        players: {
-          select: {
-            id: true,
-            user: {
-              select: {
-                id: true,
-                user: {
-                  select: {
-                    username: true,
+      // Create the game
+      return await prisma.game.create({
+        data: {
+          // Associated to the room
+          roomId,
+
+          // TODO: Attention! For now, we are assuming that the game can start immediately. In fact, I think it should be this way. However, in that case, WAITING_FOR_PLAYERS is useless
+          status: GameStatus.PLAYING,
+
+          // Create all the players; Only related to the room users
+          // ! Attention: Additional data will be created and updated once they join the game
+          // Wrong! All the associated data should be created/updated, and when the user arrives, it's simply handed to them
+          players: {
+            createMany: {
+              data: onlineUsers.map((user) => ({
+                roomUserId: user.id,
+              })),
+            },
+          },
+
+          // Create all the GameDecks - The decks associated to the game
+          decks: {
+            createMany: {
+              data: selectedDecks.map((deck) => ({ deckId: deck.id })),
+            },
+          },
+
+          // Not creating rounds - only when they all join the game, should the round be created.
+          // Wrong! The round should be created when the game starts, or when the host joins
+        },
+        select: {
+          id: true,
+          status: true,
+          players: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  id: true,
+                  user: {
+                    select: {
+                      username: true,
+                    },
                   },
                 },
               },
             },
           },
         },
-      },
+      });
     });
 
     // Map the game to a response

@@ -8,6 +8,7 @@ export interface SocketData {
   userId: string;
   username: string;
   currentRoomId?: string; // The ID of the room the user is currently in
+  currentGameId?: string; // The ID of the game the user is currently in
   isHost?: boolean;
 }
 

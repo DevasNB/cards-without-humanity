@@ -7,6 +7,7 @@ import {
   RoomUpdatePayload,
   CreateRoomPayload,
   GameUpdatePayload,
+  AnswerCard,
 } from "../types/events";
 import { RoomService } from "../../services/room.service"; // Placeholder for Room-related logic
 import { AppError, UnauthorizedError } from "../../utils/errors";
@@ -19,10 +20,12 @@ import {
   EditableRoomUser,
   EditableRoomUserSchema,
 } from "../../types/rooms";
+import { CardService } from "../../services/card.service";
 
 const roomService = new RoomService();
 const roomUserService = new RoomUserService();
 const gameService = new GameService();
+const cardService = new CardService();
 
 /**
  * Emits a comprehensive room update to all clients in a specific room.
@@ -39,23 +42,6 @@ const emitRoomUpdate = async (
 
     if (roomState) {
       io.to(roomId).emit("room:update", roomState);
-      console.log(`Room ${roomId} updated: ${JSON.stringify(roomState)}`);
-    }
-  } catch (error: any) {
-    console.error(`Failed to emit room update for ${roomId}:`, error);
-    // Consider emitting a general error or specific room error to clients if critical
-  }
-};
-
-const emitGameUpdate = async (
-  io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>,
-  roomId: string
-): Promise<void> => {
-  try {
-    const roomState: GameUpdatePayload = await gameService.getGameState(roomId); // Get latest room data from service
-
-    if (roomState) {
-      io.to(roomId).emit("game:update", roomState);
       console.log(`Room ${roomId} updated: ${JSON.stringify(roomState)}`);
     }
   } catch (error: any) {
@@ -120,7 +106,7 @@ export const registerGameHandlers = (
   });
 
   // When a roomUser updates its state
-  socket.on("roomUser:update", async (rawPayload: EditableRoomUser) => {
+  socket.on("room:user:update", async (rawPayload: EditableRoomUser) => {
     try {
       // Check if user is in a room
       if (!socket.data.currentRoomId) {
@@ -155,7 +141,7 @@ export const registerGameHandlers = (
   });
 
   // When a host updates the room settings
-  socket.on("room:updateSettings", async (rawPayload: EditableRoom) => {
+  socket.on("room:host:updateSettings", async (rawPayload: EditableRoom) => {
     try {
       // Check if user is in a room
       if (!socket.data.currentRoomId) {
@@ -202,34 +188,35 @@ export const registerGameHandlers = (
   });
 
   // When a user leaves a room
-  socket.on("room:leave", async (payload) => {
+  socket.on("room:leave", async () => {
     try {
-      // Check if user is in a room
-      if (socket.data.currentRoomId !== payload.roomId) {
-        throw new AppError("Not currently in this room.", 400);
+      const roomId = socket.data.currentRoomId;
+
+      if (!roomId) {
+        throw new AppError("Not currently in a room.", 400);
       }
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) leaving room ${payload.roomId}`
+        `User ${socket.data.username} (${socket.data.userId}) leaving room ${roomId}`
       );
 
       // Update database of roomUser disconnecting from room
-      await roomService.leaveRoom(socket.data.userId, payload.roomId);
+      await roomService.leaveRoom(socket.data.userId, roomId);
 
       // Remove socket from the Socket.IO room
-      socket.leave(payload.roomId);
+      socket.leave(roomId);
 
       // Clear socket data info related to room
       delete socket.data.currentRoomId;
       delete socket.data.isHost;
 
       // Send leave confirmation
-      socket.emit("info", { message: `Left room '${payload.roomId}'.` });
+      socket.emit("info", { message: `Left room '${roomId}'.` });
 
       // Notify all users in the room with the new room state
-      emitRoomUpdate(io, payload.roomId);
+      emitRoomUpdate(io, roomId);
     } catch (error: any) {
-      console.error(`Error leaving room ${payload.roomId}:`, error);
+      console.error(`Error leaving room ${socket.data.currentRoomId}:`, error);
 
       // Send not-found error
       socket.emit("error", {
@@ -240,7 +227,7 @@ export const registerGameHandlers = (
   });
 
   // When a user starts the game
-  socket.on("room:startGame", async () => {
+  socket.on("room:host:startGame", async () => {
     try {
       // Check if user is in a room
       if (!socket.data.currentRoomId) {
@@ -256,10 +243,28 @@ export const registerGameHandlers = (
       );
 
       // Update room in database
-      await roomService.startGame(socket.data.currentRoomId);
+      // TODO: Make this already return the handPick
+      const newGame = await roomService.startGame(socket.data.currentRoomId);
 
-      // Notify all users in the room with the new room state
-      emitGameUpdate(io, socket.data.currentRoomId);
+      // Set socket data info related to game
+      socket.data.currentGameId = newGame.id;
+
+      // Generate hand pick for each player
+      const handPick: Array<[string, AnswerCard[]]> =
+        await cardService.getHandPickForPlayersInGame(
+          socket.data.currentGameId
+        );
+
+      // Notify all users in the room with the new game state
+
+      for (const [connectionId, cards] of handPick) {
+        io.to(connectionId).emit("room:initGame", {
+          game: newGame,
+          handPick: cards,
+        });
+      }
+
+      console.log(`Game ${newGame.id} updated: ${JSON.stringify(newGame)}`);
     } catch (error: any) {
       console.error(
         `Error starting game in room ${socket.data.currentRoomId}:`,

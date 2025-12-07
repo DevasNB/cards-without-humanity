@@ -1,21 +1,9 @@
 import { GameStatus, RoundStatus } from "@prisma/client";
-import { DeckResponse } from "./decks";
 
 export interface GameResponse {
-  // props everyone should receive
   id: string;
-  players: PlayerResponse[];
-
   status: GameStatus;
-
-  decks: DeckResponse[];
-  rounds: RoundResponse[];
-  currentRoundIndex: number;
-
-  // props only the host should receive
-
-  // props each person should receive different
-  initialCards: CardResponse[];
+  players: PlayerResponse[];
 }
 
 export interface CardResponse {}
