@@ -11,6 +11,12 @@
   },
   "scripts": {
     "prepare": "husky install",
-    "lint-staged": "lint-staged"
-  }
+    "lint-staged": "lint-staged",
+    "build": "npm -w @myorg/shared run build && npm -w backend run build && npm -w frontend run build"
+  },
+  "workspaces": [
+    "shared",
+    "frontend",
+    "backend"
+  ]
 }
