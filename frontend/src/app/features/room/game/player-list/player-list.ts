@@ -11,7 +11,7 @@ import { PlayerResponse } from '../../../../services/room/room.types';
 export class PlayerList {
   private readonly _players = signal<PlayerResponse[]>([]);
   private readonly _currentUser = signal<string | null>(null);
-  private readonly _cardCzar = signal<string | null>(null);
+  private readonly _czar = signal<PlayerResponse | null>(null);
 
   @Input()
   set players(value: PlayerResponse[]) {
@@ -22,8 +22,8 @@ export class PlayerList {
     this._currentUser.set(username);
   }
   @Input()
-  set cardCzar(username: string | null) {
-    this._cardCzar.set(username);
+  set czar(user: PlayerResponse | null) {
+    this._czar.set(user);
   }
 
   // Automatically sorted leaderboard
@@ -31,5 +31,5 @@ export class PlayerList {
 
   isCurrentUser = (username: string) => this._currentUser() === username;
 
-  isCardCzar = (username: string) => this._cardCzar() === username;
+  isCardCzar = (player: PlayerResponse) => this._czar() === player;
 }

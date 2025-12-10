@@ -1,90 +1,41 @@
-export interface CreateRoomResponse {
-  id: string;
-  name: string;
-  hostId: string;
-}
+import {
+  CreateRoomResponse as CRR,
+  SimplifiedUser as SU,
+  ListedRoom as LR,
+  StartingGamePayload as SGP,
+  MiddleGamePayload as MGP,
+  PromptCard as PC,
+  SocketError as SE,
+  RoomResponse as RR,
+  GameResponse as GR,
+  RoomUserResponse as RUR,
+  PlayerResponse as PR,
+  AnswerCard as AC,
+  RoundResponse as RoR,
+} from 'cah-shared';
 
-export interface SimplifiedUser {
-  id: string;
-  username: string;
-}
+export interface CreateRoomResponse extends CRR {}
 
-export interface ListedRoom {
-  id: string;
-  name: string;
-  isPublic: boolean;
-  maxPlayers: number;
-  users: SimplifiedUser[];
-}
+export interface SimplifiedUser extends SU {}
 
-export interface RoomResponse {
-  id: string;
-  name: string;
-  hostId: string;
-  isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  winningRounds: number;
-  maxPlayers: number;
-  users: RoomUser[];
-}
+export interface ListedRoom extends LR {}
 
-export interface GameResponse {
-  id: string;
-  players: PlayerResponse[];
-  status: GameStatus;
-}
+export interface RoomResponse extends RR {}
 
-export interface StartingGamePayload {
-  game: GameResponse;
-  handPick: AnswerCard[];
-}
+export interface GameResponse extends GR {}
 
-export interface MiddleGamePayload {
-  round: RoundResponse;
-  newCards: AnswerCard[];
-}
+export interface StartingGamePayload extends SGP {}
 
-export interface PromptCard {
-  id: number;
-  text: string;
-}
+export interface MiddleGamePayload extends MGP {}
 
-export interface AnswerCard {
-  id: number;
-  text: string;
-}
+export interface PromptCard extends PC {}
 
-export enum GameStatus {
-  WAITING_FOR_PLAYERS = 'WAITING_FOR_PLAYERS', // When in lobby
-  PLAYING = 'PLAYING', // When playing a round
-  ROUND_ENDED = 'ROUND_ENDED', // When a round has ended
-  GAME_ENDED = 'GAME_ENDED', // When the game ended
-}
+export interface AnswerCard extends AC {}
 
-export interface PlayerResponse {
-  id: string;
-  roomUserId: string;
-  username: string;
-  points: number;
-}
+export interface PlayerResponse extends PR {}
 
-export interface RoundResponse {
-  id: string;
-  promptCard: PromptCard;
-  cardCzar: string;
-}
+export interface RoundResponse extends RoR {}
 
-export interface RoomUser {
-  id: string;
-  username: string;
-  isHost: boolean;
-  status: 'DISCONNECTED' | 'WAITING' | 'READY' | 'IN_GAME';
-}
+export interface RoomUser extends RUR {}
 
-export interface SocketError {
-  message: string;
-  type: string;
-}
-
-export type ErrorType = 'not-found' | 'unauthorized';
+export interface SocketError extends SE {}

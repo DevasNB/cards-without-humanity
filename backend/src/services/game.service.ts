@@ -35,6 +35,11 @@ export class GameService {
                 },
               },
             },
+            _count: {
+              select: {
+                winningRounds: true,
+              },
+            },
           },
         },
         rounds: {
@@ -49,6 +54,11 @@ export class GameService {
                   select: {
                     id: true,
                     user: true,
+                  },
+                },
+                _count: {
+                  select: {
+                    winningRounds: true,
                   },
                 },
               },
@@ -95,6 +105,7 @@ export class GameService {
         id: czar.id,
         roomUserId: czar.user.id,
         username: czar.user.user.username,
+        points: czar._count.winningRounds,
       },
       promptCard: {
         id: promptCard.id,
@@ -112,6 +123,7 @@ export class GameService {
         id: player.id,
         roomUserId: player.user.id,
         username: player.user.user.username,
+        points: player._count.winningRounds,
       })),
       currentRound: roundResponse,
     };

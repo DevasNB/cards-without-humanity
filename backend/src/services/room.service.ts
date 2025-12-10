@@ -448,6 +448,11 @@ export class RoomService {
                   },
                 },
               },
+              _count: {
+                select: {
+                  winningRounds: true,
+                },
+              },
             },
           },
         },
@@ -462,6 +467,7 @@ export class RoomService {
         id: player.id,
         roomUserId: player.user.id,
         username: player.user.user.username,
+        points: player._count.winningRounds,
       })),
     };
 

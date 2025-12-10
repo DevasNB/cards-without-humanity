@@ -1,5 +1,6 @@
 // src/types/auth.d.ts
 import { UserRole } from "@prisma/client";
+import { UserResponse as UR } from "cah-shared";
 import { z } from "zod";
 
 // Define the Zod schema for creating a user
@@ -23,13 +24,7 @@ export type LoginUserRequestBody = z.infer<typeof loginUserSchema>;
 export type EnterAnoynmousRequestBody = z.infer<typeof createUserSchema>;
 
 // Interface for the response when a user is successfully created
-export interface UserResponse {
-  id: string;
-  username: string;
-  role: UserRole;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export interface UserResponse extends UR {}
 
 // --- JWT Payload ---
 // This interface defines the data that will be stored inside the JWT

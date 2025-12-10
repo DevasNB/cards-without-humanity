@@ -17,11 +17,10 @@ export interface RoomResponse {
   hostId: string;
   users: RoomUserResponse[];
 
-  // settings: RoomSettings;
-
   createdAt: Date;
   updatedAt: Date;
 
+  // settings: RoomSettings;
   isPublic: boolean;
   winningRounds: number;
   maxPlayers: number;
