@@ -1,14 +1,14 @@
 // src/services/room.service.ts
 import prisma from "../utils/prisma";
-import { BadRequestError, NotFoundError } from "../utils/errors";
 import {
   CreateRoomResponse,
-  EditableRoom,
+  GameResponse,
   ListedRoom,
   RoomResponse,
-} from "../types/rooms";
+  EditableRoom,
+} from "cah-shared";
+import { BadRequestError, NotFoundError } from "../utils/errors";
 import { GameStatus, RoomUserStatus } from "@prisma/client";
-import { GameResponse } from "../types/games";
 
 export class RoomService {
   /**

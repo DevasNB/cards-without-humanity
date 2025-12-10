@@ -1,26 +1,21 @@
 // src/socket/handlers/gameHandler.ts
 
-import { GameSocket } from "../types/socket";
-import {
-  ClientToServerEvents,
-  ServerToClientEvents,
-  RoomUpdatePayload,
-  CreateRoomPayload,
-  GameUpdatePayload,
-  AnswerCard,
-} from "../types/events";
+import { GameSocket, IoInstance } from "../config";
 import { RoomService } from "../../services/room.service"; // Placeholder for Room-related logic
 import { AppError, UnauthorizedError } from "../../utils/errors";
-import { Server as SocketIOServer } from "socket.io";
 import { RoomUserService } from "../../services/roomUser.service";
 import { GameService } from "../../services/game.service";
+import { CardService } from "../../services/card.service";
+
 import {
+  RoomUpdatePayload,
+  CreateRoomPayload,
+  AnswerCard,
   EditableRoom,
   EditableRoomSchema,
   EditableRoomUser,
   EditableRoomUserSchema,
-} from "../../types/rooms";
-import { CardService } from "../../services/card.service";
+} from "cah-shared";
 
 const roomService = new RoomService();
 const roomUserService = new RoomUserService();
@@ -33,7 +28,7 @@ const cardService = new CardService();
  * @param roomId - The ID of the room to update.
  */
 const emitRoomUpdate = async (
-  io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>,
+  io: IoInstance,
   roomId: string
 ): Promise<void> => {
   try {
@@ -55,10 +50,7 @@ const emitRoomUpdate = async (
  * @param io - The Socket.IO server instance.
  * @param socket - The individual client socket.
  */
-export const registerGameHandlers = (
-  io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>,
-  socket: GameSocket
-) => {
+export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
   // --- Connection/Disconnection ---
   socket.on("disconnect", async () => {
     console.log(

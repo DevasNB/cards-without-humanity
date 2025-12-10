@@ -3,7 +3,7 @@ import { RoomUserStatus } from "@prisma/client";
 import prisma from "../utils/prisma";
 import { NotFoundError } from "../utils/errors";
 import { shuffle } from "../utils/helpers";
-import { AnswerCard } from "../socket/types/events";
+import { AnswerCard } from "cah-shared";
 
 export class CardService {
   public async getHandPickForPlayersInGame(

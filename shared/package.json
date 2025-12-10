@@ -2,8 +2,16 @@
   "name": "cah-shared",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/types.js",
-  "types": "dist/types.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "files": [
     "dist"
   ],
@@ -22,5 +30,8 @@
   "prettier": {
     "printWidth": 100,
     "singleQuote": true
+  },
+  "dependencies": {
+    "zod": "^4.1.13"
   }
 }
