@@ -1,6 +1,7 @@
 // src/utils/jwt.ts
 import jwt from "jsonwebtoken";
-import { JwtPayload, UserResponse } from "../types/auth"; // Your JWT payload type
+import { JwtPayload } from "../types/auth"; // Your JWT payload type
+import { UserResponse } from "cah-shared"; // Your JWT payload type
 import { UnauthorizedError } from "./errors"; // Custom error for auth issues
 import { JWT_SECRET, JWT_EXPIRES_IN } from "../configs/constants";
 import { getCookies } from "./cookies";

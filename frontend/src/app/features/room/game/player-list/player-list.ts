@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, Input, signal } from '@angular/core';
-import { PlayerResponse } from '../../../../services/room/room.types';
+import { PlayerResponse } from 'cah-shared';
 
 @Component({
   selector: 'app-game-player-list',
@@ -10,7 +10,7 @@ import { PlayerResponse } from '../../../../services/room/room.types';
 })
 export class PlayerList {
   private readonly _players = signal<PlayerResponse[]>([]);
-  private readonly _currentUser = signal<string | null>(null);
+  private readonly _currentUser = signal<PlayerResponse | null>(null);
   private readonly _czar = signal<PlayerResponse | null>(null);
 
   @Input()
@@ -18,7 +18,7 @@ export class PlayerList {
     this._players.set(value ?? []);
   }
   @Input()
-  set currentUser(username: string | null) {
+  set currentUser(username: PlayerResponse | null) {
     this._currentUser.set(username);
   }
   @Input()
@@ -29,7 +29,7 @@ export class PlayerList {
   // Automatically sorted leaderboard
   leaderboard = computed(() => [...this._players()].sort((a, b) => b.points - a.points));
 
-  isCurrentUser = (username: string) => this._currentUser() === username;
+  isCurrentUser = (username: PlayerResponse) => this._currentUser()?.id === username.id;
 
-  isCardCzar = (player: PlayerResponse) => this._czar() === player;
+  isCardCzar = (player: PlayerResponse) => this._czar()?.id === player.id;
 }

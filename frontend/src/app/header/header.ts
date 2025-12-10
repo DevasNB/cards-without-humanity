@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { AuthService } from '../services/auth/auth.service';
 import { Router } from '@angular/router';
-import { UserResponse } from '../services/auth/auth.types';
+import { UserResponse } from 'cah-shared';
 
 @Component({
   selector: 'app-header',

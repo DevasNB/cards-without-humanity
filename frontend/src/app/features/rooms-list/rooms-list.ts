@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RoomService } from '../../services/room/room.service';
 import { Router } from '@angular/router';
-import { ListedRoom } from '../../services/room/room.types';
+import { ListedRoom } from 'cah-shared';
 
 @Component({
   standalone: true,

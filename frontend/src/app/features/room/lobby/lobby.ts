@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, signal } fro
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { RoomResponse, RoomUser } from '../../../services/room/room.types';
+import { RoomResponse, RoomUserResponse } from 'cah-shared';
 import { LobbyService } from '../../../services/room/lobby/lobby.service';
 import { LobbySettings } from './lobby-settings/lobby-settings';
 import { PlayerList } from './player-list/player-list';
@@ -30,8 +30,8 @@ export class Lobby implements OnInit, OnDestroy {
   }
 
   // Derived Signals
-  currentUser = signal<RoomUser | null>(null);
-  protected readonly users = signal<RoomUser[]>([]);
+  currentUser = signal<RoomUserResponse | null>(null);
+  protected readonly users = signal<RoomUserResponse[]>([]);
   protected readonly allReady = signal<boolean>(false);
 
   // Local editable copy of the room fields

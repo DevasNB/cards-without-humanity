@@ -2,12 +2,12 @@
   @for (player of leaderboard(); track player.username) {
     <div
       class="player-row"
-      [class.me]="isCurrentUser(player.username)"
-      [class.czar]="isCardCzar(player.username)"
+      [class.me]="isCurrentUser(player)"
+      [class.czar]="isCardCzar(player)"
     >
       <div class="name">
         {{ player.username }}
-        @if (isCardCzar(player.username)) {
+        @if (isCardCzar(player)) {
           <span class="czar-tag">👑 Czar</span>
         }
       </div>

@@ -3,8 +3,8 @@ import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms'; // Required for ngModel
 import { AuthService } from '../../services/auth/auth.service';
 import { CommonModule } from '@angular/common'; // For ngIf, etc.
-import { UserResponse } from '../../services/auth/auth.types';
 import { ActivatedRoute, Router } from '@angular/router';
+import { UserResponse } from 'cah-shared';
 
 @Component({
   standalone: true,

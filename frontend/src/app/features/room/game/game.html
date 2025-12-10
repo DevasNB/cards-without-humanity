@@ -29,7 +29,7 @@
 
   <app-game-player-list
     [players]="game()?.players ?? []"
-    [currentUser]="currentPlayer()?.username ?? null"
+    [currentUser]="currentPlayer() ?? null"
     [czar]="currentRound()?.czar ?? null"
   ></app-game-player-list>
 

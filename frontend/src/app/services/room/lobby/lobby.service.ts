@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { SocketService } from '../../socket.service';
 import { BehaviorSubject, map, Observable } from 'rxjs';
-import { RoomResponse, RoomUser, SocketError } from '../room.types';
+import { RoomResponse, RoomUserResponse, SocketError } from 'cah-shared';
 import { AuthService } from '../../auth/auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -12,7 +12,7 @@ export class LobbyService {
   private readonly errorSubject = new BehaviorSubject<SocketError | null>(null);
   error$ = this.errorSubject.asObservable();
 
-  currentUser$: Observable<RoomUser | null> = this.room$.pipe(
+  currentUser$: Observable<RoomUserResponse | null> = this.room$.pipe(
     map((room) => {
       const auth = this.authService.currentUser();
       if (!room || !auth) return null;

@@ -5,10 +5,7 @@ import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import {
-  CreateUserRequestBody,
-  UserResponse, // Ensure these types match your backend's types
-} from './auth.types'; // Define these types in a local file, see step 2.1
+import { UserResponse, CreateUserRequestBody } from 'cah-shared';
 
 @Injectable({
   providedIn: 'root', // Makes the service a singleton available everywhere

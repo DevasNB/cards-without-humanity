@@ -9,7 +9,7 @@ import {
   SocketError,
   MiddleGamePayload,
   PlayerResponse,
-} from '../room.types';
+} from 'cah-shared';
 import { AuthService } from '../../auth/auth.service';
 
 // game.service.ts

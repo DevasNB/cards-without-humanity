@@ -7,7 +7,7 @@ import {
   signal,
   SimpleChanges,
 } from '@angular/core';
-import { RoomResponse } from '../../../../services/room/room.types';
+import { RoomResponse } from 'cah-shared';
 import { CommonModule } from '@angular/common';
 
 @Component({

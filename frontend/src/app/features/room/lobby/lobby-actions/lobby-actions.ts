@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { RoomUser } from '../../../../services/room/room.types';
+import { RoomUserResponse } from 'cah-shared';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -10,9 +10,9 @@ import { CommonModule } from '@angular/common';
 })
 export class LobbyActions {
   // Room from parent
-  private _user!: RoomUser;
+  private _user!: RoomUserResponse;
   @Input()
-  set user(value: RoomUser) {
+  set user(value: RoomUserResponse) {
     this._user = value;
   }
   get user() {
