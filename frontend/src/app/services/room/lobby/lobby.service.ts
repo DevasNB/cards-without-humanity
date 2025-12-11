@@ -23,13 +23,9 @@ export class LobbyService {
     private readonly socketService: SocketService,
     private readonly authService: AuthService,
   ) {
-    this.socketService
-      .listen<RoomResponse>('room:update')
-      .subscribe((room) => this.roomSubject.next(room));
+    this.socketService.listen('room:update').subscribe((room) => this.roomSubject.next(room));
 
-    this.socketService
-      .listen<SocketError>('error')
-      .subscribe((error) => this.errorSubject.next(error));
+    this.socketService.listen('error').subscribe((error) => this.errorSubject.next(error));
   }
 
   // Actions

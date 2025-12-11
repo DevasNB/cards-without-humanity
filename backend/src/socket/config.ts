@@ -13,26 +13,18 @@ export interface SocketData {
   isHost?: boolean;
 }
 
-type ClientToServerHandlers = {
-  [K in keyof ClientToServerEvents]: (payload: ClientToServerEvents[K]) => void;
-};
-
-type ServerToClientHandlers = {
-  [K in keyof ServerToClientEvents]: (payload: ServerToClientEvents[K]) => void;
-};
-
 // Declare a type alias for the full Socket.IO server instance
 export type IoInstance = SocketIOServer<
-  ClientToServerHandlers,
-  ServerToClientHandlers,
+  ClientToServerEvents,
+  ServerToClientEvents,
   {},
   SocketData
 >;
 
 export function createIOInstance(server: HttpServer): IoInstance {
   return new SocketIOServer<
-    ClientToServerHandlers,
-    ServerToClientHandlers,
+    ClientToServerEvents,
+    ServerToClientEvents,
     {},
     SocketData
   >(server, {
@@ -48,8 +40,8 @@ export function createIOInstance(server: HttpServer): IoInstance {
 // Custom socket type that includes our specific client and server event types
 // and custom data. This is used when initializing the Socket.IO server.
 export type GameSocket = Socket<
-  ClientToServerHandlers,
-  ServerToClientHandlers,
+  ClientToServerEvents,
+  ServerToClientEvents,
   {},
   SocketData
 >;

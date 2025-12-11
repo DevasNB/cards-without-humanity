@@ -21,9 +21,6 @@ export class GameService {
   private readonly handPickSubject = new BehaviorSubject<AnswerCard[]>([]);
   handPick$ = this.handPickSubject.asObservable();
 
-  private readonly roundSubject = new BehaviorSubject<RoundResponse | null>(null);
-  round$ = this.roundSubject.asObservable();
-
   currentPlayer$: Observable<PlayerResponse | null> = this.game$.pipe(
     map((game) => {
       const auth = this.authService.currentUser();
@@ -36,22 +33,20 @@ export class GameService {
     private readonly socketService: SocketService,
     private readonly authService: AuthService,
   ) {
-    this.socketService.listen<StartingGamePayload>('room:initGame').subscribe((game) => {
+    this.socketService.listen('room:initGame').subscribe((game) => {
       this.gameSubject.next(game.game);
       this.handPickSubject.next(game.handPick);
     });
 
     // New round
-    this.socketService.listen<MiddleGamePayload>('game:round:new').subscribe((update) => {
-      this.roundSubject.next(update.round);
-      this.handPickSubject.next(update.newCards);
+    this.socketService.listen('game:update').subscribe((update) => {
+      // this.gameSubject.next(update.game);
+      // this.handPickSubject.next(update.newCards);
       // this.drawBlackCard(); -> already in roundSubject
     });
 
     // Errors
-    this.socketService
-      .listen<SocketError>('error')
-      .subscribe((err) => console.error('Game error:', err));
+    this.socketService.listen('error').subscribe((err) => console.error('Game error:', err));
   }
 
   // Actions
@@ -63,6 +58,6 @@ export class GameService {
 
   /** Called from presentational component through GamePage */
   submitWhiteCard(card: AnswerCard): void {
-    this.socketService.emit('game:selectCard', { cardId: card.id });
+    // this.socketService.emit('game:selectCar', { cardId: card.id });
   }
 }

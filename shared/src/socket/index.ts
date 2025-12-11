@@ -8,19 +8,20 @@ import { StartingGamePayload } from './payloads';
 
 // --- Client-to-Server Events (Incoming) ---
 export interface ClientToServerEvents {
-  'room:join': { roomId: string };
-  'room:leave': {};
-  'room:user:update': EditableRoomUser;
-  'room:host:updateSettings': EditableRoom;
-  'room:host:startGame': {};
-  'game:join': {};
+  'room:join': (payload: { roomId: string }) => void;
+  'room:leave': () => void;
+  'room:user:update': (payload: EditableRoomUser) => void;
+  'room:host:updateSettings': (payload: EditableRoom) => void;
+  'room:host:startGame': () => void;
+  'game:join': () => void;
 }
 
 // --- Server-to-Client Events (Outgoing) ---
+
 export interface ServerToClientEvents {
-  error: { message: string; type: ErrorType }; // Generic error messages
-  info: { message: string }; // Generic info messages
-  'room:update': RoomUpdatePayload;
-  'room:initGame': StartingGamePayload;
-  'game:update': GameUpdatePayload;
+  error: (error: { message: string; type: ErrorType }) => void; // Generic error messages
+  info: (info: { message: string }) => void; // Generic info messages
+  'room:update': (payload: RoomUpdatePayload) => void;
+  'room:initGame': (payload: StartingGamePayload) => void;
+  'game:update': (payload: GameUpdatePayload) => void;
 }

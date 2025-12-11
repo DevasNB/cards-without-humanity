@@ -42,10 +42,6 @@ export class Game implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((cards) => this.handPick.set(cards));
 
-    this.gameService.round$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((round) => this.currentRound.set(round));
-
     this.gameService.currentPlayer$
       .pipe(takeUntil(this.destroy$))
       .subscribe((user) => this.currentPlayer.set(user));
