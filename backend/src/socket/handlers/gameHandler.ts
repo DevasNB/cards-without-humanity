@@ -236,7 +236,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
 
       // Update room in database
       // TODO: Make this already return the handPick
-      const { game: newGame, handPicks } = await roomService.startGame(
+      const { game: newGame, handPicks } = await gameService.startGame(
         socket.data.currentRoomId
       );
 

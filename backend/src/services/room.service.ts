@@ -2,20 +2,12 @@
 import prisma from "../utils/prisma";
 import {
   CreateRoomResponse,
-  GameResponse,
   ListedRoom,
   RoomResponse,
   EditableRoom,
-  RoundResponse,
-  AnswerCard,
 } from "cah-shared";
-import { BadRequestError, NotFoundError } from "../utils/errors";
-import { GameStatus, RoomUserStatus } from "@prisma/client";
-import { getRoundResponse } from "../utils/prisma/helpers/dtos/rounds";
-import { SelectedRounds } from "../utils/prisma/helpers/selects/rounds";
-import { RoundService } from "./round.service";
-
-const roundService = new RoundService();
+import { NotFoundError } from "../utils/errors";
+import { RoomUserStatus } from "@prisma/client";
 
 export class RoomService {
   /**
@@ -325,176 +317,6 @@ export class RoomService {
         id: roomId,
       },
     });
-  }
-
-  /**
-   * Starts a game in the given room.
-   * @param {string} roomId - The ID of the room to start the game in.
-   * @returns {Promise<GameResponse>} A promise that resolves to the created game's data.
-   * @throws {NotFoundError} If the room is not found.
-   * @throws {BadRequestError} If not everyone in the room is ready, or if there are not enough players to start the game.
-   */
-  public async startGame(roomId: string): Promise<{
-    game: GameResponse;
-    handPicks: Map<string, AnswerCard[]>;
-  }> {
-    // Find the room
-    const room = await prisma.room.findUnique({
-      where: {
-        id: roomId,
-      },
-      select: {
-        users: {
-          select: {
-            id: true,
-            status: true,
-          },
-        },
-      },
-    });
-
-    // Check if room exists
-    if (!room) {
-      throw new NotFoundError("Room not found");
-    }
-
-    /*
-    // Validations (all users are ready, and no less than 3 users are in the room)
-    const usersStatus = room.users.map((user) => user.status);
-
-    const waitingCount = usersStatus.filter(
-      (status) => status === RoomUserStatus.WAITING
-    ).length;
-
-    if (waitingCount > 0) {
-      throw new BadRequestError("Not everyone in the room is ready");
-    }
-
-    const readyCount = usersStatus.filter(
-      (status) => status === RoomUserStatus.READY
-    ).length;
-
-    if (readyCount < 3) {
-      throw new BadRequestError("Not enough players to start the game");
-    }
-      */
-
-    // Get the ids of the decks for the game
-    const selectedDecks = await prisma.deck.findMany({
-      // TODO: where the user has selected them, it must come from the payload
-      select: {
-        id: true,
-      },
-    });
-
-    // Delete all the room users that have been disconnected
-    await prisma.roomUser.deleteMany({
-      where: {
-        AND: [{ roomId }, { status: RoomUserStatus.DISCONNECTED }],
-      },
-    });
-
-    // Find only the online users.
-    // ! Attention: This is probably not needed. We could just use the room.users, as there's no one waiting, disconnected or in game
-    const onlineUsers = room.users.filter(
-      (user) => user.status === RoomUserStatus.READY
-    );
-
-    // Get a new game
-    const { createdGame, createdRound, handPicks } = await prisma.$transaction(
-      async (prisma) => {
-        // Mark all players to be IN_GAME
-        await prisma.roomUser.updateMany({
-          where: {
-            AND: [{ roomId }, { status: RoomUserStatus.READY }],
-          },
-          data: {
-            status: RoomUserStatus.IN_GAME,
-          },
-        });
-
-        // Create the game
-        const newGame = await prisma.game.create({
-          data: {
-            // Associated to the room
-            roomId,
-
-            // TODO: Attention! For now, we are assuming that the game can start immediately. In fact, I think it should be this way. However, in that case, WAITING_FOR_PLAYERS is useless
-            status: GameStatus.PLAYING,
-
-            // Create all the players; Only related to the room users
-            // ! Attention: Additional data will be created and updated once they join the game
-            // Wrong! All the associated data should be created/updated, and when the user arrives, it's simply handed to them
-            players: {
-              createMany: {
-                data: onlineUsers.map((user) => ({
-                  roomUserId: user.id,
-                })),
-              },
-            },
-
-            // Create all the GameDecks - The decks associated to the game
-            decks: {
-              createMany: {
-                data: selectedDecks.map((deck) => ({ deckId: deck.id })),
-              },
-            },
-          },
-          select: {
-            id: true,
-            status: true,
-            players: {
-              select: {
-                id: true,
-                user: {
-                  select: {
-                    id: true,
-                    user: {
-                      select: {
-                        username: true,
-                      },
-                    },
-                  },
-                },
-                _count: {
-                  select: {
-                    winningRounds: true,
-                  },
-                },
-              },
-            },
-          },
-        });
-
-        const { handPicks, roundResponse } = await roundService.createNewRound(
-          prisma,
-          newGame.id
-        );
-
-        return { createdGame: newGame, createdRound: roundResponse, handPicks };
-      }
-    );
-
-    // Check if the game has been created
-    if (!createdGame || !createdRound || !handPicks) {
-      throw new BadRequestError("Game not created");
-    }
-
-    // Map the game to a response
-
-    const gameResponse: GameResponse = {
-      id: createdGame.id,
-      status: createdGame.status,
-      players: createdGame.players.map((player) => ({
-        id: player.id,
-        roomUserId: player.user.id,
-        username: player.user.user.username,
-        points: player._count.winningRounds,
-      })),
-      currentRound: createdRound,
-    };
-
-    return { game: gameResponse, handPicks };
   }
 }
 
