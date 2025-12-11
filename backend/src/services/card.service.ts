@@ -7,10 +7,11 @@ import { AnswerCard, PromptCard } from "cah-shared";
 
 export class CardService {
   public async getHandPickForPlayersInGame(
+    tx: Prisma.TransactionClient,
     gameId: string
   ): Promise<Map<string, AnswerCard[]>> {
     // Get all valid cards from the decks table
-    const answerCards = await prisma.answerCard.findMany({
+    const answerCards = await tx.answerCard.findMany({
       where: {
         // That belong to a deck that is part of the game gameId
         deck: {
@@ -47,7 +48,7 @@ export class CardService {
     }
 
     // Get the last prompt card's pick and the connected players
-    const game = await prisma.game.findUnique({
+    const game = await tx.game.findUnique({
       where: {
         id: gameId,
       },
@@ -111,12 +112,12 @@ export class CardService {
     console.log(playerHandCards, 5935);
 
     // Insert all entries
-    await prisma.playerHandCard.createMany({
+    await tx.playerHandCard.createMany({
       data: playerHandCards,
     });
 
     // Return all created entries
-    const insertedCards = await prisma.playerHandCard.findMany({
+    const insertedCards = await tx.playerHandCard.findMany({
       where: {
         OR: playerHandCards.map(({ playerId, cardId }) => ({
           playerId,

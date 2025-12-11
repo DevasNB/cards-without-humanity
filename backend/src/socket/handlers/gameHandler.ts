@@ -236,22 +236,15 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
 
       // Update room in database
       // TODO: Make this already return the handPick
-      const newGame = await roomService.startGame(socket.data.currentRoomId);
+      const { game: newGame, handPicks } = await roomService.startGame(
+        socket.data.currentRoomId
+      );
 
       // Set socket data info related to game
       socket.data.currentGameId = newGame.id;
 
-      // Generate hand pick for each player
-      const handPick: Map<string, AnswerCard[]> =
-        await cardService.getHandPickForPlayersInGame(
-          socket.data.currentGameId
-        );
-
-      console.log(`Hand pick: ${JSON.stringify(handPick)}`, newGame);
-
       // Notify all users in the room with the new game state
-
-      for (const [connectionId, cards] of handPick) {
+      for (const [connectionId, cards] of handPicks) {
         io.to(connectionId).emit("room:initGame", {
           game: newGame,
           handPick: cards,

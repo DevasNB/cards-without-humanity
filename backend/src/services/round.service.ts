@@ -1,7 +1,12 @@
 // src/services/game.service.ts
-import { Prisma, PrismaClient, RoomUserStatus, RoundStatus } from "@prisma/client";
+import {
+  Prisma,
+  PrismaClient,
+  RoomUserStatus,
+  RoundStatus,
+} from "@prisma/client";
 import prisma from "../utils/prisma";
-import { PlayerResponse, RoundResponse } from "cah-shared";
+import { AnswerCard, PlayerResponse, RoundResponse } from "cah-shared";
 import { CardService } from "./card.service";
 import { randomElement } from "../utils/helpers";
 import { getRoundResponse } from "../utils/prisma/helpers/dtos/rounds";
@@ -13,7 +18,10 @@ export class RoundService {
   public async createNewRound(
     tx: Prisma.TransactionClient,
     gameId: string
-  ): Promise<RoundResponse> {
+  ): Promise<{
+    handPicks: Map<string, AnswerCard[]>;
+    roundResponse: RoundResponse;
+  }> {
     const promptCard = await cardService.getNewPromptCard(tx, gameId);
     const czar = await this.getNextCzar(tx, gameId);
 
@@ -30,7 +38,11 @@ export class RoundService {
 
     const roundResponse: RoundResponse = getRoundResponse(newRound);
 
-    return roundResponse;
+    // Generate hand pick for each player
+    const handPicks: Map<string, AnswerCard[]> =
+      await cardService.getHandPickForPlayersInGame(tx, gameId);
+
+    return { handPicks, roundResponse };
   }
 
   private async getNextCzar(

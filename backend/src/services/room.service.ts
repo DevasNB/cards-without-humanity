@@ -7,6 +7,7 @@ import {
   RoomResponse,
   EditableRoom,
   RoundResponse,
+  AnswerCard,
 } from "cah-shared";
 import { BadRequestError, NotFoundError } from "../utils/errors";
 import { GameStatus, RoomUserStatus } from "@prisma/client";
@@ -333,7 +334,10 @@ export class RoomService {
    * @throws {NotFoundError} If the room is not found.
    * @throws {BadRequestError} If not everyone in the room is ready, or if there are not enough players to start the game.
    */
-  public async startGame(roomId: string): Promise<GameResponse> {
+  public async startGame(roomId: string): Promise<{
+    game: GameResponse;
+    handPicks: Map<string, AnswerCard[]>;
+  }> {
     // Find the room
     const room = await prisma.room.findUnique({
       where: {
@@ -397,7 +401,7 @@ export class RoomService {
     );
 
     // Get a new game
-    const { createdGame, createdRound } = await prisma.$transaction(
+    const { createdGame, createdRound, handPicks } = await prisma.$transaction(
       async (prisma) => {
         // Mark all players to be IN_GAME
         await prisma.roomUser.updateMany({
@@ -462,14 +466,17 @@ export class RoomService {
           },
         });
 
-        const newRound = await roundService.createNewRound(prisma, newGame.id);
+        const { handPicks, roundResponse } = await roundService.createNewRound(
+          prisma,
+          newGame.id
+        );
 
-        return { createdGame: newGame, createdRound: newRound };
+        return { createdGame: newGame, createdRound: roundResponse, handPicks };
       }
     );
 
     // Check if the game has been created
-    if (!createdGame || !createdRound) {
+    if (!createdGame || !createdRound || !handPicks) {
       throw new BadRequestError("Game not created");
     }
 
@@ -487,7 +494,7 @@ export class RoomService {
       currentRound: createdRound,
     };
 
-    return gameResponse;
+    return { game: gameResponse, handPicks };
   }
 }
 
