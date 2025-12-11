@@ -2,6 +2,8 @@
 import prisma from "../utils/prisma";
 import { GameResponse, RoundResponse } from "cah-shared";
 import { NotFoundError } from "../utils/errors";
+import { SelectedRounds } from "../utils/prisma/helpers/selects/rounds";
+import { getRoundResponse } from "../utils/prisma/helpers/dtos/rounds";
 
 export class GameService {
   /**
@@ -42,36 +44,7 @@ export class GameService {
             },
           },
         },
-        rounds: {
-          select: {
-            id: true,
-            roundNumber: true,
-            status: true,
-            czar: {
-              select: {
-                id: true,
-                user: {
-                  select: {
-                    id: true,
-                    user: true,
-                  },
-                },
-                _count: {
-                  select: {
-                    winningRounds: true,
-                  },
-                },
-              },
-            },
-            promptCard: true,
-            picks: true,
-          },
-          orderBy: {
-            roundNumber: "asc",
-          },
-          take: 1,
-        },
-        round: true,
+        rounds: SelectedRounds,
       },
     });
 
@@ -86,34 +59,7 @@ export class GameService {
       throw new NotFoundError("Round not found");
     }
 
-    const czar = updatedRound.czar;
-    const promptCard = updatedRound.promptCard;
-
-    // Map the round to a response
-    const picks = updatedRound.picks.map((pick) => ({
-      id: pick.id,
-      playerId: pick.playerId,
-      cardId: pick.cardId,
-      isWinner: pick.isWinner,
-    }));
-
-    const roundResponse: RoundResponse = {
-      id: updatedRound.id,
-      roundNumber: updatedRound.roundNumber,
-      status: updatedRound.status,
-      czar: {
-        id: czar.id,
-        roomUserId: czar.user.id,
-        username: czar.user.user.username,
-        points: czar._count.winningRounds,
-      },
-      promptCard: {
-        id: promptCard.id,
-        text: promptCard.content,
-        pick: promptCard.pick,
-      },
-      picks,
-    };
+    const roundResponse = getRoundResponse(updatedRound);
 
     // Map the game to a response
     const gameResponse: GameResponse = {

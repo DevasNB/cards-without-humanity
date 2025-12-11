@@ -6,9 +6,15 @@ import {
   ListedRoom,
   RoomResponse,
   EditableRoom,
+  RoundResponse,
 } from "cah-shared";
 import { BadRequestError, NotFoundError } from "../utils/errors";
 import { GameStatus, RoomUserStatus } from "@prisma/client";
+import { getRoundResponse } from "../utils/prisma/helpers/dtos/rounds";
+import { SelectedRounds } from "../utils/prisma/helpers/selects/rounds";
+import { RoundService } from "./round.service";
+
+const roundService = new RoundService();
 
 export class RoomService {
   /**
@@ -391,84 +397,94 @@ export class RoomService {
     );
 
     // Get a new game
-    const newGame = await prisma.$transaction(async (prisma) => {
-      // Mark all players to be IN_GAME
-      await prisma.roomUser.updateMany({
-        where: {
-          AND: [{ roomId }, { status: RoomUserStatus.READY }],
-        },
-        data: {
-          status: RoomUserStatus.IN_GAME,
-        },
-      });
+    const { createdGame, createdRound } = await prisma.$transaction(
+      async (prisma) => {
+        // Mark all players to be IN_GAME
+        await prisma.roomUser.updateMany({
+          where: {
+            AND: [{ roomId }, { status: RoomUserStatus.READY }],
+          },
+          data: {
+            status: RoomUserStatus.IN_GAME,
+          },
+        });
 
-      // Create the game
-      return await prisma.game.create({
-        data: {
-          // Associated to the room
-          roomId,
+        // Create the game
+        const newGame = await prisma.game.create({
+          data: {
+            // Associated to the room
+            roomId,
 
-          // TODO: Attention! For now, we are assuming that the game can start immediately. In fact, I think it should be this way. However, in that case, WAITING_FOR_PLAYERS is useless
-          status: GameStatus.PLAYING,
+            // TODO: Attention! For now, we are assuming that the game can start immediately. In fact, I think it should be this way. However, in that case, WAITING_FOR_PLAYERS is useless
+            status: GameStatus.PLAYING,
 
-          // Create all the players; Only related to the room users
-          // ! Attention: Additional data will be created and updated once they join the game
-          // Wrong! All the associated data should be created/updated, and when the user arrives, it's simply handed to them
-          players: {
-            createMany: {
-              data: onlineUsers.map((user) => ({
-                roomUserId: user.id,
-              })),
+            // Create all the players; Only related to the room users
+            // ! Attention: Additional data will be created and updated once they join the game
+            // Wrong! All the associated data should be created/updated, and when the user arrives, it's simply handed to them
+            players: {
+              createMany: {
+                data: onlineUsers.map((user) => ({
+                  roomUserId: user.id,
+                })),
+              },
+            },
+
+            // Create all the GameDecks - The decks associated to the game
+            decks: {
+              createMany: {
+                data: selectedDecks.map((deck) => ({ deckId: deck.id })),
+              },
             },
           },
-
-          // Create all the GameDecks - The decks associated to the game
-          decks: {
-            createMany: {
-              data: selectedDecks.map((deck) => ({ deckId: deck.id })),
-            },
-          },
-
-          // Not creating rounds - only when they all join the game, should the round be created.
-          // Wrong! The round should be created when the game starts, or when the host joins
-        },
-        select: {
-          id: true,
-          status: true,
-          players: {
-            select: {
-              id: true,
-              user: {
-                select: {
-                  id: true,
-                  user: {
-                    select: {
-                      username: true,
+          select: {
+            id: true,
+            status: true,
+            players: {
+              select: {
+                id: true,
+                user: {
+                  select: {
+                    id: true,
+                    user: {
+                      select: {
+                        username: true,
+                      },
                     },
                   },
                 },
-              },
-              _count: {
-                select: {
-                  winningRounds: true,
+                _count: {
+                  select: {
+                    winningRounds: true,
+                  },
                 },
               },
             },
           },
-        },
-      });
-    });
+        });
+
+        const newRound = await roundService.createNewRound(prisma, newGame.id);
+
+        return { createdGame: newGame, createdRound: newRound };
+      }
+    );
+
+    // Check if the game has been created
+    if (!createdGame || !createdRound) {
+      throw new BadRequestError("Game not created");
+    }
 
     // Map the game to a response
+
     const gameResponse: GameResponse = {
-      id: newGame.id,
-      status: newGame.status,
-      players: newGame.players.map((player) => ({
+      id: createdGame.id,
+      status: createdGame.status,
+      players: createdGame.players.map((player) => ({
         id: player.id,
         roomUserId: player.user.id,
         username: player.user.user.username,
         points: player._count.winningRounds,
       })),
+      currentRound: createdRound,
     };
 
     return gameResponse;

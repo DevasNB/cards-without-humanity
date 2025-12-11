@@ -242,10 +242,12 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       socket.data.currentGameId = newGame.id;
 
       // Generate hand pick for each player
-      const handPick: Array<[string, AnswerCard[]]> =
+      const handPick: Map<string, AnswerCard[]> =
         await cardService.getHandPickForPlayersInGame(
           socket.data.currentGameId
         );
+
+      console.log(`Hand pick: ${JSON.stringify(handPick)}`, newGame);
 
       // Notify all users in the room with the new game state
 
