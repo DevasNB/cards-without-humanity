@@ -29,7 +29,6 @@ export class RoundService {
       data: {
         gameId,
         status: RoundStatus.DRAWING_CARDS,
-        roundNumber: 1,
         czarId: czar.id,
         promptCardId: promptCard.id,
       },

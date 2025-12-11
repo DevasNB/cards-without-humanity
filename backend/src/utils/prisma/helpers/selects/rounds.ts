@@ -1,7 +1,6 @@
 export const SelectedRounds = {
   select: {
     id: true,
-    roundNumber: true,
     status: true,
     czar: {
       select: {
@@ -13,6 +12,7 @@ export const SelectedRounds = {
     promptCard: true,
     picks: true,
   },
-  orderBy: { roundNumber: "asc" },
+  // TODO: Check if this is correct
+  orderBy: { createdAt: "asc" },
   take: 1,
 } as const;

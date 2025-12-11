@@ -20,7 +20,6 @@ export function getRoundResponse(
 
   const roundResponse: RoundResponse = {
     id: updatedRound.id,
-    roundNumber: updatedRound.roundNumber,
     status: updatedRound.status,
     czar: {
       id: czar.id,

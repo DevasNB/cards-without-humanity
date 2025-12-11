@@ -170,12 +170,11 @@ model Player {
 // The round of a game
 model Round {
   id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) // Used as an ordering system
   updatedAt DateTime @updatedAt
 
-  gameId      String // The game it belongs to
-  roundNumber Int // It has a numbering system. We need to know which is it
-  status      RoundStatus @default(DRAWING_CARDS) // The status of the round
+  gameId String // The game it belongs to
+  status RoundStatus @default(DRAWING_CARDS) // The status of the round
 
   czarId       String // Who is the judge?
   winnerId     String? // Who won the round? Optional because in the start we don't know
@@ -187,8 +186,6 @@ model Round {
   promptCard PromptCard @relation(fields: [promptCardId], references: [id], onDelete: Restrict) // It has only one prompt card. If any game is running and a promptCard is deleted, the Round should restrict it
 
   picks RoundPick[] // All answer card submissions for this round
-
-  @@unique([gameId, roundNumber]) // The round number is unique to the game it belongs to
 }
 
 // The status of the round

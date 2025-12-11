@@ -6,7 +6,6 @@ import { PromptCard } from './PromptCard';
 export interface RoundResponse {
   id: string;
   status: RoundStatus;
-  roundNumber: number;
 
   czar: PlayerResponse;
   winner?: PlayerResponse;
@@ -17,7 +16,6 @@ export interface RoundResponse {
 
 export interface RoundPayload {
   id: string;
-  roundNumber: number;
 }
 
 export interface RoundPick {
