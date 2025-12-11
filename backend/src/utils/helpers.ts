@@ -17,3 +17,21 @@ export function shuffle<T>(newArray: T[]): T[] {
 
   return array;
 }
+
+export function fisherYatesShuffle<T>(needed: number, answerCards: T[]): T[] {
+  const chosenIds = [];
+
+  const pool = [...answerCards]; // shallow copy
+
+  for (let i = 0; i < needed; i++) {
+    const idx = Math.floor(Math.random() * pool.length);
+    chosenIds.push(pool[idx]);
+    pool.splice(idx, 1);
+  }
+
+  return chosenIds;
+}
+
+export function randomElement<T>(array: T[]) {
+  return array[Math.floor(Math.random() * array.length)];
+}
