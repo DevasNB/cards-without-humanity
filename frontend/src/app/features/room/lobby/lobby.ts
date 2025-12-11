@@ -1,8 +1,17 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  EventEmitter,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { RoomResponse, RoomUserResponse } from 'cah-shared';
+import { GameResponse, RoomResponse, RoomUserResponse } from 'cah-shared';
 import { LobbyService } from '../../../services/room/lobby/lobby.service';
 import { LobbySettings } from './lobby-settings/lobby-settings';
 import { PlayerList } from './player-list/player-list';
@@ -17,34 +26,18 @@ import { Router } from '@angular/router';
 })
 export class Lobby implements OnInit, OnDestroy {
   // Properties
-  // Room from parent
-  private _room!: RoomResponse;
-  @Input()
-  set room(value: RoomResponse) {
-    this._room = value;
-    this.users.set(this._room?.users ?? []);
-    this.allReady.set(this._room?.users.every((u) => u.status === 'READY'));
-  }
-  get room() {
-    return this._room;
-  }
+  @Output() roomNotFound = new EventEmitter<string>(); // Output to parent for critical actions (leave, room not found)
+  private readonly destroy$ = new Subject<void>();
 
   // Derived Signals
-  currentUser = signal<RoomUserResponse | null>(null);
-  protected readonly users = signal<RoomUserResponse[]>([]);
-  protected readonly allReady = signal<boolean>(false);
+  protected readonly room = signal<RoomResponse | null>(null);
+  protected readonly currentUser = signal<RoomUserResponse | null>(null);
+  protected readonly allReady = computed(
+    () => this.room()?.users.every((u) => u.status === 'READY') ?? false,
+  );
 
-  // Local editable copy of the room fields
-  protected editableRoom = signal<Partial<RoomResponse>>({});
-
-  // Output to parent for critical actions (leave, room not found)
-  @Output() roomNotFound = new EventEmitter<string>();
-
-  // Local error message
-  protected errorMessage = signal<string | null>(null);
-
-  // Unsubscribing observables
-  private readonly destroy$ = new Subject<void>();
+  protected editableRoom = signal<Partial<RoomResponse>>({}); // Local editable copy of the room fields
+  protected errorMessage = signal<string | null>(null); // Local error message
 
   constructor(
     protected readonly lobbyService: LobbyService,
@@ -53,6 +46,10 @@ export class Lobby implements OnInit, OnDestroy {
 
   // Lifecycle Hooks
   ngOnInit() {
+    this.lobbyService.room$.pipe(takeUntil(this.destroy$)).subscribe((room) => {
+      this.room.set(room);
+    });
+
     // Listen for room updates
     this.lobbyService.error$
       .pipe(takeUntil(this.destroy$))

@@ -19,7 +19,6 @@ export class Game implements OnInit, OnDestroy {
   // Signals for reactive UI
   game = signal<GameResponse | null>(null);
   handPick = signal<AnswerCard[]>([]);
-  currentRound = signal<RoundResponse | null>(null);
   currentPlayer = signal<PlayerResponse | null>(null);
 
   private readonly _selectedAnswerCard = signal<AnswerCard | null>(null);

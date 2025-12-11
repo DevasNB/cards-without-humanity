@@ -1,4 +1,4 @@
-import { Component, computed, Input } from '@angular/core';
+import { Component, computed, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { RoomResponse, RoomUserResponse } from 'cah-shared';
 import { CommonModule } from '@angular/common';
 
@@ -12,8 +12,8 @@ export class PlayerList {
   // ---------------------------
   // Inputs & Outputs
   // ---------------------------
-  @Input() room!: RoomResponse;
   @Input() users!: RoomUserResponse[];
+  @Input() maxPlayers!: number;
 
   protected readonly readyCount = computed(
     () => this.users.filter((u) => u.status === 'READY').length,
