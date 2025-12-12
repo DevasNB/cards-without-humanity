@@ -36,6 +36,8 @@ export class GameService {
     this.socketService.listen('room:initGame').subscribe((game) => {
       this.gameSubject.next(game.game);
       this.handPickSubject.next(game.handPick);
+
+      this.socketService.emit('game:join');
     });
 
     // New round
@@ -53,7 +55,6 @@ export class GameService {
 
     // General game updates
     this.socketService.listen('game:update').subscribe((update) => {
-      console.log(update, 24941)
       this.gameSubject.next(update);
     });
 
@@ -62,11 +63,6 @@ export class GameService {
   }
 
   // Actions
-
-  /** Called from GamePage (not from presentational components!) */
-  joinGame(): void {
-    this.socketService.emit('game:join');
-  }
 
   /** Called from presentational component through GamePage */
   submitWhiteCard(card: AnswerCard): void {

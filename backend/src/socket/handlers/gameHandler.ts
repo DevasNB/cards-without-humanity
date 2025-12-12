@@ -295,6 +295,46 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
     }
   });
 
+  // When a user claims to join a game
+  socket.on("game:join", async () => {
+    try {
+      // Check if user is in a room
+      if (!socket.data.currentRoomId) {
+        throw new AppError("Not currently in a room.", 400);
+      }
+
+      if (socket.data.currentGameId) {
+        throw new AppError("Already in a game.", 400);
+      }
+
+      console.log(
+        `User ${socket.data.username} (${socket.data.userId}) joining game in room ${socket.data.currentRoomId}`
+      );
+
+      const gameId = await gameService.getRoomAssociatedGameId(
+        socket.data.currentRoomId
+      ); // Get latest room data from service
+
+      if (!gameId) {
+        throw new AppError("Room not found.", 404);
+      }
+
+      // Set socket data info related to game
+      socket.data.currentGameId = gameId;
+    } catch (error: any) {
+      console.error(
+        `Error joining game in room ${socket.data.currentRoomId}:`,
+        error
+      );
+
+      // Send not-found error
+      socket.emit("error", {
+        message: error.message || "Failed to join game.",
+        type: "not-found",
+      });
+    }
+  });
+
   socket.on("game:card:select", async (payload: { cardId: string }) => {
     try {
       // Check if user is in a room

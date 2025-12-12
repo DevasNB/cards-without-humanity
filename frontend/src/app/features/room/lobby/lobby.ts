@@ -11,7 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { GameResponse, RoomResponse, RoomUserResponse } from 'cah-shared';
+import { RoomResponse, RoomUserResponse } from 'cah-shared';
 import { LobbyService } from '../../../services/room/lobby/lobby.service';
 import { LobbySettings } from './lobby-settings/lobby-settings';
 import { PlayerList } from './player-list/player-list';

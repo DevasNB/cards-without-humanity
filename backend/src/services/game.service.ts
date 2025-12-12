@@ -81,6 +81,19 @@ export class GameService {
     return gameResponse;
   }
 
+  public async getRoomAssociatedGameId(roomId: string): Promise<string> {
+    const game = await prisma.game.findUnique({
+      where: { roomId },
+      select: { id: true },
+    });
+
+    if (!game) {
+      throw new NotFoundError("Round not found");
+    }
+
+    return game.id;
+  }
+
   /**
    * Starts a game in the given room.
    * @param {string} roomId - The ID of the room to start the game in.

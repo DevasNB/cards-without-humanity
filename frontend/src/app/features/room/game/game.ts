@@ -24,9 +24,7 @@ export class Game implements OnInit, OnDestroy {
   selectedAnswerCard = signal<AnswerCard | null>(null);
   hasSubmitted = signal<boolean>(false);
 
-  constructor(protected readonly gameService: GameService) {
-    // TODO: this.socketService.emit('game:join');
-  }
+  constructor(protected readonly gameService: GameService) {}
 
   ngOnInit() {
     // Subscribe to reactive streams from the service

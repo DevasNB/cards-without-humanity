@@ -96,8 +96,6 @@ export class CardService {
       answerCards
     );
 
-    console.log(shuffledCards, 2491);
-
     const playerHandCards = [];
     let cardIndex = 0;
 
@@ -108,8 +106,6 @@ export class CardService {
         cardIndex++;
       }
     }
-
-    console.log(playerHandCards, 5935);
 
     // Insert all entries
     await tx.playerHandCard.createMany({
@@ -137,8 +133,6 @@ export class CardService {
       },
     });
 
-    console.log(insertedCards, 14941);
-
     const cardsByConn = new Map<string, AnswerCard[]>();
 
     for (const card of insertedCards) {
@@ -155,8 +149,6 @@ export class CardService {
 
       cardsByConn.get(connId)!.push(newCard);
     }
-
-    console.log(cardsByConn);
 
     return cardsByConn;
   }
