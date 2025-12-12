@@ -243,5 +243,5 @@ model RoundPick {
   answerCard AnswerCard @relation(fields: [cardId], references: [id], onDelete: Restrict) // If any game is running and an AnswerCard is deleted, the RoundPick should restrict it
   player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade) // If the player is deleted, so is the RoundPick
 
-  @@unique([roundId, cardId, playerId]) // A player can only submit a specific card once per round
+  @@unique([roundId, playerId]) // A player can only submit one card per round
 }

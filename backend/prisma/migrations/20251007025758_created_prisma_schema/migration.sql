@@ -206,6 +206,3 @@ ALTER TABLE `RoundPick` ADD CONSTRAINT `RoundPick_roundId_fkey` FOREIGN KEY (`ro
 
 -- AddForeignKey
 ALTER TABLE `RoundPick` ADD CONSTRAINT `RoundPick_cardId_fkey` FOREIGN KEY (`cardId`) REFERENCES `AnswerCard`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `RoundPick` ADD CONSTRAINT `RoundPick_playerId_fkey` FOREIGN KEY (`playerId`) REFERENCES `Player`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
