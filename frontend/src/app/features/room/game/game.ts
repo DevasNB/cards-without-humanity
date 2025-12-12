@@ -21,13 +21,7 @@ export class Game implements OnInit, OnDestroy {
   handPick = signal<AnswerCard[]>([]);
   currentPlayer = signal<PlayerResponse | null>(null);
 
-  private readonly _selectedAnswerCard = signal<AnswerCard | null>(null);
-  selectAnswerCard(value: AnswerCard) {
-    this._selectedAnswerCard.set(value);
-  }
-  get selectedAnswerCard() {
-    return this._selectedAnswerCard;
-  }
+  selectedAnswerCard = signal<AnswerCard | null>(null);
 
   constructor(protected readonly gameService: GameService) {
     // TODO: this.socketService.emit('game:join');
@@ -52,6 +46,10 @@ export class Game implements OnInit, OnDestroy {
   }
 
   // Methods
+
+  protected selectCard(card: AnswerCard): void {
+    this.selectedAnswerCard.set(card);
+  }
 
   /**
    * Called when the user submits their chosen answer card.

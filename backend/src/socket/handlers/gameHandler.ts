@@ -15,6 +15,7 @@ import {
   EditableRoomSchema,
   EditableRoomUser,
   EditableRoomUserSchema,
+  GameUpdatePayload,
 } from "cah-shared";
 
 const roomService = new RoomService();
@@ -41,6 +42,32 @@ const emitRoomUpdate = async (
     }
   } catch (error: any) {
     console.error(`Failed to emit room update for ${roomId}:`, error);
+    // Consider emitting a general error or specific room error to clients if critical
+  }
+};
+
+/**
+ * Emits a comprehensive game update to all clients in a specific room.
+ * @param io - The Socket.IO server instance.
+ * @param roomId - The ID of the room to update.
+ * @returns A promise that resolves when the update is complete.
+ * @throws {Error} If there is an error while emitting the update.
+ */
+const emitGameUpdate = async (
+  io: IoInstance,
+  roomId: string
+): Promise<void> => {
+  try {
+    // TODO: Do not send the whole object at once
+    const gameState: GameUpdatePayload = await gameService.getGameState(roomId); // Get latest room data from service
+
+    console.log(gameState, 24941);
+    if (gameState) {
+      io.to(roomId).emit("game:update", gameState);
+      console.log(`Game ${roomId} updated: ${JSON.stringify(gameState)}`);
+    }
+  } catch (error: any) {
+    console.error(`Failed to emit game update for ${roomId}:`, error);
     // Consider emitting a general error or specific room error to clients if critical
   }
 };
@@ -79,6 +106,8 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
 
       // Store on socket data info about the roomId and if the user is host
       socket.data.currentRoomId = payload.roomId;
+      // TODO: add socket.data.currentRoomUserId
+      // TODO: add socket.data.currentPlayerId
       socket.data.isHost = socket.data.userId === room.hostId;
 
       // Send join confirmation
@@ -261,6 +290,44 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       // Send not-found error
       socket.emit("error", {
         message: error.message || "Failed to start game.",
+        type: "not-found",
+      });
+    }
+  });
+
+  socket.on("game:card:select", async (payload: { cardId: string }) => {
+    try {
+      // Check if user is in a room
+      if (!socket.data.currentRoomId) {
+        throw new AppError("Not currently in a room.", 400);
+      }
+
+      if (!socket.data.currentGameId) {
+        throw new AppError("Not currently in a game.", 400);
+      }
+
+      console.log(
+        `User ${socket.data.username} (${socket.data.userId}) selecting card ${payload.cardId} in game ${socket.data.currentGameId}`
+      );
+
+      // Update game in database
+      await cardService.selectCard(
+        socket.data.currentGameId,
+        socket.data.userId,
+        payload.cardId
+      );
+
+      // Notify all users in the room with the new game state
+      emitGameUpdate(io, socket.data.currentRoomId);
+    } catch (error: any) {
+      console.error(
+        `Error selecting card ${payload.cardId} in game ${socket.data.currentGameId}:`,
+        error
+      );
+
+      // Send not-found error
+      socket.emit("error", {
+        message: error.message || "Failed to select card.",
         type: "not-found",
       });
     }

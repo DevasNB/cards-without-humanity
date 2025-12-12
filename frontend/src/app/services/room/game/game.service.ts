@@ -39,10 +39,22 @@ export class GameService {
     });
 
     // New round
+    this.socketService.listen('game:round:new').subscribe((update) => {
+      const currentGame = this.gameSubject.getValue();
+      if (!currentGame) {
+        return;
+      }
+
+      this.gameSubject.next({ ...currentGame, currentRound: update.round });
+
+      const currentHandPick = this.handPickSubject.getValue();
+      this.handPickSubject.next({ ...currentHandPick, ...update.newCards });
+    });
+
+    // General game updates
     this.socketService.listen('game:update').subscribe((update) => {
-      // this.gameSubject.next(update.game);
-      // this.handPickSubject.next(update.newCards);
-      // this.drawBlackCard(); -> already in roundSubject
+      console.log(update, 24941)
+      this.gameSubject.next(update);
     });
 
     // Errors
@@ -58,6 +70,6 @@ export class GameService {
 
   /** Called from presentational component through GamePage */
   submitWhiteCard(card: AnswerCard): void {
-    // this.socketService.emit('game:selectCar', { cardId: card.id });
+    this.socketService.emit('game:card:select', { cardId: card.id });
   }
 }

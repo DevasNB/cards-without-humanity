@@ -1,9 +1,9 @@
 @if (game(); as game) {
   <div class="page">
     <div class="top-flex">
-      <div class="card black-card">{{ game.currentRound?.promptCard?.text }}</div>
+      <div class="card black-card">{{ game.currentRound.promptCard.text }}</div>
 
-      @for (card of handPick(); track $index) {
+      @for (card of game.currentRound.picks; track $index) {
         <div class="card white-card"></div>
       }
     </div>
@@ -18,7 +18,7 @@
         <button
           class="card small white-card hand-pick"
           [class.chosen]="selectedAnswerCard()?.id === card.id"
-          (click)="selectAnswerCard(card)"
+          (click)="selectCard(card)"
         >
           {{ card.text }}
         </button>
@@ -31,7 +31,7 @@
     <app-game-player-list
       [players]="game.players"
       [currentUser]="currentPlayer() ?? null"
-      [czar]="game.currentRound?.czar ?? null"
+      [czar]="game.currentRound.czar"
     ></app-game-player-list>
 
     <button class="next-btn">Próxima ronda</button>

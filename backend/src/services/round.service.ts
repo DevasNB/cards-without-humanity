@@ -11,6 +11,7 @@ import { CardService } from "./card.service";
 import { randomElement } from "../utils/helpers";
 import { getRoundResponse } from "../utils/prisma/helpers/dtos/rounds";
 import { SelectedRounds } from "../utils/prisma/helpers/selects/rounds";
+import { NotFoundError } from "../utils/errors";
 
 const cardService = new CardService();
 

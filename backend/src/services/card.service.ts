@@ -192,4 +192,60 @@ export class CardService {
       pick: promptCard.pick,
     };
   }
+
+  public async selectCard(
+    gameId: string,
+    userId: string,
+    cardId: string
+  ): Promise<void> {
+    // TODO: fix this method: with playerId and roundId
+    const currentRound = await prisma.round.findFirst({
+      where: { gameId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        game: {
+          select: {
+            roomId: true,
+          },
+        },
+      },
+    });
+
+    if (!currentRound) {
+      throw new NotFoundError("Round not found");
+    }
+
+    const roomUser = await prisma.roomUser.findUnique({
+      where: { userId_roomId: { userId, roomId: currentRound.game.roomId } },
+    });
+
+    if (!roomUser) {
+      throw new NotFoundError("Room user not found");
+    }
+
+    const player = await prisma.player.findUnique({
+      where: {
+        gameId_roomUserId: {
+          gameId,
+          roomUserId: roomUser.id,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!player) {
+      throw new NotFoundError("Player not found");
+    }
+
+    await prisma.roundPick.create({
+      data: {
+        cardId,
+        playerId: player.id,
+        roundId: currentRound.id,
+      },
+    });
+  }
 }
