@@ -165,6 +165,8 @@ model Player {
 
   hand        PlayerHandCard[] // The cards the user has
   submissions RoundPick[] // The cards the user submitted
+
+  @@unique([gameId, roomUserId]) // Player as a unique combination of game and roomUser
 }
 
 // The round of a game
