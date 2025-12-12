@@ -39,7 +39,7 @@
   transition: 0.2s ease;
 }
 
-.hand-pick:hover {
+.hand-pick.can-pick:hover {
   border-color: black;
   transform: translateY(-3px);
 }

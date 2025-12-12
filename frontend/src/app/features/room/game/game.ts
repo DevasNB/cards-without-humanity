@@ -22,6 +22,7 @@ export class Game implements OnInit, OnDestroy {
   currentPlayer = signal<PlayerResponse | null>(null);
 
   selectedAnswerCard = signal<AnswerCard | null>(null);
+  hasSubmitted = signal<boolean>(false);
 
   constructor(protected readonly gameService: GameService) {
     // TODO: this.socketService.emit('game:join');
@@ -48,6 +49,8 @@ export class Game implements OnInit, OnDestroy {
   // Methods
 
   protected selectCard(card: AnswerCard): void {
+    if (this.hasSubmitted()) return;
+
     this.selectedAnswerCard.set(card);
   }
 
@@ -56,10 +59,13 @@ export class Game implements OnInit, OnDestroy {
    * Emits the event to the server to record the submission.
    */
   handleAnswerCardSubmit() {
+    if (this.hasSubmitted()) return;
+
     const card = this.selectedAnswerCard();
 
     if (card) {
       this.gameService.submitWhiteCard(card);
+      this.hasSubmitted.set(true);
     }
   }
 }

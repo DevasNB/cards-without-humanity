@@ -8,7 +8,7 @@
       }
     </div>
 
-    <button (click)="handleAnswerCardSubmit()" [disabled]="!selectedAnswerCard()">
+    <button (click)="handleAnswerCardSubmit()" [disabled]="!selectedAnswerCard() || hasSubmitted()">
       Confirm Selection
     </button>
 
@@ -17,7 +17,10 @@
       @for (card of handPick(); track $index) {
         <button
           class="card small white-card hand-pick"
-          [class.chosen]="selectedAnswerCard()?.id === card.id"
+          [ngClass]="{
+            chosen: selectedAnswerCard()?.id === card.id,
+            'can-pick': !hasSubmitted(),
+          }"
           (click)="selectCard(card)"
         >
           {{ card.text }}
