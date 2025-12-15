@@ -1,16 +1,21 @@
 @if (game(); as game) {
   <div class="page">
-    <div class="top-flex">
-      <div class="card black-card">{{ game.currentRound.promptCard.text }}</div>
+    <section class="top-flex">
+      <div>
+        <div class="card black-card">{{ game.currentRound.promptCard.text }}</div>
+        <button
+          class="confirm-selection-btn"
+          (click)="handleAnswerCardSubmit()"
+          [disabled]="!selectedAnswerCard() || hasSubmitted()"
+        >
+          Confirm Selection
+        </button>
+      </div>
 
       @for (card of game.currentRound.picks; track $index) {
         <div class="card white-card"></div>
       }
-    </div>
-
-    <button (click)="handleAnswerCardSubmit()" [disabled]="!selectedAnswerCard() || hasSubmitted()">
-      Confirm Selection
-    </button>
+    </section>
 
     <!-- SELECTED WHITE CARD DISPLAY -->
     <div class="white-grid">
@@ -37,6 +42,5 @@
       [czar]="game.currentRound.czar"
     ></app-game-player-list>
 
-    <button class="next-btn">Próxima ronda</button>
   </div>
 }

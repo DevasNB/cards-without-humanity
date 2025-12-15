@@ -59,19 +59,19 @@
 
 /**/
 
-/* NEXT ROUND BUTTON */
-.next-btn {
-  margin: 24px auto;
+/* CONFIRM SELECTION BUTTON */
+.confirm-selection-btn {
+  margin-top: 8px;
+  width: 100%;
   display: block;
-  padding: 12px 20px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: 2px solid black;
+  padding: 8px 0;
+  border-radius: 16px;
+  border: 1px solid black;
   background: white;
   cursor: pointer;
 }
 
-.next-btn:hover {
+.confirm-selection-btn:hover:not(:disabled) {
   background: black;
   color: white;
 }
