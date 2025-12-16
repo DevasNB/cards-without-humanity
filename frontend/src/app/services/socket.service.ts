@@ -11,15 +11,14 @@ type EventPayload<E extends keyof ServerToClientEvents> = ServerToClientEvents[E
   ? P
   : never;
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class SocketService implements OnDestroy {
   private readonly socket: Socket<ServerToClientEvents, ClientToServerEvents>;
 
   constructor() {
     this.socket = io(environment.socketUrl, {
       transports: ['websocket'],
+      withCredentials: true,
     });
   }
 
@@ -44,8 +43,19 @@ export class SocketService implements OnDestroy {
     });
   }
 
-  // Desconectar quando o serviço for destruído
-  ngOnDestroy() {
+  /**
+   * Disconnects the socket to prevent any further events from being emitted.
+   * This method is called when the user logs out of the application.
+   */
+  logout(): void {
     this.socket.disconnect();
+  }
+
+  /**
+   * Called when the service is about to be destroyed.
+   * Disconnects the socket to prevent any further events from being emitted.
+   */
+  ngOnDestroy(): void {
+    this.logout();
   }
 }

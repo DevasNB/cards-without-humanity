@@ -1,11 +1,13 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { SocketService } from '../../socket.service';
 import { BehaviorSubject, map, Observable } from 'rxjs';
 import { RoomResponse, RoomUserResponse, SocketError } from 'cah-shared';
 import { AuthService } from '../../auth/auth.service';
 
-@Injectable({ providedIn: 'root' })
-export class LobbyService {
+@Injectable()
+export class LobbyService implements OnDestroy {
+  private currentRoomId?: string;
+
   private readonly roomSubject = new BehaviorSubject<RoomResponse | null>(null);
   room$ = this.roomSubject.asObservable();
 
@@ -24,7 +26,6 @@ export class LobbyService {
     private readonly authService: AuthService,
   ) {
     this.socketService.listen('room:update').subscribe((room) => this.roomSubject.next(room));
-
     this.socketService.listen('error').subscribe((error) => this.errorSubject.next(error));
   }
 
@@ -38,6 +39,13 @@ export class LobbyService {
    * @returns {void}
    */
   joinRoom(roomId: string): void {
+    if (this.currentRoomId === roomId) return;
+
+    if (this.currentRoomId) {
+      this.socketService.emit('room:leave');
+    }
+
+    this.currentRoomId = roomId;
     this.socketService.emit('room:join', { roomId: roomId });
   }
 
@@ -48,7 +56,12 @@ export class LobbyService {
    * @returns {void}
    */
   leaveRoom(): void {
+    if (!this.currentRoomId) return;
+
     this.socketService.emit('room:leave');
+
+    this.currentRoomId = undefined;
+    this.roomSubject.next(null);
   }
 
   /**
@@ -116,5 +129,9 @@ export class LobbyService {
 
     // Emit start game
     this.socketService.emit('room:host:startGame');
+  }
+
+  ngOnDestroy() {
+    this.leaveRoom();
   }
 }

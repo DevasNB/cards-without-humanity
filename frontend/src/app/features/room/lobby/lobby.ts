@@ -91,16 +91,6 @@ export class Lobby implements OnInit, OnDestroy {
     this.lobbyService.updateRoomSettings(changes);
   }
 
-  protected leaveRoom(): void {
-    try {
-      this.lobbyService.leaveRoom();
-    } catch (err) {
-      console.log(err);
-    } finally {
-      this.redirectHome();
-    }
-  }
-
   protected redirectHome(): void {
     this.router.navigate(['/home']);
   }

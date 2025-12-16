@@ -1,19 +1,11 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, map, Observable } from 'rxjs';
 import { SocketService } from '../../socket.service';
-import {
-  GameResponse,
-  StartingGamePayload,
-  AnswerCard,
-  RoundResponse,
-  SocketError,
-  MiddleGamePayload,
-  PlayerResponse,
-} from 'cah-shared';
+import { GameResponse, AnswerCard, PlayerResponse } from 'cah-shared';
 import { AuthService } from '../../auth/auth.service';
 
 // game.service.ts
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class GameService {
   private readonly gameSubject = new BehaviorSubject<GameResponse | null>(null);
   game$ = this.gameSubject.asObservable();

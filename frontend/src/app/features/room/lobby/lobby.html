@@ -18,7 +18,7 @@
       [allReady]="allReady()"
       (statusToggle)="lobbyService.toggleCurrentUserStatus()"
       (startGame)="lobbyService.startGame()"
-      (leaveRoom)="leaveRoom()"
+      (leaveRoom)="redirectHome()"
     ></app-lobby-actions>
   </div>
 } @else {

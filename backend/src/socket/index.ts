@@ -26,12 +26,6 @@ export const initializeSocketIO = (httpServer: HttpServer): IoInstance => {
     socket.emit("info", {
       message: `Welcome, ${socket.data.username}! You are connected.`,
     });
-
-    socket.on("disconnect", () => {
-      console.log(
-        `User disconnected: ${socket.data.username} (ID: ${socket.id})`
-      );
-    });
   });
 
   return io;

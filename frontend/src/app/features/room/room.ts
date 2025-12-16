@@ -8,17 +8,18 @@ import { LoadingSkeleton } from '../../loading-skeleton/loading-skeleton';
 import { Lobby } from './lobby/lobby';
 import { Game } from './game/game';
 import { GameService } from '../../services/room/game/game.service';
+import { SocketService } from '../../services/socket.service';
 
 @Component({
   standalone: true,
   selector: 'room',
   imports: [CommonModule, FormsModule, Lobby, Game, LoadingSkeleton],
+  providers: [LobbyService, SocketService, GameService],
   templateUrl: './room.html',
   styleUrl: './room.css',
 })
 export class RoomComponent implements OnInit, OnDestroy {
   // Properties
-  roomId: string | null = null;
   private readonly destroy$ = new Subject<void>();
 
   constructor(
@@ -29,25 +30,31 @@ export class RoomComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    // Set roomId from URL
-    this.roomId = this.route.snapshot.paramMap.get('roomId');
-    if (!this.roomId) {
-      // TODO: Handle error
-      this.redirectHome();
-      return;
-    }
+    this.route.paramMap.subscribe((params) => {
+      const roomId = params.get('roomId');
 
-    // Join room
-    this.lobbyService.joinRoom(this.roomId);
+      if (!roomId) {
+        // TODO: Handle error
+        this.redirectHome();
+        return;
+      }
 
-    // Subscribe to room updates (from service-managed stream)
-    this.lobbyService.room$.pipe(takeUntil(this.destroy$)).subscribe((room) => {});
+      // Join room
+      this.lobbyService.joinRoom(roomId);
+    });
+  }
+
+  /**
+   * When leaving the component, clean up subscriptions and leave the room.
+   */
+  ngOnDestroy() {
+    this.destroy();
   }
 
   /**
    * Cleans up subscriptions and leaves the room.
    */
-  ngOnDestroy() {
+  private destroy(): void {
     // Clean up subscriptions
     this.destroy$.next();
     this.destroy$.complete();

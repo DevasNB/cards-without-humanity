@@ -233,12 +233,12 @@ export class RoomService {
    * Leaves a room.
    * @param {string} userId - The ID of the user leaving the room.
    * @param {string} roomId - The ID of the room to leave.
-   * @returns {Promise<void>} A promise that resolves when the user has left the room.
+   * @returns {Promise<boolean>} A promise that resolves when the user has left the room; true if the room was deleted, false otherwise.
    * @throws {NotFoundError} If the room or user is not found.
    * If the user is the host, the next host in the room will be set to the next online user.
    * If there are no online users in the room, the room will be deleted.
    */
-  public async leaveRoom(userId: string, roomId: string): Promise<void> {
+  public async leaveRoom(userId: string, roomId: string): Promise<boolean> {
     // Find the room
     const room = await prisma.room.findUnique({
       where: {
@@ -273,7 +273,7 @@ export class RoomService {
     // If user isn't host, return - everything is fine
     if (room.hostId !== userId) {
       console.log("Room user is not host");
-      return;
+      return false;
     }
 
     // If user is host, find the next host
@@ -305,7 +305,7 @@ export class RoomService {
           hostId: newHostId,
         },
       });
-      return;
+      return false;
     }
 
     // If there are not any online users, delete the room
@@ -317,6 +317,8 @@ export class RoomService {
         id: roomId,
       },
     });
+
+    return true;
   }
 }
 
