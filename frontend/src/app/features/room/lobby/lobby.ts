@@ -56,7 +56,9 @@ export class Lobby implements OnInit, OnDestroy {
       .subscribe((error) => this.socketErrorHandler(error));
 
     // update whenever room changes
-    this.lobbyService.currentUser$.subscribe((user) => this.currentUser.set(user));
+    this.lobbyService.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((user) => this.currentUser.set(user));
   }
 
   ngOnDestroy(): void {

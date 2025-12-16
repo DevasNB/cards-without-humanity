@@ -30,7 +30,7 @@ export class RoomComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.route.paramMap.subscribe((params) => {
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       const roomId = params.get('roomId');
 
       if (!roomId) {

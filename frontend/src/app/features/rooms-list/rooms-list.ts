@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RoomService } from '../../services/room/room.service';
 import { Router } from '@angular/router';
 import { ListedRoom } from 'cah-shared';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -13,8 +14,9 @@ import { ListedRoom } from 'cah-shared';
   styleUrl: './rooms-list.css',
 })
 export class RoomsListComponent implements OnInit {
-  rooms = signal<ListedRoom[]>([]);
-  loading = signal<boolean>(true);
+  private readonly destroy$ = new Subject<void>();
+  protected rooms = signal<ListedRoom[]>([]);
+  protected loading = signal<boolean>(true);
 
   constructor(
     private readonly roomsService: RoomService,
@@ -22,19 +24,27 @@ export class RoomsListComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.roomsService.getRooms().subscribe({
-      next: (rooms) => {
-        this.rooms.set(rooms);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.rooms.set([]);
-        this.loading.set(false);
-      },
-    });
+    this.roomsService
+      .getRooms()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (rooms) => {
+          this.rooms.set(rooms);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.rooms.set([]);
+          this.loading.set(false);
+        },
+      });
   }
 
   goToRoom(roomId: string) {
     this.router.navigate(['/room', roomId]);
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

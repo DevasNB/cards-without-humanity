@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { AuthService } from '../services/auth/auth.service';
 import { Router } from '@angular/router';
 import { UserResponse } from 'cah-shared';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -10,6 +11,8 @@ import { UserResponse } from 'cah-shared';
   styleUrl: './header.css',
 })
 export class Header {
+  private readonly destroy$ = new Subject<void>();
+
   constructor(
     protected readonly authService: AuthService,
     private readonly router: Router,
@@ -21,9 +24,14 @@ export class Header {
 
   toggleLogin(): void {
     if (this.authService.isAuthenticated()) {
-      this.authService.logout().subscribe();
+      this.authService.logout().pipe(takeUntil(this.destroy$)).subscribe();
     } else {
       this.router.navigate(['/login']);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next(undefined);
+    this.destroy$.complete();
   }
 }

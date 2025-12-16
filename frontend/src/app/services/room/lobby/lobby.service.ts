@@ -1,11 +1,13 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { SocketService } from '../../socket.service';
-import { BehaviorSubject, map, Observable } from 'rxjs';
+import { BehaviorSubject, map, Observable, Subject, takeUntil } from 'rxjs';
 import { RoomResponse, RoomUserResponse, SocketError } from 'cah-shared';
 import { AuthService } from '../../auth/auth.service';
 
 @Injectable()
 export class LobbyService implements OnDestroy {
+  private readonly destroy$ = new Subject<void>();
+
   private currentRoomId?: string;
 
   private readonly roomSubject = new BehaviorSubject<RoomResponse | null>(null);
@@ -25,8 +27,15 @@ export class LobbyService implements OnDestroy {
     private readonly socketService: SocketService,
     private readonly authService: AuthService,
   ) {
-    this.socketService.listen('room:update').subscribe((room) => this.roomSubject.next(room));
-    this.socketService.listen('error').subscribe((error) => this.errorSubject.next(error));
+    this.socketService
+      .listen('room:update')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((room) => this.roomSubject.next(room));
+      
+    this.socketService
+      .listen('error')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((error) => this.errorSubject.next(error));
   }
 
   // Actions
@@ -133,5 +142,7 @@ export class LobbyService implements OnDestroy {
 
   ngOnDestroy() {
     this.leaveRoom();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
