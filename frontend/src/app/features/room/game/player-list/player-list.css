@@ -1,0 +1,57 @@
+.players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  width: clamp(222px, 25vw + 5rem, 280px);
+
+  background: #ffffff33;
+}
+
+.player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background: #ffffff0d;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+
+  border: 1px solid transparent;
+  transition: 0.15s ease;
+}
+
+.player-row {
+  border-color: #0e5fa0;
+  background: #0e5fa033;
+}
+
+.player-row.me {
+  border-color: #4ade80;
+  background: #4ade8033;
+}
+
+.player-row.czar {
+  border-color: #60a5fa;
+  background: #60a5fa33;
+}
+
+.name {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.czar-tag {
+  font-size: 12px;
+  background: #60a5fa55;
+  padding: 2px 6px;
+  border-radius: 1rem;
+}
+
+.points {
+  font-weight: 600;
+}

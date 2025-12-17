@@ -1,18 +1,8 @@
 // src/socket/index.ts
 import { Server as HttpServer } from "node:http"; // For the http server type
-import { Server as SocketIOServer } from "socket.io";
-import { GameSocket, SocketData } from "./types/socket";
-import { ClientToServerEvents, ServerToClientEvents } from "./types/events";
+import { createIOInstance, GameSocket, IoInstance } from "./config";
 import { socketAuthenticationMiddleware } from "./middlewares/authentication.middleware";
 import { registerGameHandlers } from "./handlers/gameHandler";
-
-// Declare a type alias for the full Socket.IO server instance
-export type IoInstance = SocketIOServer<
-  ClientToServerEvents,
-  ServerToClientEvents,
-  {},
-  SocketData
->;
 
 /**
  * Initializes the Socket.IO server and attaches it to the HTTP server.
@@ -20,19 +10,7 @@ export type IoInstance = SocketIOServer<
  * @returns The initialized Socket.IO server instance.
  */
 export const initializeSocketIO = (httpServer: HttpServer): IoInstance => {
-  const io: IoInstance = new SocketIOServer<
-    ClientToServerEvents,
-    ServerToClientEvents,
-    {},
-    SocketData
-  >(httpServer, {
-    cors: {
-      origin: process.env.CLIENT_URL,
-      methods: ["GET", "POST"],
-      credentials: true,
-    },
-    // path: '/socket.io',
-  });
+  const io: IoInstance = createIOInstance(httpServer);
 
   // --- Authentication Middleware & Initial Setup ---
   io.use(socketAuthenticationMiddleware);
@@ -47,12 +25,6 @@ export const initializeSocketIO = (httpServer: HttpServer): IoInstance => {
     // Initial welcome message or state
     socket.emit("info", {
       message: `Welcome, ${socket.data.username}! You are connected.`,
-    });
-
-    socket.on("disconnect", () => {
-      console.log(
-        `User disconnected: ${socket.data.username} (ID: ${socket.id})`
-      );
     });
   });
 

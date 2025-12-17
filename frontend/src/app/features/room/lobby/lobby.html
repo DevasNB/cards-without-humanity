@@ -1,0 +1,26 @@
+@if (room(); as room) {
+  <div class="container my-5">
+    <h2 class="text-center mb-4">Configurar Sala</h2>
+
+    <app-lobby-settings
+      [room]="room"
+      (fieldChange)="handleRoomChange($event)"
+      [isHost]="currentUser()?.isHost ?? false"
+    ></app-lobby-settings>
+
+    <app-lobby-player-list
+      [maxPlayers]="room.maxPlayers"
+      [users]="room.users"
+    ></app-lobby-player-list>
+
+    <app-lobby-actions
+      [user]="currentUser()!"
+      [allReady]="allReady()"
+      (statusToggle)="lobbyService.toggleCurrentUserStatus()"
+      (startGame)="lobbyService.startGame()"
+      (leaveRoom)="redirectHome()"
+    ></app-lobby-actions>
+  </div>
+} @else {
+  <span></span>
+}

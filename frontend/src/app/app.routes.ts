@@ -3,7 +3,7 @@ import { Home } from './features/home/home';
 import { DecksListComponent } from './features/decks/list-decks/list-decks';
 import { CreateDeckComponent } from './features/decks/create-deck/create-deck';
 import { authGuard } from './services/auth/auth.guard';
-import { RoomComponent } from './features/rooms/room';
+import { RoomComponent } from './features/room/room';
 import { LoginComponent } from './features/login/login';
 import { RoomsListComponent } from './features/rooms-list/rooms-list';
 

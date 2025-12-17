@@ -1,0 +1,9 @@
+export type GameStatus = 'WAITING_FOR_PLAYERS' | 'PLAYING' | 'ROUND_ENDED' | 'GAME_ENDED';
+
+export const GameStatus = {
+  WAITING_FOR_PLAYERS: 'WAITING_FOR_PLAYERS',
+  PLAYING: 'PLAYING',
+  ROUND_ENDED: 'ROUND_ENDED',
+  GAME_ENDED: 'GAME_ENDED',
+};
+

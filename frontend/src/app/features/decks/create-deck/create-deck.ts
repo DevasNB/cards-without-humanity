@@ -9,6 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 
 // Definimos um tipo para as nossas cartas para ser mais claro
 type Card = {
@@ -27,6 +28,7 @@ type Card = {
 })
 export class CreateDeckComponent implements OnInit, AfterViewInit {
   @ViewChildren('carouselCard') cardElements!: QueryList<ElementRef<HTMLDivElement>>;
+  private readonly destroy$ = new Subject<void>();
 
   stepIndex: number = 1;
   stepTitle: string = '';
@@ -51,7 +53,7 @@ export class CreateDeckComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.cardElements.changes.subscribe(() => {
+    this.cardElements.changes.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.selectedCard(this.currentIndex, 'auto');
     });
   }
@@ -198,5 +200,10 @@ export class CreateDeckComponent implements OnInit, AfterViewInit {
     if (card && card.type === 'prompt') {
       card.content += '_____ ';
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next(undefined);
+    this.destroy$.complete();
   }
 }

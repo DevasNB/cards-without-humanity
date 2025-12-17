@@ -8,6 +8,8 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("Starting seeding...");
 
+  await prisma.game.deleteMany({});
+  await prisma.room.deleteMany({});
   await prisma.user.deleteMany({});
   await prisma.deck.deleteMany({});
 

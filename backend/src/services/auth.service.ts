@@ -4,7 +4,7 @@ import {
   CreateUserRequestBody,
   EnterAnoynmousRequestBody,
   UserResponse,
-} from "../types/auth";
+} from "cah-shared";
 import { UserRole } from "@prisma/client";
 import { ConflictError, NotFoundError } from "../utils/errors";
 

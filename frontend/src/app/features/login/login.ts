@@ -3,8 +3,9 @@ import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms'; // Required for ngModel
 import { AuthService } from '../../services/auth/auth.service';
 import { CommonModule } from '@angular/common'; // For ngIf, etc.
-import { UserResponse } from '../../services/auth/auth.types';
 import { ActivatedRoute, Router } from '@angular/router';
+import { UserResponse } from 'cah-shared';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -14,6 +15,8 @@ import { ActivatedRoute, Router } from '@angular/router';
   styleUrl: './login.css',
 })
 export class LoginComponent {
+  private readonly destroy$ = new Subject<void>();
+
   username: string = '';
   returnUrl: string = '';
 
@@ -34,21 +37,24 @@ export class LoginComponent {
     this.isLoading.set(true);
     this.loginResponse.set(null);
 
-    this.authService.login({ username: this.username }).subscribe({
-      next: (response) => {
-        // AuthService handles navigation on success
-        console.log('Login successful!', response);
-        this.loginResponse.set(response);
-        this.isLoading.set(false);
-        this.router.navigateByUrl(this.returnUrl);
-      },
-      error: (error) => {
-        this.errorMessage.set(error.message || 'Login failed.');
-        console.error('Login error:', error);
+    this.authService
+      .login({ username: this.username })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          // AuthService handles navigation on success
+          console.log('Login successful!', response);
+          this.loginResponse.set(response);
+          this.isLoading.set(false);
+          this.router.navigateByUrl(this.returnUrl);
+        },
+        error: (error) => {
+          this.errorMessage.set(error.message || 'Login failed.');
+          console.error('Login error:', error);
 
-        this.isLoading.set(false);
-      },
-    });
+          this.isLoading.set(false);
+        },
+      });
   }
 
   changeUsername(event: string): void {

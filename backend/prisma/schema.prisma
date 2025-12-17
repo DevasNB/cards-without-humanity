@@ -6,11 +6,11 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 // The pack of cards
@@ -104,7 +104,7 @@ model RoomUser {
   createdAt DateTime @default(now()) // joinedAt
   updatedAt DateTime @updatedAt
 
-  connectionId String? // connection of WebSocket
+  connectionId String // connection of WebSocket
   status       RoomUserStatus // status of the user inside the room
 
   userId String // It is a user
@@ -134,8 +134,8 @@ model Game {
 
   roomId String @unique // Each room can only have one active game at a time
 
-  status       GameStatus @default(WAITING_FOR_PLAYERS) // The status of the game
-  round        Int        @default(1) // The number of the round the game is in
+  status GameStatus @default(WAITING_FOR_PLAYERS) // The status of the game
+  round  Int        @default(1) // The number of the round the game is in
 
   players Player[] // The game has many players playing
   rounds  Round[] // A game has many rounds
@@ -168,17 +168,18 @@ model Player {
 
   hand        PlayerHandCard[] // The cards the user has
   submissions RoundPick[] // The cards the user submitted
+
+  @@unique([gameId, roomUserId]) // Player as a unique combination of game and roomUser
 }
 
 // The round of a game
 model Round {
   id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) // Used as an ordering system
   updatedAt DateTime @updatedAt
 
-  gameId      String // The game it belongs to
-  roundNumber Int // It has a numbering system. We need to know which is it
-  status      RoundStatus @default(DRAWING_CARDS) // The status of the round
+  gameId String // The game it belongs to
+  status RoundStatus @default(DRAWING_CARDS) // The status of the round
 
   czarId       String // Who is the judge?
   winnerId     String? // Who won the round? Optional because in the start we don't know
@@ -190,8 +191,6 @@ model Round {
   promptCard PromptCard @relation(fields: [promptCardId], references: [id], onDelete: Restrict) // It has only one prompt card. If any game is running and a promptCard is deleted, the Round should restrict it
 
   picks RoundPick[] // All answer card submissions for this round
-
-  @@unique([gameId, roundNumber]) // The round number is unique to the game it belongs to
 }
 
 // The status of the round
@@ -247,5 +246,5 @@ model RoundPick {
   answerCard AnswerCard @relation(fields: [cardId], references: [id], onDelete: Restrict) // If any game is running and an AnswerCard is deleted, the RoundPick should restrict it
   player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade) // If the player is deleted, so is the RoundPick
 
-  @@unique([roundId, cardId, playerId]) // A player can only submit a specific card once per round
+  @@unique([roundId, playerId]) // A player can only submit one card per round
 }
