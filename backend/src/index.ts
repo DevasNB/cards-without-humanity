@@ -9,7 +9,8 @@ import decksRoutes from "./routes/decks.routes";
 import { AppError } from "./utils/errors";
 import { PORT } from "./configs/constants";
 import { corsMiddleware, corsOptions } from "./configs/corsOptions";
-import { initializeSocketIO, IoInstance } from "./socket";
+import { initializeSocketIO } from "./socket";
+import { IoInstance } from "./socket/config";
 
 const app = express();
 

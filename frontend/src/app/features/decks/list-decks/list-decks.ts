@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DeckService } from '../../../services/deck/deck.service';
 import { OnInit, signal } from '@angular/core';
-import { ListedDeck } from '../../../services/deck/deck.types';
+import { ListedDeck } from 'cah-shared';
 
 @Component({
   standalone: true,

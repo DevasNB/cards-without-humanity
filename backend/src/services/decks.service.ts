@@ -1,5 +1,6 @@
+import { ListedDeck } from "cah-shared";
 import prisma from "../utils/prisma";
-import { ListedDeck } from "../types/decks";
+
 export class DecksService {
   /**
    * Lists all Decks in the database.
