@@ -1,0 +1,24 @@
+<!-- rooms-list.page.html -->
+<div class="container">
+  <h1>Available Rooms</h1>
+
+  @if (loading()) {
+    <div>Loading rooms…</div>
+  }
+
+  @if (!loading() && rooms().length === 0) {
+    <div>No rooms available.</div>
+  }
+
+  @for (room of rooms(); track room.id) {
+    <div class="room-card" (click)="goToRoom(room.id)">
+      <h2>{{ room.name }}</h2>
+
+      <div class="meta">{{ room.users.length }} / {{ room.maxPlayers }} players</div>
+
+      <div class="privacy">
+        {{ room.isPublic ? 'Public 🔓' : 'Private 🔒' }}
+      </div>
+    </div>
+  }
+</div>
