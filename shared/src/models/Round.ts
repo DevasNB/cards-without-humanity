@@ -23,4 +23,5 @@ export interface RoundPick {
   playerId: string;
   cardId: string;
   isWinner?: boolean;
+  text?: string;
 }

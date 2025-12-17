@@ -54,12 +54,9 @@ export class GameService {
       });
 
     // General game updates
-    this.socketService
-      .listen('game:update')
-
-      .subscribe((update) => {
-        this.gameSubject.next(update);
-      });
+    this.socketService.listen('game:update').subscribe((update) => {
+      this.gameSubject.next(update);
+    });
 
     // Errors
     this.socketService

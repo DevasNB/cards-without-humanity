@@ -1,17 +1,10 @@
 // src/services/game.service.ts
-import {
-  Prisma,
-  PrismaClient,
-  RoomUserStatus,
-  RoundStatus,
-} from "@prisma/client";
-import prisma from "../utils/prisma";
+import { Prisma, RoomUserStatus, RoundStatus } from "@prisma/client";
 import { AnswerCard, PlayerResponse, RoundResponse } from "cah-shared";
 import { CardService } from "./card.service";
 import { randomElement } from "../utils/helpers";
 import { getRoundResponse } from "../utils/prisma/helpers/dtos/rounds";
 import { SelectedRounds } from "../utils/prisma/helpers/selects/rounds";
-import { NotFoundError } from "../utils/errors";
 
 const cardService = new CardService();
 

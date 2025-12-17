@@ -5,7 +5,7 @@
 
 .card {
   padding: 24px;
-  border-radius: 16px;
+  border-radius: 1rem;
   font-size: 20px;
   width: 216px;
   height: 246px;
@@ -65,7 +65,7 @@
   width: 100%;
   display: block;
   padding: 8px 0;
-  border-radius: 16px;
+  border-radius: 1rem;
   border: 1px solid black;
   background: white;
   cursor: pointer;
@@ -74,4 +74,12 @@
 .confirm-selection-btn:hover:not(:disabled) {
   background: black;
   color: white;
+}
+
+.bottom-section {
+  width: 100%;
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  margin-bottom: 24px;
 }

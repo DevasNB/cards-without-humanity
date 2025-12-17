@@ -13,12 +13,12 @@
       </div>
 
       @for (card of game.currentRound.picks; track $index) {
-        <div class="card white-card"></div>
+        <div class="card white-card">{{ card.text }}</div>
       }
     </section>
 
     <!-- SELECTED WHITE CARD DISPLAY -->
-    <div class="white-grid">
+    <main class="white-grid">
       @for (card of handPick(); track $index) {
         <button
           class="card small white-card hand-pick"
@@ -31,16 +31,14 @@
           {{ card.text }}
         </button>
       }
-    </div>
+    </main>
 
-    <!-- WHITE CARDS GRID -->
-    <div class="white-grid"></div>
-
-    <app-game-player-list
-      [players]="game.players"
-      [currentUser]="currentPlayer() ?? null"
-      [czar]="game.currentRound.czar"
-    ></app-game-player-list>
-
+    <aside class="bottom-section">
+      <app-game-player-list
+        [players]="game.players"
+        [currentUser]="currentPlayer() ?? null"
+        [czar]="game.currentRound.czar"
+      ></app-game-player-list>
+    </aside>
   </div>
 }

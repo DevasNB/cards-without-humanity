@@ -10,7 +10,19 @@ export const SelectedRounds = {
       },
     },
     promptCard: true,
-    picks: true,
+    picks: {
+      select: {
+        id: true,
+        playerId: true,
+        cardId: true,
+        isWinner: true,
+        answerCard: {
+          select: {
+            content: true,
+          },
+        },
+      },
+    },
   },
   // TODO: Check if this is correct
   orderBy: { createdAt: "asc" },

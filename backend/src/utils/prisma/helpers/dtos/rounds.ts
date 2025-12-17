@@ -1,5 +1,5 @@
 import { RoundResponse } from "cah-shared";
-import { Prisma } from "@prisma/client";
+import { Prisma, RoundStatus } from "@prisma/client";
 import { SelectedRoundsType } from "../types/rounds";
 
 export function getRoundResponse(
@@ -16,6 +16,10 @@ export function getRoundResponse(
     playerId: pick.playerId,
     cardId: pick.cardId,
     isWinner: pick.isWinner,
+    text:
+      updatedRound.status === RoundStatus.DRAWING_CARDS
+        ? undefined
+        : pick.answerCard.content,
   }));
 
   const roundResponse: RoundResponse = {
