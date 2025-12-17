@@ -6,11 +6,9 @@ import { AppError, UnauthorizedError } from "../../utils/errors";
 import { RoomUserService } from "../../services/roomUser.service";
 import { GameService } from "../../services/game.service";
 import { CardService } from "../../services/card.service";
-
 import {
   RoomUpdatePayload,
   CreateRoomPayload,
-  AnswerCard,
   EditableRoom,
   EditableRoomSchema,
   EditableRoomUser,
@@ -71,7 +69,6 @@ const emitGameUpdate = async (
     // TODO: Do not send the whole object at once
     const gameState: GameUpdatePayload = await gameService.getGameState(roomId); // Get latest room data from service
 
-    console.log(gameState, 24941);
     if (gameState) {
       io.to(roomId).emit("game:update", gameState);
       console.log(`Game ${roomId} updated: ${JSON.stringify(gameState)}`);
@@ -308,21 +305,20 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
 
       // Update room in database
       // TODO: Make this already return the handPick
-      const { game: newGame, handPicks } =
-        await gameService.startGame(currentRoomId);
+      const { game, handPicks } = await gameService.startGame(currentRoomId);
 
       // Set socket data info related to game
-      socket.data.currentGameId = newGame.id;
+      socket.data.currentGameId = game.id;
 
       // Notify all users in the room with the new game state
       for (const [connectionId, cards] of handPicks) {
-        io.to(connectionId).emit("room:initGame", {
-          game: newGame,
+        io.to(connectionId).emit("room:game:new", {
+          game: game,
           handPick: cards,
         });
       }
 
-      console.log(`Game ${newGame.id} updated: ${JSON.stringify(newGame)}`);
+      console.log(`Game ${game.id} updated: ${JSON.stringify(game)}`);
     } catch (error: any) {
       console.error(`Error starting game in room ${currentRoomId}:`, error);
 

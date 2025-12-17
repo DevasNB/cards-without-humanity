@@ -23,7 +23,7 @@ export interface ServerToClientEvents {
   error: (error: { message: string; type: ErrorType }) => void; // Generic error messages
   info: (info: { message: string }) => void; // Generic info messages
   'room:update': (payload: RoomUpdatePayload) => void;
-  'room:initGame': (payload: StartingGamePayload) => void;
+  'room:game:new': (payload: StartingGamePayload) => void;
   'game:update': (payload: GameUpdatePayload) => void;
   'game:round:new': (payload: MiddleGamePayload) => void;
 }

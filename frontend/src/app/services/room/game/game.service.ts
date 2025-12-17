@@ -28,7 +28,7 @@ export class GameService {
     private readonly authService: AuthService,
   ) {
     this.socketService
-      .listen('room:initGame')
+      .listen('room:game:new')
       .pipe(takeUntil(this.destroy$))
       .subscribe((game) => {
         this.gameSubject.next(game.game);
