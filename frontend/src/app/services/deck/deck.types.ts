@@ -1,7 +1,3 @@
-export interface DeckResponse {
-  id: string;
-}
-
 export interface ListedDeck {
   id: string;
   name: string;
