@@ -7,6 +7,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.6",
     "prettier": "^3.6.2",
+    "prettier-plugin-prisma": "^5.0.0",
     "semantic-release": "^24.2.9"
   },
   "scripts": {
@@ -19,5 +20,9 @@
     "shared",
     "frontend",
     "backend"
-  ]
+  ],
+  "dependencies": {
+    "@ngx-translate/core": "^17.0.0",
+    "@ngx-translate/http-loader": "^17.0.0"
+  }
 }

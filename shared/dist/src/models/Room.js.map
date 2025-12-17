@@ -1,0 +1,1 @@
+{"version":3,"file":"Room.js","sourceRoot":"","sources":["../../../src/models/Room.ts"],"names":[],"mappings":";;;AA6CA,6BAAwB;AAExB,yCAAyC;AAC5B,QAAA,kBAAkB,GAAG,OAAC;KAChC,MAAM,CAAC;IACN,IAAI,EAAE,OAAC,CAAC,MAAM,EAAE,CAAC,QAAQ,EAAE;IAC3B,QAAQ,EAAE,OAAC,CAAC,OAAO,EAAE,CAAC,QAAQ,EAAE;IAChC,uCAAuC;IACvC,oCAAoC;CACrC,CAAC;KACD,KAAK,EAAE,CAAC"}

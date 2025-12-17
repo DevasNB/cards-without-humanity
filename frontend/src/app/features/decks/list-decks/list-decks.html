@@ -7,16 +7,15 @@
   <h2 class="mb-4">Baralhos de Cartas Disponíveis</h2>
 
   <div class="list-group">
-    <div
-      *ngFor="let deck of decks"
-      class="list-group-item list-group-item-action flex-column align-items-start mb-2"
-    >
-      <div class="d-flex w-100 justify-content-between">
-        <h5 class="mb-1">{{ deck.name }}</h5>
-        <small>{{ deck.cardCount }} cartas</small>
+    @for (deck of decks(); track deck.id) {
+      <div class="list-group-item list-group-item-action flex-column align-items-start mb-2">
+        <div class="d-flex w-100 justify-content-between">
+          <h5 class="mb-1">{{ deck.name }}</h5>
+          <small>{{ deck.totalCards }} cartas</small>
+        </div>
+        <p class="mb-1">{{ deck.description }}</p>
+        <button class="btn btn-sm btn-outline-secondary mt-2">Ver Cartas</button>
       </div>
-      <p class="mb-1">{{ deck.description }}</p>
-      <button class="btn btn-sm btn-outline-secondary mt-2">Ver Cartas</button>
-    </div>
+    }
   </div>
 </div>
