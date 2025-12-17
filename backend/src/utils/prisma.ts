@@ -6,6 +6,8 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
+// TODO: implement redis
+
 // Check if a global PrismaClient instance already exists
 // If not, create a new one
 const prisma =

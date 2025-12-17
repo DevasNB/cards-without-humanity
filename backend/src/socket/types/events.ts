@@ -1,5 +1,6 @@
 // src/socket/types/events.d.ts
 
+import { GameResponse } from "../../types/games";
 import {
   CreateRoomResponse,
   EditableRoom,
@@ -13,6 +14,7 @@ export interface ClientToServerEvents {
   "room:leave": (payload: { roomId: string }) => void;
   "room:updateSettings": (payload: EditableRoom) => void;
   "roomUser:update": (payload: EditableRoomUser) => void;
+  "room:startGame": () => void;
 }
 
 export type ErrorType = "not-found" | "unauthorized";
@@ -22,6 +24,7 @@ export interface ServerToClientEvents {
   error: (payload: { message: string; type: ErrorType }) => void; // Generic error messages
   info: (payload: { message: string }) => void; // Generic info messages
   "room:update": (payload: RoomUpdatePayload) => void;
+  "game:update": (payload: GameUpdatePayload) => void;
 }
 
 // --- Specific Payload Interfaces ---
@@ -31,3 +34,10 @@ export interface ServerToClientEvents {
 export interface CreateRoomPayload extends CreateRoomResponse {}
 
 export interface RoomUpdatePayload extends RoomResponse {}
+
+export interface GameUpdatePayload extends GameResponse {}
+
+export interface RoundPayload {
+  id: string;
+  roundNumber: number;
+}
