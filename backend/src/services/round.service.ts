@@ -5,37 +5,37 @@ import { CardService } from "./card.service";
 import { randomElement } from "../utils/helpers";
 import { getRoundResponse } from "../utils/prisma/helpers/dtos/rounds";
 import { SelectedRounds } from "../utils/prisma/helpers/selects/rounds";
+import prisma from "../utils/prisma";
 
 const cardService = new CardService();
 
 export class RoundService {
-  public async createNewRound(
-    tx: Prisma.TransactionClient,
-    gameId: string
-  ): Promise<{
+  public async createNewRound(gameId: string): Promise<{
     handPicks: Map<string, AnswerCard[]>;
     roundResponse: RoundResponse;
   }> {
-    const promptCard = await cardService.getNewPromptCard(tx, gameId);
-    const czar = await this.getNextCzar(tx, gameId);
+    return await prisma.$transaction(async (tx) => {
+      const promptCard = await cardService.getNewPromptCard(tx, gameId);
+      const czar = await this.getNextCzar(tx, gameId);
 
-    const newRound = await tx.round.create({
-      data: {
-        gameId,
-        status: RoundStatus.DRAWING_CARDS,
-        czarId: czar.id,
-        promptCardId: promptCard.id,
-      },
-      select: SelectedRounds.select,
+      const newRound = await tx.round.create({
+        data: {
+          gameId,
+          status: RoundStatus.DRAWING_CARDS,
+          czarId: czar.id,
+          promptCardId: promptCard.id,
+        },
+        select: SelectedRounds.select,
+      });
+
+      const roundResponse: RoundResponse = getRoundResponse(newRound);
+
+      // Generate hand pick for each player
+      const handPicks: Map<string, AnswerCard[]> =
+        await cardService.getHandPickForPlayersInGame(tx, gameId);
+
+      return { handPicks, roundResponse };
     });
-
-    const roundResponse: RoundResponse = getRoundResponse(newRound);
-
-    // Generate hand pick for each player
-    const handPicks: Map<string, AnswerCard[]> =
-      await cardService.getHandPickForPlayersInGame(tx, gameId);
-
-    return { handPicks, roundResponse };
   }
 
   private async getNextCzar(

@@ -1,15 +1,19 @@
 import { AnswerCard } from '../models/AnswerCard';
-import { GameResponse } from '../models/Game';
+import { IncompleteGame } from '../models/Game';
 import { RoundResponse } from '../models/Round';
 
 // --- Specific Payload Interfaces ---
 
 export interface StartingGamePayload {
-  game: GameResponse;
-  handPick: AnswerCard[];
+  game: IncompleteGame;
 }
 
 export interface MiddleGamePayload {
   round: RoundResponse;
-  newCards: AnswerCard[];
+  handPick: AnswerCard[];
+}
+
+export interface EndRoundPayload {
+  reason: 'timeout' | 'all_played';
+  //  result: RoundResponse;
 }

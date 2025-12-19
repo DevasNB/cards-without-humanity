@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, map, Observable, Subject, takeUntil } from 'rxjs';
 import { SocketService } from '../../socket.service';
-import { GameResponse, AnswerCard, PlayerResponse } from 'cah-shared';
+import { AnswerCard, PlayerResponse, IncompleteGame, RoundResponse } from 'cah-shared';
 import { AuthService } from '../../auth/auth.service';
 
 // game.service.ts
@@ -9,11 +9,14 @@ import { AuthService } from '../../auth/auth.service';
 export class GameService {
   private readonly destroy$ = new Subject<void>();
 
-  private readonly gameSubject = new BehaviorSubject<GameResponse | null>(null);
+  private readonly gameSubject = new BehaviorSubject<IncompleteGame | null>(null);
   game$ = this.gameSubject.asObservable();
 
   private readonly handPickSubject = new BehaviorSubject<AnswerCard[]>([]);
   handPick$ = this.handPickSubject.asObservable();
+
+  private readonly roundSubject = new BehaviorSubject<RoundResponse | null>(null);
+  round$ = this.roundSubject.asObservable();
 
   currentPlayer$: Observable<PlayerResponse | null> = this.game$.pipe(
     map((game) => {
@@ -32,7 +35,6 @@ export class GameService {
       .pipe(takeUntil(this.destroy$))
       .subscribe((game) => {
         this.gameSubject.next(game.game);
-        this.handPickSubject.next(game.handPick);
 
         this.socketService.emit('game:join');
       });
@@ -42,15 +44,10 @@ export class GameService {
       .listen('game:round:new')
       .pipe(takeUntil(this.destroy$))
       .subscribe((update) => {
-        const currentGame = this.gameSubject.getValue();
-        if (!currentGame) {
-          return;
-        }
-
-        this.gameSubject.next({ ...currentGame, currentRound: update.round });
+        this.roundSubject.next(update.round);
 
         const currentHandPick = this.handPickSubject.getValue();
-        this.handPickSubject.next({ ...currentHandPick, ...update.newCards });
+        this.handPickSubject.next([...currentHandPick, ...update.handPick]);
       });
 
     // General game updates

@@ -1,13 +1,11 @@
 // src/services/game.service.ts
 import prisma from "../utils/prisma";
-import { AnswerCard, GameResponse } from "cah-shared";
+import { AnswerCard, GameResponse, IncompleteGame } from "cah-shared";
 import { BadRequestError, NotFoundError } from "../utils/errors";
 import { SelectedRounds } from "../utils/prisma/helpers/selects/rounds";
 import { getRoundResponse } from "../utils/prisma/helpers/dtos/rounds";
 import { GameStatus, RoomUserStatus } from "@prisma/client";
 import { RoundService } from "./round.service";
-
-const roundService = new RoundService();
 
 export class GameService {
   /**
@@ -101,10 +99,7 @@ export class GameService {
    * @throws {NotFoundError} If the room is not found.
    * @throws {BadRequestError} If not everyone in the room is ready, or if there are not enough players to start the game.
    */
-  public async startGame(roomId: string): Promise<{
-    game: GameResponse;
-    handPicks: Map<string, AnswerCard[]>;
-  }> {
+  public async startGame(roomId: string): Promise<IncompleteGame> {
     // Find the room
     const room = await prisma.room.findUnique({
       where: {
@@ -168,88 +163,81 @@ export class GameService {
     );
 
     // Get a new game
-    const { createdGame, createdRound, handPicks } = await prisma.$transaction(
-      async (prisma) => {
-        // Mark all players to be IN_GAME
-        await prisma.roomUser.updateMany({
-          where: {
-            AND: [{ roomId }, { status: RoomUserStatus.READY }],
-          },
-          data: {
-            status: RoomUserStatus.IN_GAME,
-          },
-        });
+    const { createdGame } = await prisma.$transaction(async (prisma) => {
+      // Mark all players to be IN_GAME
+      await prisma.roomUser.updateMany({
+        where: {
+          AND: [{ roomId }, { status: RoomUserStatus.READY }],
+        },
+        data: {
+          status: RoomUserStatus.IN_GAME,
+        },
+      });
 
-        // Create the game
-        const newGame = await prisma.game.create({
-          data: {
-            // Associated to the room
-            roomId,
+      // Create the game
+      const newGame = await prisma.game.create({
+        data: {
+          // Associated to the room
+          roomId,
 
-            // TODO: Attention! For now, we are assuming that the game can start immediately. In fact, I think it should be this way. However, in that case, WAITING_FOR_PLAYERS is useless
-            status: GameStatus.PLAYING,
+          // TODO: Attention! For now, we are assuming that the game can start immediately. In fact, I think it should be this way. However, in that case, WAITING_FOR_PLAYERS is useless
+          status: GameStatus.PLAYING,
 
-            // Create all the players; Only related to the room users
-            // ! Attention: Additional data will be created and updated once they join the game
-            // Wrong! All the associated data should be created/updated, and when the user arrives, it's simply handed to them
-            players: {
-              createMany: {
-                data: onlineUsers.map((user) => ({
-                  roomUserId: user.id,
-                })),
-              },
-            },
-
-            // Create all the GameDecks - The decks associated to the game
-            decks: {
-              createMany: {
-                data: selectedDecks.map((deck) => ({ deckId: deck.id })),
-              },
+          // Create all the players; Only related to the room users
+          // ! Attention: Additional data will be created and updated once they join the game
+          // Wrong! All the associated data should be created/updated, and when the user arrives, it's simply handed to them
+          players: {
+            createMany: {
+              data: onlineUsers.map((user) => ({
+                roomUserId: user.id,
+              })),
             },
           },
-          select: {
-            id: true,
-            status: true,
-            players: {
-              select: {
-                id: true,
-                user: {
-                  select: {
-                    id: true,
-                    user: {
-                      select: {
-                        username: true,
-                      },
+
+          // Create all the GameDecks - The decks associated to the game
+          decks: {
+            createMany: {
+              data: selectedDecks.map((deck) => ({ deckId: deck.id })),
+            },
+          },
+        },
+        select: {
+          id: true,
+          status: true,
+          players: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  id: true,
+                  user: {
+                    select: {
+                      username: true,
                     },
                   },
                 },
-                _count: {
-                  select: {
-                    winningRounds: true,
-                  },
+              },
+              _count: {
+                select: {
+                  winningRounds: true,
                 },
               },
             },
           },
-        });
+        },
+      });
 
-        const { handPicks, roundResponse } = await roundService.createNewRound(
-          prisma,
-          newGame.id
-        );
-
-        return { createdGame: newGame, createdRound: roundResponse, handPicks };
-      }
-    );
+      return { createdGame: newGame };
+    });
 
     // Check if the game has been created
-    if (!createdGame || !createdRound || !handPicks) {
+    if (!createdGame) {
       throw new BadRequestError("Game not created");
     }
 
     // Map the game to a response
 
-    const gameResponse: GameResponse = {
+    const gameResponse: IncompleteGame = {
       id: createdGame.id,
       status: createdGame.status,
       players: createdGame.players.map((player) => ({
@@ -258,9 +246,8 @@ export class GameService {
         username: player.user.user.username,
         points: player._count.winningRounds,
       })),
-      currentRound: createdRound,
     };
 
-    return { game: gameResponse, handPicks };
+    return gameResponse;
   }
 }

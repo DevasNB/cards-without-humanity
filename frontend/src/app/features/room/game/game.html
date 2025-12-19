@@ -1,44 +1,50 @@
 @if (game(); as game) {
-  <div class="page">
-    <section class="top-flex">
-      <div>
-        <div class="card black-card">{{ game.currentRound.promptCard.text }}</div>
-        <button
-          class="confirm-selection-btn"
-          (click)="handleAnswerCardSubmit()"
-          [disabled]="!selectedAnswerCard() || hasSubmitted()"
-        >
-          Confirm Selection
-        </button>
-      </div>
+  @if (round(); as round) {
+    <div class="page">
+      <section>
+        <div class="counter">{{ counter() }}</div>
 
-      @for (card of game.currentRound.picks; track $index) {
-        <div class="card white-card">{{ card.text }}</div>
-      }
-    </section>
+        <div class="top-flex">
+          <div>
+            <div class="card black-card">{{ round.promptCard.text }}</div>
+            <button
+              class="confirm-selection-btn"
+              (click)="handleAnswerCardSubmit()"
+              [disabled]="!selectedAnswerCard() || hasSubmitted()"
+            >
+              Confirm Selection
+            </button>
+          </div>
 
-    <!-- SELECTED WHITE CARD DISPLAY -->
-    <main class="white-grid">
-      @for (card of handPick(); track $index) {
-        <button
-          class="card small white-card hand-pick"
-          [ngClass]="{
-            chosen: selectedAnswerCard()?.id === card.id,
-            'can-pick': !hasSubmitted(),
-          }"
-          (click)="selectCard(card)"
-        >
-          {{ card.text }}
-        </button>
-      }
-    </main>
+          @for (card of round.picks; track $index) {
+            <div class="card white-card">{{ card.text }}</div>
+          }
+        </div>
+      </section>
 
-    <aside class="bottom-section">
-      <app-game-player-list
-        [players]="game.players"
-        [currentUser]="currentPlayer() ?? null"
-        [czar]="game.currentRound.czar"
-      ></app-game-player-list>
-    </aside>
-  </div>
+      <!-- SELECTED WHITE CARD DISPLAY -->
+      <main class="white-grid">
+        @for (card of handPick(); track $index) {
+          <button
+            class="card small white-card hand-pick"
+            [ngClass]="{
+              chosen: selectedAnswerCard()?.id === card.id,
+              'can-pick': !hasSubmitted(),
+            }"
+            (click)="selectCard(card)"
+          >
+            {{ card.text }}
+          </button>
+        }
+      </main>
+
+      <aside class="bottom-section">
+        <app-game-player-list
+          [players]="game.players"
+          [currentUser]="currentPlayer() ?? null"
+          [czar]="round.czar"
+        ></app-game-player-list>
+      </aside>
+    </div>
+  }
 }

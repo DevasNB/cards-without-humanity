@@ -7,5 +7,10 @@ export interface GameResponse {
     players: PlayerResponse[];
     currentRound: RoundResponse;
 }
+export interface IncompleteGame {
+    id: string;
+    status: GameStatus;
+    players: PlayerResponse[];
+}
 export interface GameUpdatePayload extends GameResponse {
 }

@@ -1,6 +1,7 @@
 export const SelectedRounds = {
   select: {
     id: true,
+    createdAt: true,
     status: true,
     czar: {
       select: {

@@ -15,6 +15,7 @@ import {
   EditableRoomUserSchema,
   GameUpdatePayload,
 } from "cah-shared";
+import { startRound } from "./roundTimer";
 
 const roomService = new RoomService();
 const roomUserService = new RoomUserService();
@@ -140,7 +141,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       );
 
       // Create the roomUser in database
-      const room: CreateRoomPayload = await roomService.joinRoom(
+      const room: CreateRoomPayload = ccccgiawait roomService.joinRoom(
         payload.roomId,
         socket.data.userId,
         socket.id
@@ -285,9 +286,18 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
     }
   });
 
-  // When a user starts the game
+  // on host click start game, start countdown
+  // Notify room users it's about to start in 3 seconds
+  /*
+      io.to(currentRoomId).emit("game:starting", {
+        message: "Starting game in 3 seconds.",
+      });*/
+
+  // Here it already started the game
   socket.on("room:host:startGame", async () => {
     const currentRoomId = socket.data.currentRoomId;
+
+    console.log("USER TOLD TO START THE GAME");
 
     try {
       // Check if user is in a room
@@ -305,18 +315,20 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
 
       // Update room in database
       // TODO: Make this already return the handPick
-      const { game, handPicks } = await gameService.startGame(currentRoomId);
+      const game = await gameService.startGame(currentRoomId);
+
+      console.log("A GAME WAS CREATED");
 
       // Set socket data info related to game
       socket.data.currentGameId = game.id;
 
-      // Notify all users in the room with the new game state
-      for (const [connectionId, cards] of handPicks) {
-        io.to(connectionId).emit("room:game:new", {
-          game: game,
-          handPick: cards,
-        });
-      }
+      console.log("EVERYONE WAS WWARNED THAT THE GAME STARTED");
+
+      io.to(currentRoomId).emit("room:game:new", {
+        game,
+      });
+
+      await startRound(game, io);
 
       console.log(`Game ${game.id} updated: ${JSON.stringify(game)}`);
     } catch (error: any) {
@@ -340,9 +352,16 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
         throw new AppError("Not currently in a room.", 400);
       }
 
+      if (socket.data.isHost) {
+        console.warn("User has already joined the game because it is the host");
+        return;
+      }
+
       if (socket.data.currentGameId) {
         throw new AppError("Already in a game.", 400);
       }
+
+      console.log("HEEEY:");
 
       console.log(
         `User ${socket.data.username} (${socket.data.userId}) joining game in room ${currentRoomId}`

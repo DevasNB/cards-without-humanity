@@ -2,6 +2,8 @@ import { RoundResponse } from "cah-shared";
 import { Prisma, RoundStatus } from "@prisma/client";
 import { SelectedRoundsType } from "../types/rounds";
 
+const ROUND_DURATION = 30_000;
+
 export function getRoundResponse(
   updatedRound: Prisma.RoundGetPayload<{
     select: SelectedRoundsType;
@@ -24,6 +26,8 @@ export function getRoundResponse(
 
   const roundResponse: RoundResponse = {
     id: updatedRound.id,
+    startedAt: updatedRound.createdAt.getTime(),
+    endsAt: updatedRound.createdAt.getTime() + ROUND_DURATION,
     status: updatedRound.status,
     czar: {
       id: czar.id,

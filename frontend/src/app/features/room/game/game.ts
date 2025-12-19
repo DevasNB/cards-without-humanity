@@ -1,9 +1,24 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import { GameResponse, AnswerCard, PlayerResponse } from 'cah-shared';
+import {
+  GameResponse,
+  AnswerCard,
+  PlayerResponse,
+  IncompleteGame,
+  RoundResponse,
+} from 'cah-shared';
 import { GameService } from '../../../services/room/game/game.service';
-import { Subject, takeUntil } from 'rxjs';
+import { filter, interval, map, Subject, switchMap, takeUntil, takeWhile } from 'rxjs';
 import { PlayerList } from './player-list/player-list';
 import { CommonModule } from '@angular/common';
+
+// TODO: make this the same for frontend and backend
+const ROUND_DURATION = 30_000;
+const getCounterNumber = (endsAt: number) => {
+  const remainingMs = endsAt - Date.now();
+  const remainingSeconds = Math.ceil(remainingMs / 1000);
+
+  return Math.max(0, remainingSeconds);
+};
 
 @Component({
   selector: 'app-game',
@@ -16,11 +31,15 @@ export class Game implements OnInit, OnDestroy {
   // Game from parent
   private readonly destroy$ = new Subject<void>();
 
-  // Signals for reactive UI
-  game = signal<GameResponse | null>(null);
+  // Signals for reactive streams
+  game = signal<IncompleteGame | null>(null);
+  round = signal<RoundResponse | null>(null);
   handPick = signal<AnswerCard[]>([]);
-  currentPlayer = signal<PlayerResponse | null>(null);
 
+  currentPlayer = signal<PlayerResponse | null>(null);
+  counter = signal<number>(ROUND_DURATION / 1000);
+
+  // Signals for user interaction
   selectedAnswerCard = signal<AnswerCard | null>(null);
   hasSubmitted = signal<boolean>(false);
 
@@ -29,6 +48,25 @@ export class Game implements OnInit, OnDestroy {
   ngOnInit() {
     // Subscribe to reactive streams from the service
     this.gameService.game$.pipe(takeUntil(this.destroy$)).subscribe((game) => this.game.set(game));
+
+    this.gameService.round$
+      .pipe(
+        takeUntil(this.destroy$),
+        filter((round): round is RoundResponse => !!round),
+        switchMap((round) =>
+          interval(500).pipe(
+            map(() => getCounterNumber(round.endsAt)),
+            takeWhile((x) => x > 0, true),
+          ),
+        ),
+      )
+      .subscribe((counter) => {
+        this.counter.set(counter);
+      });
+
+    this.gameService.round$.pipe(takeUntil(this.destroy$)).subscribe((round) => {
+      this.round.set(round);
+    });
 
     this.gameService.handPick$
       .pipe(takeUntil(this.destroy$))
