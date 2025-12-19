@@ -141,7 +141,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       );
 
       // Create the roomUser in database
-      const room: CreateRoomPayload = ccccgiawait roomService.joinRoom(
+      const room: CreateRoomPayload = await roomService.joinRoom(
         payload.roomId,
         socket.data.userId,
         socket.id
