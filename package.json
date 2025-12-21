@@ -7,17 +7,10 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.6",
     "prettier": "^3.6.2",
-    "prettier-plugin-prisma": "^5.0.0",
     "semantic-release": "^24.2.9"
   },
   "scripts": {
-    "lint-staged": "lint-staged",
-    "build": "npm -w cah-shared run build && npm -w backend run build && npm -w frontend run build",
-    "postinstall": "npm --workspace shared run build"
-  },
-  "workspaces": [
-    "shared",
-    "frontend",
-    "backend"
-  ]
+    "prepare": "husky install",
+    "lint-staged": "lint-staged"
+  }
 }
