@@ -1,5 +1,5 @@
 // src/services/game.service.ts
-import { Prisma, RoomUserStatus } from "@prisma/client";
+import { Prisma, RoomUserStatus, RoundStatus } from "@prisma/client";
 import prisma from "../utils/prisma";
 import { NotFoundError } from "../utils/errors";
 import { fisherYatesShuffle } from "../utils/helpers";
@@ -192,7 +192,7 @@ export class CardService {
   ): Promise<void> {
     // TODO: fix this method: with playerId and roundId
     const currentRound = await prisma.round.findFirst({
-      where: { gameId },
+      where: { gameId, status: RoundStatus.DRAWING_CARDS },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,

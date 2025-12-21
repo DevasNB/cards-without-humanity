@@ -15,12 +15,14 @@ import {
   EditableRoomUserSchema,
   GameUpdatePayload,
 } from "cah-shared";
-import { startRound } from "./roundTimer";
+import { endRound, startRound } from "./roundTimer";
+import { RoundService } from "../../services/round.service";
 
 const roomService = new RoomService();
 const roomUserService = new RoomUserService();
 const gameService = new GameService();
 const cardService = new CardService();
+const roundService = new RoundService();
 
 const removeData = (socket: GameSocket) => {
   // Clear socket data info related to room
@@ -87,7 +89,6 @@ const leaveRoom = async (
 ) => {
   // Clear socket data info related to room
   removeData(socket);
-  console.log("LEAVINGGGG");
 
   if (!roomId) {
     throw new AppError("Room ID not provided.");
@@ -297,8 +298,6 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
   socket.on("room:host:startGame", async () => {
     const currentRoomId = socket.data.currentRoomId;
 
-    console.log("USER TOLD TO START THE GAME");
-
     try {
       // Check if user is in a room
       if (!currentRoomId) {
@@ -317,12 +316,8 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       // TODO: Make this already return the handPick
       const game = await gameService.startGame(currentRoomId);
 
-      console.log("A GAME WAS CREATED");
-
       // Set socket data info related to game
       socket.data.currentGameId = game.id;
-
-      console.log("EVERYONE WAS WWARNED THAT THE GAME STARTED");
 
       io.to(currentRoomId).emit("room:game:new", {
         game,
@@ -360,8 +355,6 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       if (socket.data.currentGameId) {
         throw new AppError("Already in a game.", 400);
       }
-
-      console.log("HEEEY:");
 
       console.log(
         `User ${socket.data.username} (${socket.data.userId}) joining game in room ${currentRoomId}`
@@ -409,6 +402,13 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
         socket.data.userId,
         payload.cardId
       );
+
+      const { haveAllPlayersSubmitted, roundId } =
+        await roundService.haveAllPlayersSubmitted(socket.data.currentGameId);
+
+      if (haveAllPlayersSubmitted) {
+        endRound(socket.data.currentGameId, roundId, io, "all_played");
+      }
 
       // Notify all users in the room with the new game state
       emitGameUpdate(io, currentRoomId);

@@ -50,6 +50,13 @@ export class GameService {
         this.handPickSubject.next([...currentHandPick, ...update.handPick]);
       });
 
+    this.socketService
+      .listen('game:round:end')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((update) => {
+        this.roundSubject.next(update.round);
+      });
+
     // General game updates
     this.socketService.listen('game:update').subscribe((update) => {
       this.gameSubject.next(update);

@@ -147,7 +147,6 @@ model Game {
 enum GameStatus {
   WAITING_FOR_PLAYERS // When in lobby
   PLAYING // When playing a round
-  ROUND_ENDED // When a round has ended
   GAME_ENDED // When the game ended
 }
 

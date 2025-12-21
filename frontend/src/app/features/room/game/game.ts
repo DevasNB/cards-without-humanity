@@ -1,11 +1,5 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import {
-  GameResponse,
-  AnswerCard,
-  PlayerResponse,
-  IncompleteGame,
-  RoundResponse,
-} from 'cah-shared';
+import { AnswerCard, PlayerResponse, IncompleteGame, RoundResponse } from 'cah-shared';
 import { GameService } from '../../../services/room/game/game.service';
 import { filter, interval, map, Subject, switchMap, takeUntil, takeWhile } from 'rxjs';
 import { PlayerList } from './player-list/player-list';
@@ -49,12 +43,14 @@ export class Game implements OnInit, OnDestroy {
     // Subscribe to reactive streams from the service
     this.gameService.game$.pipe(takeUntil(this.destroy$)).subscribe((game) => this.game.set(game));
 
+    // TODO: fix "DRAWING_CARDS"
     this.gameService.round$
       .pipe(
         takeUntil(this.destroy$),
         filter((round): round is RoundResponse => !!round),
         switchMap((round) =>
           interval(500).pipe(
+            filter(() => round.status === "DRAWING_CARDS"),
             map(() => getCounterNumber(round.endsAt)),
             takeWhile((x) => x > 0, true),
           ),

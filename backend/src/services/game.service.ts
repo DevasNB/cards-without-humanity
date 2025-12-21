@@ -1,6 +1,11 @@
 // src/services/game.service.ts
 import prisma from "../utils/prisma";
-import { AnswerCard, GameResponse, IncompleteGame } from "cah-shared";
+import {
+  AnswerCard,
+  GameResponse,
+  IncompleteGame,
+  RoundResponse,
+} from "cah-shared";
 import { BadRequestError, NotFoundError } from "../utils/errors";
 import { SelectedRounds } from "../utils/prisma/helpers/selects/rounds";
 import { getRoundResponse } from "../utils/prisma/helpers/dtos/rounds";
@@ -61,7 +66,7 @@ export class GameService {
       throw new NotFoundError("Round not found");
     }
 
-    const roundResponse = getRoundResponse(updatedRound);
+    const roundResponse: RoundResponse = getRoundResponse(updatedRound);
 
     // Map the game to a response
     const gameResponse: GameResponse = {

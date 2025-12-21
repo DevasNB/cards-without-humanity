@@ -6,11 +6,12 @@ import { randomElement } from "../utils/helpers";
 import { getRoundResponse } from "../utils/prisma/helpers/dtos/rounds";
 import { SelectedRounds } from "../utils/prisma/helpers/selects/rounds";
 import prisma from "../utils/prisma";
+import { NotFoundError } from "../utils/errors";
 
 const cardService = new CardService();
 
 export class RoundService {
-  public async createNewRound(gameId: string): Promise<{
+  public async create(gameId: string): Promise<{
     handPicks: Map<string, AnswerCard[]>;
     roundResponse: RoundResponse;
   }> {
@@ -143,6 +144,57 @@ export class RoundService {
       roomUserId: nextCzar.user.id,
       username: nextCzar.user.user.username,
       points: nextCzar._count.winningRounds,
+    };
+  }
+
+  public async updateToVoting(roundId: string): Promise<RoundResponse> {
+    const round = await prisma.round.update({
+      where: { id: roundId },
+      data: { status: RoundStatus.CZAR_VOTING },
+      select: SelectedRounds.select,
+    });
+
+    return getRoundResponse(round);
+  }
+
+  public async haveAllPlayersSubmitted(
+    gameId: string
+  ): Promise<{ haveAllPlayersSubmitted: boolean; roundId: string }> {
+    // TODO: fix this method: with playerId and roundId
+    const currentRound = await prisma.round.findFirst({
+      where: { gameId, status: RoundStatus.DRAWING_CARDS },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!currentRound) {
+      throw new NotFoundError("Round not found");
+    }
+
+    // Check if all players have selected a card
+    const players = await prisma.player.findMany({
+      where: {
+        user: {
+          status: RoomUserStatus.IN_GAME,
+        },
+        gameId: gameId,
+      },
+      select: {
+        submissions: {
+          where: {
+            roundId: currentRound.id,
+          },
+        },
+      },
+    });
+
+    return {
+      haveAllPlayersSubmitted: players.every(
+        (player) => player.submissions.length > 0
+      ),
+      roundId: currentRound.id,
     };
   }
 }

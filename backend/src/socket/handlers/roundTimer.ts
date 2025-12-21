@@ -1,7 +1,7 @@
 import { RoundService } from "../../services/round.service";
 import { BadRequestError } from "../../utils/errors";
 import { IoInstance } from "../config";
-import { GameResponse, IncompleteGame, RoundResponse } from "cah-shared";
+import { IncompleteGame } from "cah-shared";
 
 const roundService = new RoundService();
 
@@ -27,15 +27,9 @@ export async function startRound(
   game: IncompleteGame,
   io: IoInstance
 ): Promise<void> {
-  console.log("THE ROUND IS STARTING!");
   setDefaultGameState(game);
 
-  // TODO: Round cannot be created here
-  const { handPicks, roundResponse } = await roundService.createNewRound(
-    game.id
-  );
-
-  console.log("CREATED A NEW ROUND");
+  const { handPicks, roundResponse } = await roundService.create(game.id);
 
   if (!roundResponse || !handPicks) {
     throw new BadRequestError("Round not created");
@@ -50,10 +44,9 @@ export async function startRound(
   // Set timer
   inMemoryGame.roundEndsAt = roundResponse.endsAt;
   inMemoryGame.roundTimer = setTimeout(() => {
-    endRound(game.id, io, "timeout");
+    endRound(game.id, roundResponse.id, io, "timeout");
   }, ROUND_DURATION);
 
-  console.log("EVERYONE SHOULD RECEIVE A NEW ROUND");
   // Notify all users in the room with the new game state
   for (const [connectionId, cards] of handPicks) {
     io.to(connectionId).emit("game:round:new", {
@@ -63,13 +56,13 @@ export async function startRound(
   }
 }
 
-export function endRound(
+export async function endRound(
   gameId: string,
+  roundId: string,
   io: IoInstance,
   reason: "timeout" | "all_played"
-): void {
+): Promise<void> {
   const room = activeGames[gameId];
-
   if (!room.roundEndsAt) return; // already ended
 
   if (room.roundTimer) {
@@ -78,9 +71,12 @@ export function endRound(
   }
 
   room.roundEndsAt = null;
+  
+  const round = await roundService.updateToVoting(roundId);
 
   io.to(gameId).emit("game:round:end", {
     reason,
+    round
   });
 
   // startRound(gameId, io);

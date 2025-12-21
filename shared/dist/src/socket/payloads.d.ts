@@ -10,4 +10,5 @@ export interface MiddleGamePayload {
 }
 export interface EndRoundPayload {
     reason: 'timeout' | 'all_played';
+    round: RoundResponse;
 }
