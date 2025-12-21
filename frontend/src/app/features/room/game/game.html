@@ -10,7 +10,7 @@
             <button
               class="confirm-selection-btn"
               (click)="handleAnswerCardSubmit()"
-              [disabled]="!selectedAnswerCard() || hasSubmitted()"
+              [disabled]="!selectedAnswerCard() || !canSubmit()"
             >
               Confirm Selection
             </button>
@@ -28,8 +28,8 @@
           <button
             class="card small white-card hand-pick"
             [ngClass]="{
-              chosen: selectedAnswerCard()?.id === card.id,
-              'can-pick': !hasSubmitted(),
+              chosen: selectedAnswerCard()?.id === card.id && !isCzar(),
+              'can-pick': canSubmit(),
             }"
             (click)="selectCard(card)"
           >

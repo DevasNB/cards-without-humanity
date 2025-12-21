@@ -1,14 +1,14 @@
 // src/services/game.service.ts
 import { Prisma, RoomUserStatus, RoundStatus } from "@prisma/client";
 import prisma from "../utils/prisma";
-import { NotFoundError } from "../utils/errors";
+import { BadRequestError, NotFoundError } from "../utils/errors";
 import { fisherYatesShuffle } from "../utils/helpers";
 import { AnswerCard, PromptCard } from "cah-shared";
 
 export class CardService {
   public async getHandPickForPlayersInGame(
     tx: Prisma.TransactionClient,
-    gameId: string
+    gameId: string,
   ): Promise<Map<string, AnswerCard[]>> {
     // Get all valid cards from the decks table
     const answerCards = await tx.answerCard.findMany({
@@ -93,7 +93,7 @@ export class CardService {
     // Create an array of objects to insert and shuffle it
     const shuffledCards = fisherYatesShuffle<{ id: string }>(
       missingNumberOfCards * game.players.length,
-      answerCards
+      answerCards,
     );
 
     const playerHandCards = [];
@@ -155,7 +155,7 @@ export class CardService {
 
   public async getNewPromptCard(
     tx: Prisma.TransactionClient,
-    gameId: string
+    gameId: string,
   ): Promise<PromptCard> {
     const ids = await tx.promptCard.findMany({
       where: {
@@ -188,7 +188,7 @@ export class CardService {
   public async selectCard(
     gameId: string,
     userId: string,
-    cardId: string
+    cardId: string,
   ): Promise<void> {
     // TODO: fix this method: with playerId and roundId
     const currentRound = await prisma.round.findFirst({
@@ -225,6 +225,11 @@ export class CardService {
       },
       select: {
         id: true,
+        judgingRounds: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
 
@@ -232,6 +237,11 @@ export class CardService {
       throw new NotFoundError("Player not found");
     }
 
+    if (
+      player.judgingRounds.map((round) => round.id).includes(currentRound.id)
+    ) {
+      throw new BadRequestError("This player is the czar for this round");
+    }
     await prisma.roundPick.create({
       data: {
         cardId,

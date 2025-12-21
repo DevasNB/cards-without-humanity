@@ -41,7 +41,7 @@ export class RoundService {
 
   private async getNextCzar(
     tx: Prisma.TransactionClient,
-    gameId: string
+    gameId: string,
   ): Promise<PlayerResponse> {
     // Find all players
     const possiblePlayers = await tx.player.findMany({
@@ -72,7 +72,7 @@ export class RoundService {
     });
 
     const neverCzar = possiblePlayers.filter(
-      (p) => p._count.judgingRounds === 0
+      (p) => p._count.judgingRounds === 0,
     );
 
     // If there is at least one player from the game that has not been czar yet
@@ -134,7 +134,7 @@ export class RoundService {
     const candidates = sorted.filter(
       (p) =>
         (p.judgingRounds[0]?.createdAt ?? new Date(0)).getTime() ===
-        earliestLastJudged.getTime()
+        earliestLastJudged.getTime(),
     );
 
     const nextCzar = randomElement(candidates);
@@ -158,7 +158,7 @@ export class RoundService {
   }
 
   public async haveAllPlayersSubmitted(
-    gameId: string
+    gameId: string,
   ): Promise<{ haveAllPlayersSubmitted: boolean; roundId: string }> {
     // TODO: fix this method: with playerId and roundId
     const currentRound = await prisma.round.findFirst({
@@ -180,6 +180,11 @@ export class RoundService {
           status: RoomUserStatus.IN_GAME,
         },
         gameId: gameId,
+        judgingRounds: {
+          none: {
+            id: currentRound.id,
+          },
+        },
       },
       select: {
         submissions: {
@@ -192,9 +197,23 @@ export class RoundService {
 
     return {
       haveAllPlayersSubmitted: players.every(
-        (player) => player.submissions.length > 0
+        (player) => player.submissions.length > 0,
       ),
       roundId: currentRound.id,
     };
+  }
+
+  public async getRoundState(roomId: string): Promise<RoundResponse> {
+    const round = await prisma.round.findFirst({
+      where: { game: { roomId } },
+      orderBy: { createdAt: "desc" },
+      select: SelectedRounds.select,
+    });
+
+    if (!round) {
+      throw new NotFoundError("Round not found");
+    }
+
+    return getRoundResponse(round);
   }
 }

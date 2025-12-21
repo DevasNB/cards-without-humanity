@@ -13,6 +13,10 @@ export interface MiddleGamePayload {
   handPick: AnswerCard[];
 }
 
+export interface RoundUpdatePayload {
+  round: RoundResponse;
+}
+
 export interface EndRoundPayload {
   reason: 'timeout' | 'all_played';
   round: RoundResponse;

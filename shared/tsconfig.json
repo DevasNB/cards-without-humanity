@@ -2,7 +2,7 @@
   "compilerOptions": {
     "types": ["node"],
     "lib": ["es2020"],
-    "rootDir": "./", // Root directory for your TypeScript source files
+    "rootDir": "./src", // Root directory for your TypeScript source files
     "skipLibCheck": true, // Skip type checking of all declaration files (*.d.ts)
     "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased file names.
     "resolveJsonModule": true, // Allow importing .json files

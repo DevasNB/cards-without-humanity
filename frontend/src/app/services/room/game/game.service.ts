@@ -51,6 +51,13 @@ export class GameService {
       });
 
     this.socketService
+      .listen('game:round:update')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((update) => {
+        this.roundSubject.next(update.round);
+      });
+
+    this.socketService
       .listen('game:round:end')
       .pipe(takeUntil(this.destroy$))
       .subscribe((update) => {

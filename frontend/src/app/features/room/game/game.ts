@@ -30,6 +30,8 @@ export class Game implements OnInit, OnDestroy {
   round = signal<RoundResponse | null>(null);
   handPick = signal<AnswerCard[]>([]);
 
+  isCzar = signal<boolean>(false);
+
   currentPlayer = signal<PlayerResponse | null>(null);
   counter = signal<number>(ROUND_DURATION / 1000);
 
@@ -62,6 +64,7 @@ export class Game implements OnInit, OnDestroy {
 
     this.gameService.round$.pipe(takeUntil(this.destroy$)).subscribe((round) => {
       this.round.set(round);
+      this.isCzar.set(round?.czar.username === this.currentPlayer()?.username);
     });
 
     this.gameService.handPick$
@@ -81,7 +84,7 @@ export class Game implements OnInit, OnDestroy {
   // Methods
 
   protected selectCard(card: AnswerCard): void {
-    if (this.hasSubmitted()) return;
+    if (!this.canSubmit()) return;
 
     this.selectedAnswerCard.set(card);
   }
@@ -90,14 +93,17 @@ export class Game implements OnInit, OnDestroy {
    * Called when the user submits their chosen answer card.
    * Emits the event to the server to record the submission.
    */
-  handleAnswerCardSubmit() {
-    if (this.hasSubmitted()) return;
+  protected handleAnswerCardSubmit(): void {
+    if (!this.canSubmit()) return;
 
     const card = this.selectedAnswerCard();
+    if (!card) return;
 
-    if (card) {
-      this.gameService.submitWhiteCard(card);
-      this.hasSubmitted.set(true);
-    }
+    this.gameService.submitWhiteCard(card);
+    this.hasSubmitted.set(true);
+  }
+
+  protected canSubmit(): boolean {
+    return !(this.hasSubmitted() || this.isCzar());
   }
 }

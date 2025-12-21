@@ -14,6 +14,7 @@ import {
   EditableRoomUser,
   EditableRoomUserSchema,
   GameUpdatePayload,
+  RoundResponse,
 } from "cah-shared";
 import { endRound, startRound } from "./roundTimer";
 import { RoundService } from "../../services/round.service";
@@ -75,6 +76,33 @@ const emitGameUpdate = async (
     if (gameState) {
       io.to(roomId).emit("game:update", gameState);
       console.log(`Game ${roomId} updated: ${JSON.stringify(gameState)}`);
+    }
+  } catch (error: any) {
+    console.error(`Failed to emit game update for ${roomId}:`, error);
+    // Consider emitting a general error or specific room error to clients if critical
+  }
+};
+
+/**
+ * Emits a comprehensive game update to all clients in a specific room.
+ * @param io - The Socket.IO server instance.
+ * @param roomId - The ID of the room to update.
+ * @returns A promise that resolves when the update is complete.
+ * @throws {Error} If there is an error while emitting the update.
+ */
+const emitRoundUpdate = async (
+  io: IoInstance,
+  roomId: string,
+): Promise<void> => {
+  try {
+    // TODO: Do not send the whole object at once
+    const roundState: RoundResponse = await roundService.getRoundState(roomId); // Get latest room data from service
+
+    if (roundState) {
+      io.to(roomId).emit("game:round:update", { round: roundState });
+      console.log(
+        `Round ${roundState.id} updated: ${JSON.stringify(roundState)}`,
+      );
     }
   } catch (error: any) {
     console.error(`Failed to emit game update for ${roomId}:`, error);
@@ -417,7 +445,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       }
 
       // Notify all users in the room with the new game state
-      emitGameUpdate(io, currentRoomId);
+      emitRoundUpdate(io, currentRoomId);
     } catch (error: any) {
       console.error(
         `Error selecting card ${payload.cardId} in game ${socket.data.currentGameId}:`,
