@@ -50,7 +50,7 @@ export class Game implements OnInit, OnDestroy {
         filter((round): round is RoundResponse => !!round),
         switchMap((round) =>
           interval(500).pipe(
-            filter(() => round.status === "DRAWING_CARDS"),
+            takeWhile(() => round.status === 'DRAWING_CARDS'),
             map(() => getCounterNumber(round.endsAt)),
             takeWhile((x) => x > 0, true),
           ),

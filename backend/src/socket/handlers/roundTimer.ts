@@ -25,7 +25,8 @@ const setDefaultGameState = (game: IncompleteGame) => {
 
 export async function startRound(
   game: IncompleteGame,
-  io: IoInstance
+  roomId: string,
+  io: IoInstance,
 ): Promise<void> {
   setDefaultGameState(game);
 
@@ -44,7 +45,7 @@ export async function startRound(
   // Set timer
   inMemoryGame.roundEndsAt = roundResponse.endsAt;
   inMemoryGame.roundTimer = setTimeout(() => {
-    endRound(game.id, roundResponse.id, io, "timeout");
+    endRound(game.id, roomId, roundResponse.id, io, "timeout");
   }, ROUND_DURATION);
 
   // Notify all users in the room with the new game state
@@ -58,9 +59,10 @@ export async function startRound(
 
 export async function endRound(
   gameId: string,
+  roomId: string,
   roundId: string,
   io: IoInstance,
-  reason: "timeout" | "all_played"
+  reason: "timeout" | "all_played",
 ): Promise<void> {
   const room = activeGames[gameId];
   if (!room.roundEndsAt) return; // already ended
@@ -71,12 +73,12 @@ export async function endRound(
   }
 
   room.roundEndsAt = null;
-  
+
   const round = await roundService.updateToVoting(roundId);
 
-  io.to(gameId).emit("game:round:end", {
+  io.to(roomId).emit("game:round:end", {
     reason,
-    round
+    round,
   });
 
   // startRound(gameId, io);

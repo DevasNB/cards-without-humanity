@@ -41,7 +41,7 @@ const removeData = (socket: GameSocket) => {
  */
 const emitRoomUpdate = async (
   io: IoInstance,
-  roomId: string
+  roomId: string,
 ): Promise<void> => {
   try {
     // TODO: Do not send the whole object at once
@@ -66,7 +66,7 @@ const emitRoomUpdate = async (
  */
 const emitGameUpdate = async (
   io: IoInstance,
-  roomId: string
+  roomId: string,
 ): Promise<void> => {
   try {
     // TODO: Do not send the whole object at once
@@ -85,7 +85,7 @@ const emitGameUpdate = async (
 const leaveRoom = async (
   io: IoInstance,
   socket: GameSocket,
-  roomId?: string
+  roomId?: string,
 ) => {
   // Clear socket data info related to room
   removeData(socket);
@@ -97,7 +97,7 @@ const leaveRoom = async (
   // Update database of roomUser disconnecting from room
   const wasRoomDeleted = await roomService.leaveRoom(
     socket.data.userId,
-    roomId
+    roomId,
   );
 
   // Remove socket from the Socket.IO room
@@ -125,7 +125,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
 
     try {
       console.log(
-        `A user disconnected: ${socket.data.username} (ID: ${socket.id})`
+        `A user disconnected: ${socket.data.username} (ID: ${socket.id})`,
       );
 
       await leaveRoom(io, socket, currentRoomId);
@@ -138,21 +138,21 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
   socket.on("room:join", async (payload: { roomId: string }) => {
     try {
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) attempting to join room ${payload.roomId}`
+        `User ${socket.data.username} (${socket.data.userId}) attempting to join room ${payload.roomId}`,
       );
 
       // Create the roomUser in database
       const room: CreateRoomPayload = await roomService.joinRoom(
         payload.roomId,
         socket.data.userId,
-        socket.id
+        socket.id,
       );
 
       // Add socket to the Socket.IO room
       socket.join(payload.roomId);
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) joined room ${payload.roomId}`
+        `User ${socket.data.username} (${socket.data.userId}) joined room ${payload.roomId}`,
       );
       // Store on socket data info about the roomId and if the user is host
       socket.data.currentRoomId = payload.roomId;
@@ -190,14 +190,14 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       const payload = EditableRoomUserSchema.parse(rawPayload);
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) updating room ${currentRoomId}`
+        `User ${socket.data.username} (${socket.data.userId}) updating room ${currentRoomId}`,
       );
 
       // Update roomUser in database
       await roomUserService.changeRoomUserStatus(
         socket.data.userId,
         currentRoomId,
-        payload
+        payload,
       );
 
       // Notify all users in the room with the new room state
@@ -227,7 +227,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       if (!socket.data.isHost) {
         // Make sure only the host can update room settings
         const error = new UnauthorizedError(
-          "Only the host can update room settings."
+          "Only the host can update room settings.",
         );
 
         console.error(`Error updating room settings:`, error);
@@ -243,7 +243,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       const payload = EditableRoomSchema.parse(rawPayload);
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) updating room ${currentRoomId}`
+        `User ${socket.data.username} (${socket.data.userId}) updating room ${currentRoomId}`,
       );
 
       // Update room in database
@@ -272,7 +272,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       }
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) leaving room ${currentRoomId}`
+        `User ${socket.data.username} (${socket.data.userId}) leaving room ${currentRoomId}`,
       );
 
       await leaveRoom(io, socket, currentRoomId);
@@ -309,7 +309,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       }
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) starting game in room ${currentRoomId}`
+        `User ${socket.data.username} (${socket.data.userId}) starting game in room ${currentRoomId}`,
       );
 
       // Update room in database
@@ -323,7 +323,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
         game,
       });
 
-      await startRound(game, io);
+      await startRound(game, currentRoomId, io);
 
       console.log(`Game ${game.id} updated: ${JSON.stringify(game)}`);
     } catch (error: any) {
@@ -357,7 +357,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       }
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) joining game in room ${currentRoomId}`
+        `User ${socket.data.username} (${socket.data.userId}) joining game in room ${currentRoomId}`,
       );
 
       const gameId = await gameService.getRoomAssociatedGameId(currentRoomId); // Get latest room data from service
@@ -393,21 +393,27 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       }
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) selecting card ${payload.cardId} in game ${socket.data.currentGameId}`
+        `User ${socket.data.username} (${socket.data.userId}) selecting card ${payload.cardId} in game ${socket.data.currentGameId}`,
       );
 
       // Update game in database
       await cardService.selectCard(
         socket.data.currentGameId,
         socket.data.userId,
-        payload.cardId
+        payload.cardId,
       );
 
       const { haveAllPlayersSubmitted, roundId } =
         await roundService.haveAllPlayersSubmitted(socket.data.currentGameId);
 
       if (haveAllPlayersSubmitted) {
-        endRound(socket.data.currentGameId, roundId, io, "all_played");
+        endRound(
+          socket.data.currentGameId,
+          currentRoomId,
+          roundId,
+          io,
+          "all_played",
+        );
       }
 
       // Notify all users in the room with the new game state
@@ -415,7 +421,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
     } catch (error: any) {
       console.error(
         `Error selecting card ${payload.cardId} in game ${socket.data.currentGameId}:`,
-        error
+        error,
       );
 
       // Send not-found error
