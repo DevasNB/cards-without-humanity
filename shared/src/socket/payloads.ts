@@ -1,3 +1,4 @@
+import { PlayerResponse } from 'src/models';
 import { AnswerCard } from '../models/AnswerCard';
 import { IncompleteGame } from '../models/Game';
 import { RoundResponse } from '../models/Round';
@@ -15,6 +16,7 @@ export interface MiddleGamePayload {
 
 export interface RoundUpdatePayload {
   round: RoundResponse;
+  players: PlayerResponse[] | undefined;
 }
 
 export interface EndRoundPayload {

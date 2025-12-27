@@ -9,6 +9,7 @@ export class CardService {
   public async getHandPickForPlayersInGame(
     tx: Prisma.TransactionClient,
     gameId: string,
+    lastRoundPick: number
   ): Promise<Map<string, AnswerCard[]>> {
     // Get all valid cards from the decks table
     const answerCards = await tx.answerCard.findMany({
@@ -85,15 +86,14 @@ export class CardService {
     }
 
     // Calculate the number of cards that are missing
-    const pick = game.rounds[0]?.promptCard.pick ?? 0;
-    const missingNumberOfCards = 7 - pick;
+    const missingNumberOfCards = 7 - lastRoundPick;
 
     if (missingNumberOfCards <= 0) return new Map();
 
     // Create an array of objects to insert and shuffle it
     const shuffledCards = fisherYatesShuffle<{ id: string }>(
       missingNumberOfCards * game.players.length,
-      answerCards,
+      answerCards
     );
 
     const playerHandCards = [];
@@ -105,6 +105,15 @@ export class CardService {
         playerHandCards.push({ playerId: player.id, cardId: card.id });
         cardIndex++;
       }
+    }
+
+    if (playerHandCards.length !== 7 * game.players.length) {
+      console.log("Answer cards: ", answerCards);
+      console.log("Rounds: ", game.rounds);
+      console.log("Pick: ", lastRoundPick);
+      console.log("Missing number of cards: ", missingNumberOfCards);
+      console.log("Shuffled cards: ", shuffledCards);
+      console.log("Player hand cards: ", playerHandCards);
     }
 
     // Insert all entries
@@ -155,7 +164,7 @@ export class CardService {
 
   public async getNewPromptCard(
     tx: Prisma.TransactionClient,
-    gameId: string,
+    gameId: string
   ): Promise<PromptCard> {
     const ids = await tx.promptCard.findMany({
       where: {
@@ -188,7 +197,7 @@ export class CardService {
   public async selectCard(
     gameId: string,
     userId: string,
-    cardId: string,
+    cardId: string
   ): Promise<void> {
     // TODO: fix this method: with playerId and roundId
     const currentRound = await prisma.round.findFirst({
@@ -242,6 +251,7 @@ export class CardService {
     ) {
       throw new BadRequestError("This player is the czar for this round");
     }
+
     await prisma.roundPick.create({
       data: {
         cardId,

@@ -49,15 +49,27 @@
   cursor: default;
 }
 
-.hand-pick.can-pick:hover {
+.confirm-selection-btn:disabled,
+.hand-pick:disabled {
+  color: #666;
+  background: #eee;
+}
+
+.czar-pick:not(:disabled):hover,
+.hand-pick.selectable:not(:disabled):hover {
   cursor: pointer;
   border-color: black;
   transform: translateY(-3px);
 }
 
+.czar-pick.chosen,
 .white-card.chosen {
   border-color: black;
   background: #efefef;
+}
+
+.czar-pick.winner {
+  background: #ef444450;
 }
 
 /* WHITE CARDS */

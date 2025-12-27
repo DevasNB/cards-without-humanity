@@ -1,11 +1,10 @@
 import { RoundService } from "../../services/round.service";
 import { BadRequestError } from "../../utils/errors";
+import { ROUND_DURATION } from "../../utils/prisma/helpers/dtos/rounds";
 import { IoInstance } from "../config";
 import { IncompleteGame } from "cah-shared";
 
 const roundService = new RoundService();
-
-const ROUND_DURATION = 30_000;
 
 interface ActiveRounds {
   roundId: string | null;
@@ -26,7 +25,7 @@ const setDefaultGameState = (game: IncompleteGame) => {
 export async function startRound(
   game: IncompleteGame,
   roomId: string,
-  io: IoInstance,
+  io: IoInstance
 ): Promise<void> {
   setDefaultGameState(game);
 
@@ -62,24 +61,31 @@ export async function endRound(
   roomId: string,
   roundId: string,
   io: IoInstance,
-  reason: "timeout" | "all_played",
+  reason: "timeout" | "all_played"
 ): Promise<void> {
-  const room = activeGames[gameId];
-  if (!room.roundEndsAt) return; // already ended
+  try {
+    const room = activeGames[gameId];
+    if (!room.roundEndsAt) return; // already ended
 
-  if (room.roundTimer) {
-    clearTimeout(room.roundTimer);
-    room.roundTimer = null;
+    console.log(room, 148);
+    if (room.roundTimer) {
+      clearTimeout(room.roundTimer);
+      room.roundTimer = null;
+    }
+
+    console.log(room, 14941);
+
+    room.roundEndsAt = null;
+
+    const round = await roundService.updateToVoting(roundId);
+
+    io.to(roomId).emit("game:round:end", {
+      reason,
+      round,
+    });
+  } catch (err) {
+    console.log("BANANANA", 4959);
+    console.log("Error ending a round", err);
   }
-
-  room.roundEndsAt = null;
-
-  const round = await roundService.updateToVoting(roundId);
-
-  io.to(roomId).emit("game:round:end", {
-    reason,
-    round,
-  });
-
   // startRound(gameId, io);
 }

@@ -27,6 +27,7 @@ export interface ClientToServerEvents {
   'room:host:startGame': () => void;
   'game:join': () => void;
   'game:card:select': (payload: { cardId: string }) => void;
+  'game:czar:vote': (payload: { roundPickId: string }) => void;
 }
 
 // --- Server-to-Client Events (Outgoing) ---

@@ -1,16 +1,15 @@
 // src/services/game.service.ts
 import prisma from "../utils/prisma";
-import {
-  AnswerCard,
-  GameResponse,
-  IncompleteGame,
-  RoundResponse,
-} from "cah-shared";
+import { GameResponse, IncompleteGame, RoundResponse } from "cah-shared";
 import { BadRequestError, NotFoundError } from "../utils/errors";
 import { SelectedRounds } from "../utils/prisma/helpers/selects/rounds";
 import { getRoundResponse } from "../utils/prisma/helpers/dtos/rounds";
 import { GameStatus, RoomUserStatus } from "@prisma/client";
-import { RoundService } from "./round.service";
+
+// TODO: delete this
+(async () => {
+  await prisma.room.deleteMany();
+})();
 
 export class GameService {
   /**

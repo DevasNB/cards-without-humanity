@@ -1,50 +1,71 @@
-@if (game(); as game) {
-  @if (round(); as round) {
-    <div class="page">
-      <section>
-        <div class="counter">{{ counter() }}</div>
+@if (data(); as data) {
+  <div class="page">
+    <section>
+      <div class="counter">{{ counter() }}</div>
 
-        <div class="top-flex">
-          <div>
-            <div class="card black-card">{{ round.promptCard.text }}</div>
+      <div class="top-flex">
+        <div>
+          <div class="card black-card">{{ data.round.promptCard.text }}</div>
+          @if (isCzar()) {
             <button
               class="confirm-selection-btn"
-              (click)="handleAnswerCardSubmit()"
-              [disabled]="!selectedAnswerCard() || !canSubmit()"
+              (click)="handleVoting()"
+              [disabled]="!selectedRoundPick() || !canVote()"
             >
-              Confirm Selection
+              Vote Card
             </button>
-          </div>
-
-          @for (card of round.picks; track $index) {
-            <div class="card white-card">{{ card.text }}</div>
+          } @else {
+            <button
+              class="confirm-selection-btn"
+              (click)="handleCardSubmit()"
+              [disabled]="!selectedAnswerCard() || !canSubmitAnswerCard()"
+            >
+              Play Card
+            </button>
           }
         </div>
-      </section>
 
-      <!-- SELECTED WHITE CARD DISPLAY -->
-      <main class="white-grid">
-        @for (card of handPick(); track $index) {
+        @for (card of data.round.picks; track $index) {
           <button
-            class="card small white-card hand-pick"
+            class="card white-card czar-pick"
             [ngClass]="{
-              chosen: selectedAnswerCard()?.id === card.id && !isCzar(),
-              'can-pick': canSubmit(),
+              chosen: selectedRoundPick()?.id === card.id,
+              selectable: canVote(),
+              winner: isCardWinner(card),
             }"
-            (click)="selectCard(card)"
+            (click)="selectRoundPick(card)"
+            [disabled]="!canVote()"
           >
             {{ card.text }}
           </button>
         }
-      </main>
+      </div>
+    </section>
 
-      <aside class="bottom-section">
-        <app-game-player-list
-          [players]="game.players"
-          [currentUser]="currentPlayer() ?? null"
-          [czar]="round.czar"
-        ></app-game-player-list>
-      </aside>
-    </div>
-  }
+    <!-- SELECTED WHITE CARD DISPLAY -->
+    <main class="white-grid">
+      @for (card of handPick(); track $index) {
+        <button
+          class="card small white-card hand-pick"
+          [ngClass]="{
+            chosen: selectedAnswerCard()?.id === card.id,
+            selectable: !selectedAnswerCard() && !isCzar(),
+          }"
+          (click)="selectCard(card)"
+          [disabled]="isCzar()"
+        >
+          {{ card.text }}
+        </button>
+      }
+    </main>
+
+    <aside class="bottom-section">
+      <app-game-player-list
+        [players]="data.game.players"
+        [currentUser]="currentPlayer() ?? null"
+        [czar]="data.round.czar"
+        [winner]="data.round.winner || null"
+      ></app-game-player-list>
+    </aside>
+  </div>
 }

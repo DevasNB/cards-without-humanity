@@ -176,6 +176,7 @@ model Round {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now()) // Used as an ordering system
   updatedAt DateTime @updatedAt
+  endsAt    DateTime
 
   gameId String // The game it belongs to
   status RoundStatus @default(DRAWING_CARDS) // The status of the round

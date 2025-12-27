@@ -3,10 +3,13 @@ import { Prisma, RoomUserStatus, RoundStatus } from "@prisma/client";
 import { AnswerCard, PlayerResponse, RoundResponse } from "cah-shared";
 import { CardService } from "./card.service";
 import { randomElement } from "../utils/helpers";
-import { getRoundResponse } from "../utils/prisma/helpers/dtos/rounds";
+import {
+  getRoundResponse,
+  ROUND_DURATION,
+} from "../utils/prisma/helpers/dtos/rounds";
 import { SelectedRounds } from "../utils/prisma/helpers/selects/rounds";
 import prisma from "../utils/prisma";
-import { NotFoundError } from "../utils/errors";
+import { BadRequestError, NotFoundError } from "../utils/errors";
 
 const cardService = new CardService();
 
@@ -18,10 +21,12 @@ export class RoundService {
     return await prisma.$transaction(async (tx) => {
       const promptCard = await cardService.getNewPromptCard(tx, gameId);
       const czar = await this.getNextCzar(tx, gameId);
+      const lastRoundPick = await this.getLastRoundPick(tx, gameId);
 
       const newRound = await tx.round.create({
         data: {
           gameId,
+          endsAt: new Date(Date.now() + ROUND_DURATION),
           status: RoundStatus.DRAWING_CARDS,
           czarId: czar.id,
           promptCardId: promptCard.id,
@@ -33,7 +38,11 @@ export class RoundService {
 
       // Generate hand pick for each player
       const handPicks: Map<string, AnswerCard[]> =
-        await cardService.getHandPickForPlayersInGame(tx, gameId);
+        await cardService.getHandPickForPlayersInGame(
+          tx,
+          gameId,
+          lastRoundPick
+        );
 
       return { handPicks, roundResponse };
     });
@@ -41,7 +50,7 @@ export class RoundService {
 
   private async getNextCzar(
     tx: Prisma.TransactionClient,
-    gameId: string,
+    gameId: string
   ): Promise<PlayerResponse> {
     // Find all players
     const possiblePlayers = await tx.player.findMany({
@@ -72,7 +81,7 @@ export class RoundService {
     });
 
     const neverCzar = possiblePlayers.filter(
-      (p) => p._count.judgingRounds === 0,
+      (p) => p._count.judgingRounds === 0
     );
 
     // If there is at least one player from the game that has not been czar yet
@@ -121,7 +130,7 @@ export class RoundService {
     });
 
     // Sort the players by their most recent judging round
-    const sorted = players.sort((a, b) => {
+    const sorted = [...players].sort((a, b) => {
       const aDate = a.judgingRounds[0]?.createdAt ?? new Date(0);
       const bDate = b.judgingRounds[0]?.createdAt ?? new Date(0);
       return aDate.getTime() - bDate.getTime();
@@ -134,7 +143,7 @@ export class RoundService {
     const candidates = sorted.filter(
       (p) =>
         (p.judgingRounds[0]?.createdAt ?? new Date(0)).getTime() ===
-        earliestLastJudged.getTime(),
+        earliestLastJudged.getTime()
     );
 
     const nextCzar = randomElement(candidates);
@@ -150,7 +159,7 @@ export class RoundService {
   public async updateToVoting(roundId: string): Promise<RoundResponse> {
     const round = await prisma.round.update({
       where: { id: roundId },
-      data: { status: RoundStatus.CZAR_VOTING },
+      data: { status: RoundStatus.CZAR_VOTING, endsAt: new Date() },
       select: SelectedRounds.select,
     });
 
@@ -158,7 +167,7 @@ export class RoundService {
   }
 
   public async haveAllPlayersSubmitted(
-    gameId: string,
+    gameId: string
   ): Promise<{ haveAllPlayersSubmitted: boolean; roundId: string }> {
     // TODO: fix this method: with playerId and roundId
     const currentRound = await prisma.round.findFirst({
@@ -176,10 +185,10 @@ export class RoundService {
     // Check if all players have selected a card
     const players = await prisma.player.findMany({
       where: {
+        gameId: gameId,
         user: {
           status: RoomUserStatus.IN_GAME,
         },
-        gameId: gameId,
         judgingRounds: {
           none: {
             id: currentRound.id,
@@ -187,6 +196,15 @@ export class RoundService {
         },
       },
       select: {
+        /* user: {
+          select: {
+            user: {
+              select: {
+                username: true,
+              },
+            },
+          },
+        },*/
         submissions: {
           where: {
             roundId: currentRound.id,
@@ -195,12 +213,57 @@ export class RoundService {
       },
     });
 
+    // console.log(players[0].user.user.username, players[0].submissions, 1494);
+    // console.log(1914, players.every((player) => player.submissions.length > 0));
     return {
       haveAllPlayersSubmitted: players.every(
-        (player) => player.submissions.length > 0,
+        (player) => player.submissions.length > 0
       ),
       roundId: currentRound.id,
     };
+  }
+
+  public async voteForRoundPick(
+    gameId: string,
+    roundPickId: string
+  ): Promise<void> {
+    const roundPick = await prisma.roundPick.findUnique({
+      where: { id: roundPickId },
+      select: { roundId: true },
+    });
+
+    if (!roundPick) {
+      throw new NotFoundError("Round pick not found");
+    }
+
+    const round = await prisma.round.findUnique({
+      where: { id: roundPick.roundId },
+      select: { status: true },
+    });
+
+    if (!round) {
+      throw new NotFoundError("Round not found");
+    }
+
+    if (round.status !== RoundStatus.CZAR_VOTING) {
+      throw new BadRequestError("Round is not in voting phase");
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const roundPick = await tx.roundPick.update({
+        where: { id: roundPickId },
+        data: { isWinner: true },
+        select: {
+          round: true,
+          playerId: true,
+        },
+      });
+
+      await tx.round.update({
+        where: { id: roundPick.round.id },
+        data: { winnerId: roundPick.playerId, status: RoundStatus.ENDED },
+      });
+    });
   }
 
   public async getRoundState(roomId: string): Promise<RoundResponse> {
@@ -215,5 +278,32 @@ export class RoundService {
     }
 
     return getRoundResponse(round);
+  }
+
+  public async getLastRoundPick(
+    tx: Prisma.TransactionClient,
+    gameId: string
+  ): Promise<number> {
+    const round = await tx.round.findFirst({
+      where: { gameId, status: RoundStatus.ENDED },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        promptCard: {
+          select: {
+            id: true,
+            pick: true,
+          },
+        },
+      },
+    });
+
+    console.log("Last round: ", round);
+
+    if (!round) {
+      return 0;
+    }
+
+    return round.promptCard.pick;
   }
 }

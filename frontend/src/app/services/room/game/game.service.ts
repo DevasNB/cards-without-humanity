@@ -1,12 +1,12 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, map, Observable, Subject, takeUntil } from 'rxjs';
 import { SocketService } from '../../socket.service';
-import { AnswerCard, PlayerResponse, IncompleteGame, RoundResponse } from 'cah-shared';
+import { AnswerCard, PlayerResponse, IncompleteGame, RoundResponse, RoundPick } from 'cah-shared';
 import { AuthService } from '../../auth/auth.service';
 
 // game.service.ts
 @Injectable()
-export class GameService {
+export class GameService implements OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   private readonly gameSubject = new BehaviorSubject<IncompleteGame | null>(null);
@@ -35,7 +35,6 @@ export class GameService {
       .pipe(takeUntil(this.destroy$))
       .subscribe((game) => {
         this.gameSubject.next(game.game);
-
         this.socketService.emit('game:join');
       });
 
@@ -55,12 +54,20 @@ export class GameService {
       .pipe(takeUntil(this.destroy$))
       .subscribe((update) => {
         this.roundSubject.next(update.round);
+
+        const lastGame = this.gameSubject.getValue();
+        if (update.players && lastGame) {
+          this.gameSubject.next({ ...lastGame, players: update.players });
+          // TODO: fix this game:round:update
+        }
       });
 
     this.socketService
       .listen('game:round:end')
       .pipe(takeUntil(this.destroy$))
       .subscribe((update) => {
+        console.log(update, 2592);
+        console.log(new Date(), new Date(update.round.endsAt), 25923)
         this.roundSubject.next(update.round);
       });
 
@@ -81,6 +88,11 @@ export class GameService {
   /** Called from presentational component through GamePage */
   submitWhiteCard(card: AnswerCard): void {
     this.socketService.emit('game:card:select', { cardId: card.id });
+  }
+
+  /** Called from presentational component through GamePage */
+  submitRoundPick(card: RoundPick): void {
+    this.socketService.emit('game:czar:vote', { roundPickId: card.id });
   }
 
   // Cleanup

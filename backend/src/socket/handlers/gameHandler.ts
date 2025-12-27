@@ -18,12 +18,14 @@ import {
 } from "cah-shared";
 import { endRound, startRound } from "./roundTimer";
 import { RoundService } from "../../services/round.service";
+import { PlayerService } from "../../services/player.sevice";
 
 const roomService = new RoomService();
 const roomUserService = new RoomUserService();
 const gameService = new GameService();
 const cardService = new CardService();
 const roundService = new RoundService();
+const playerService = new PlayerService();
 
 const removeData = (socket: GameSocket) => {
   // Clear socket data info related to room
@@ -42,7 +44,7 @@ const removeData = (socket: GameSocket) => {
  */
 const emitRoomUpdate = async (
   io: IoInstance,
-  roomId: string,
+  roomId: string
 ): Promise<void> => {
   try {
     // TODO: Do not send the whole object at once
@@ -67,7 +69,7 @@ const emitRoomUpdate = async (
  */
 const emitGameUpdate = async (
   io: IoInstance,
-  roomId: string,
+  roomId: string
 ): Promise<void> => {
   try {
     // TODO: Do not send the whole object at once
@@ -93,15 +95,21 @@ const emitGameUpdate = async (
 const emitRoundUpdate = async (
   io: IoInstance,
   roomId: string,
+  withPlayers: boolean = false
 ): Promise<void> => {
   try {
     // TODO: Do not send the whole object at once
     const roundState: RoundResponse = await roundService.getRoundState(roomId); // Get latest room data from service
+    let players = undefined;
+
+    if (withPlayers) {
+      players = await playerService.getUpdatedPlayers(roomId);
+    }
 
     if (roundState) {
-      io.to(roomId).emit("game:round:update", { round: roundState });
+      io.to(roomId).emit("game:round:update", { round: roundState, players });
       console.log(
-        `Round ${roundState.id} updated: ${JSON.stringify(roundState)}`,
+        `Round ${roundState.id} updated: ${JSON.stringify(roundState)}`
       );
     }
   } catch (error: any) {
@@ -113,7 +121,7 @@ const emitRoundUpdate = async (
 const leaveRoom = async (
   io: IoInstance,
   socket: GameSocket,
-  roomId?: string,
+  roomId?: string
 ) => {
   // Clear socket data info related to room
   removeData(socket);
@@ -125,7 +133,7 @@ const leaveRoom = async (
   // Update database of roomUser disconnecting from room
   const wasRoomDeleted = await roomService.leaveRoom(
     socket.data.userId,
-    roomId,
+    roomId
   );
 
   // Remove socket from the Socket.IO room
@@ -153,7 +161,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
 
     try {
       console.log(
-        `A user disconnected: ${socket.data.username} (ID: ${socket.id})`,
+        `A user disconnected: ${socket.data.username} (ID: ${socket.id})`
       );
 
       await leaveRoom(io, socket, currentRoomId);
@@ -166,21 +174,21 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
   socket.on("room:join", async (payload: { roomId: string }) => {
     try {
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) attempting to join room ${payload.roomId}`,
+        `User ${socket.data.username} (${socket.data.userId}) attempting to join room ${payload.roomId}`
       );
 
       // Create the roomUser in database
       const room: CreateRoomPayload = await roomService.joinRoom(
         payload.roomId,
         socket.data.userId,
-        socket.id,
+        socket.id
       );
 
       // Add socket to the Socket.IO room
       socket.join(payload.roomId);
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) joined room ${payload.roomId}`,
+        `User ${socket.data.username} (${socket.data.userId}) joined room ${payload.roomId}`
       );
       // Store on socket data info about the roomId and if the user is host
       socket.data.currentRoomId = payload.roomId;
@@ -218,14 +226,14 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       const payload = EditableRoomUserSchema.parse(rawPayload);
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) updating room ${currentRoomId}`,
+        `User ${socket.data.username} (${socket.data.userId}) updating room ${currentRoomId}`
       );
 
       // Update roomUser in database
       await roomUserService.changeRoomUserStatus(
         socket.data.userId,
         currentRoomId,
-        payload,
+        payload
       );
 
       // Notify all users in the room with the new room state
@@ -255,7 +263,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       if (!socket.data.isHost) {
         // Make sure only the host can update room settings
         const error = new UnauthorizedError(
-          "Only the host can update room settings.",
+          "Only the host can update room settings."
         );
 
         console.error(`Error updating room settings:`, error);
@@ -271,7 +279,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       const payload = EditableRoomSchema.parse(rawPayload);
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) updating room ${currentRoomId}`,
+        `User ${socket.data.username} (${socket.data.userId}) updating room ${currentRoomId}`
       );
 
       // Update room in database
@@ -300,7 +308,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       }
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) leaving room ${currentRoomId}`,
+        `User ${socket.data.username} (${socket.data.userId}) leaving room ${currentRoomId}`
       );
 
       await leaveRoom(io, socket, currentRoomId);
@@ -337,7 +345,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       }
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) starting game in room ${currentRoomId}`,
+        `User ${socket.data.username} (${socket.data.userId}) starting game in room ${currentRoomId}`
       );
 
       // Update room in database
@@ -385,7 +393,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       }
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) joining game in room ${currentRoomId}`,
+        `User ${socket.data.username} (${socket.data.userId}) joining game in room ${currentRoomId}`
       );
 
       const gameId = await gameService.getRoomAssociatedGameId(currentRoomId); // Get latest room data from service
@@ -421,14 +429,14 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       }
 
       console.log(
-        `User ${socket.data.username} (${socket.data.userId}) selecting card ${payload.cardId} in game ${socket.data.currentGameId}`,
+        `User ${socket.data.username} (${socket.data.userId}) selecting card ${payload.cardId} in game ${socket.data.currentGameId}`
       );
 
       // Update game in database
       await cardService.selectCard(
         socket.data.currentGameId,
         socket.data.userId,
-        payload.cardId,
+        payload.cardId
       );
 
       const { haveAllPlayersSubmitted, roundId } =
@@ -440,7 +448,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
           currentRoomId,
           roundId,
           io,
-          "all_played",
+          "all_played"
         );
       }
 
@@ -449,12 +457,51 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
     } catch (error: any) {
       console.error(
         `Error selecting card ${payload.cardId} in game ${socket.data.currentGameId}:`,
-        error,
+        error
       );
 
       // Send not-found error
       socket.emit("error", {
         message: error.message || "Failed to select card.",
+        type: "not-found",
+      });
+    }
+  });
+
+  socket.on("game:czar:vote", async (payload: { roundPickId: string }) => {
+    const currentRoomId = socket.data.currentRoomId;
+
+    try {
+      // Check if user is in a room
+      if (!currentRoomId) {
+        throw new AppError("Not currently in a room.", 400);
+      }
+
+      if (!socket.data.currentGameId) {
+        throw new AppError("Not currently in a game.", 400);
+      }
+
+      console.log(
+        `User ${socket.data.username} (${socket.data.userId}) voting for card ${payload.roundPickId} in game ${socket.data.currentGameId}`
+      );
+
+      // Update game in database
+      await roundService.voteForRoundPick(
+        socket.data.currentGameId,
+        payload.roundPickId
+      );
+
+      // Notify all users in the room with the new game state
+      emitRoundUpdate(io, currentRoomId, true);
+    } catch (error: any) {
+      console.error(
+        `Error voting for card ${payload.roundPickId} in game ${socket.data.currentGameId}:`,
+        error
+      );
+
+      // Send not-found error
+      socket.emit("error", {
+        message: error.message || "Failed to vote for card.",
         type: "not-found",
       });
     }
