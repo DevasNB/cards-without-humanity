@@ -21,7 +21,6 @@ export class RoundService {
     return await prisma.$transaction(async (tx) => {
       const promptCard = await cardService.getNewPromptCard(tx, gameId);
       const czar = await this.getNextCzar(tx, gameId);
-      const lastRoundPick = await this.getLastRoundPick(tx, gameId);
 
       const newRound = await tx.round.create({
         data: {
@@ -38,11 +37,7 @@ export class RoundService {
 
       // Generate hand pick for each player
       const handPicks: Map<string, AnswerCard[]> =
-        await cardService.getHandPickForPlayersInGame(
-          tx,
-          gameId,
-          lastRoundPick
-        );
+        await cardService.getHandPickForPlayersInGame(tx, gameId);
 
       return { handPicks, roundResponse };
     });
@@ -223,10 +218,7 @@ export class RoundService {
     };
   }
 
-  public async voteForRoundPick(
-    gameId: string,
-    roundPickId: string
-  ): Promise<void> {
+  public async voteForRoundPick(roundPickId: string): Promise<void> {
     const roundPick = await prisma.roundPick.findUnique({
       where: { id: roundPickId },
       select: { roundId: true },
@@ -278,32 +270,5 @@ export class RoundService {
     }
 
     return getRoundResponse(round);
-  }
-
-  public async getLastRoundPick(
-    tx: Prisma.TransactionClient,
-    gameId: string
-  ): Promise<number> {
-    const round = await tx.round.findFirst({
-      where: { gameId, status: RoundStatus.ENDED },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        promptCard: {
-          select: {
-            id: true,
-            pick: true,
-          },
-        },
-      },
-    });
-
-    console.log("Last round: ", round);
-
-    if (!round) {
-      return 0;
-    }
-
-    return round.promptCard.pick;
   }
 }

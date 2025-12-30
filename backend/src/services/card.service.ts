@@ -2,78 +2,51 @@
 import { Prisma, RoomUserStatus, RoundStatus } from "@prisma/client";
 import prisma from "../utils/prisma";
 import { BadRequestError, NotFoundError } from "../utils/errors";
-import { fisherYatesShuffle } from "../utils/helpers";
+import { fisherYatesShuffle, randomElement } from "../utils/helpers";
 import { AnswerCard, PromptCard } from "cah-shared";
 
 export class CardService {
   public async getHandPickForPlayersInGame(
     tx: Prisma.TransactionClient,
-    gameId: string,
-    lastRoundPick: number
+    gameId: string
   ): Promise<Map<string, AnswerCard[]>> {
-    // Get all valid cards from the decks table
-    const answerCards = await tx.answerCard.findMany({
-      where: {
-        // That belong to a deck that is part of the game gameId
-        deck: {
-          games: {
-            some: {
-              gameId,
-            },
-          },
-        },
-        // That as not been submitted in any round
-        roundSubmissions: {
-          none: {
-            round: {
-              gameId,
-            },
-          },
-        },
-        // And that are not in any player's hand
-        playerHands: {
-          none: {
-            player: {
-              gameId,
-            },
-          },
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (answerCards.length === 0) {
-      throw new Error("No answer cards available to draw from.");
-    }
-
-    // Get the last prompt card's pick and the connected players
+    // Get the current game and connected players
     const game = await tx.game.findUnique({
       where: {
         id: gameId,
       },
       select: {
-        // Get the last round's prompt card's pick
-        // TODO: Check is it desc?
-        rounds: {
-          orderBy: {
-            createdAt: "desc",
-          },
-          take: 1,
-          select: {
-            promptCard: {
-              select: {
-                pick: true,
-              },
-            },
-          },
-        },
         // Get all the players that are in game
         players: {
           where: {
             user: {
               status: RoomUserStatus.IN_GAME,
+            },
+          },
+          select: {
+            id: true,
+            _count: {
+              select: {
+                hand: true,
+              },
+            },
+          },
+        },
+        // Get the last round
+        rounds: {
+          where: {
+            status: RoundStatus.ENDED,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 1,
+          select: {
+            picks: true,
+            promptCard: {
+              select: {
+                pick: true,
+              },
             },
           },
         },
@@ -85,23 +58,60 @@ export class CardService {
       throw new NotFoundError("Game not found");
     }
 
-    // Calculate the number of cards that are missing
-    const missingNumberOfCards = 7 - lastRoundPick;
+    // Calculate the max amount of cards that are missing
+    // If there is a last round, use 3 (the max pick amount)
+    // If there is no last round, use 7 (the max hand amount)
+    const missingNumberOfCardsPerPlayer =
+      game.rounds.length > 0 ? game.rounds[0].promptCard.pick : 7;
 
-    if (missingNumberOfCards <= 0) return new Map();
+    const missingNumberOfCards =
+      missingNumberOfCardsPerPlayer * game.players.length;
+
+    // Get the needed deck: Get the max needed amount of all valid cards from the game decks
+    const answerCards = await this.takeNRandomCards(
+      tx,
+      gameId,
+      missingNumberOfCards
+    );
+
+    if (answerCards.length === 0) {
+      throw new Error("No answer cards available to draw from.");
+    }
+
+    if (game.rounds.length > 0) {
+      // Delete all player hand cards that are part of the last round
+      await tx.playerHandCard.deleteMany({
+        where: {
+          OR: game.rounds[0].picks.map((pick) => ({
+            AND: [{ playerId: pick.playerId }, { cardId: pick.cardId }],
+          })),
+        },
+      });
+    }
+
+    console.log(answerCards, 149);
 
     // Create an array of objects to insert and shuffle it
+    // TODO: now this is kinda inefficient and unnecessary. remove it for now
+    /*
     const shuffledCards = fisherYatesShuffle<{ id: string }>(
-      missingNumberOfCards * game.players.length,
+      missingNumberOfCards,
       answerCards
     );
+    */
+    const shuffledCards = [...answerCards];
 
     const playerHandCards = [];
     let cardIndex = 0;
 
+    // TODO: the new algo will do this already
+    // For each player, give the missing number of cards
     for (const player of game.players) {
-      for (let i = 0; i < missingNumberOfCards; i++) {
-        const card = shuffledCards[cardIndex % shuffledCards.length];
+      // Compute the number of cards that are missing
+      const neededCards = 7 - player._count.hand;
+
+      for (let i = 0; i < neededCards; i++) {
+        const card = shuffledCards[cardIndex];
         playerHandCards.push({ playerId: player.id, cardId: card.id });
         cardIndex++;
       }
@@ -109,25 +119,23 @@ export class CardService {
 
     if (playerHandCards.length !== 7 * game.players.length) {
       console.log("Answer cards: ", answerCards);
-      console.log("Rounds: ", game.rounds);
-      console.log("Pick: ", lastRoundPick);
-      console.log("Missing number of cards: ", missingNumberOfCards);
+      console.log("Missing number of cards: ", missingNumberOfCardsPerPlayer);
       console.log("Shuffled cards: ", shuffledCards);
       console.log("Player hand cards: ", playerHandCards);
     }
 
-    // Insert all entries
+    // Insert all new entries
     await tx.playerHandCard.createMany({
       data: playerHandCards,
     });
 
-    // Return all created entries
+    // Return all cards for each player
+    // TODO: what can we do with groupBy?
     const insertedCards = await tx.playerHandCard.findMany({
       where: {
-        OR: playerHandCards.map(({ playerId, cardId }) => ({
-          playerId,
-          cardId,
-        })),
+        player: {
+          gameId,
+        },
       },
       select: {
         id: true,
@@ -162,26 +170,101 @@ export class CardService {
     return cardsByConn;
   }
 
+  // TODO: for performance sake, use Redis. take the important cards for the game, store it in "THE game's deck, and just keep taking from it"
+  private async takeNRandomCards(
+    tx: Prisma.TransactionClient,
+    gameId: string,
+    n: number
+  ): Promise<{ id: string }[]> {
+    const where = {
+      // That belong to a deck that is part of the game gameId
+      deck: {
+        games: {
+          some: {
+            gameId,
+          },
+        },
+      },
+      // That as not been submitted in any round
+      roundSubmissions: {
+        none: {
+          round: {
+            gameId,
+          },
+        },
+      },
+      // And that are not in any player's hand
+      playerHands: {
+        none: {
+          player: {
+            gameId,
+          },
+        },
+      },
+    };
+
+    const itemCount = await prisma.answerCard.count({
+      where: where,
+    });
+
+    const skip = Math.max(0, Math.floor(Math.random() * itemCount) - n);
+    const orderDir = randomElement([
+      Prisma.SortOrder.asc,
+      Prisma.SortOrder.desc,
+    ]);
+
+    return await tx.answerCard.findMany({
+      where: where,
+      skip: skip,
+      select: {
+        id: true,
+      },
+      orderBy: { id: orderDir },
+      take: n,
+    });
+  }
+
+  // TODO: use Redis as well in here
   public async getNewPromptCard(
     tx: Prisma.TransactionClient,
     gameId: string
   ): Promise<PromptCard> {
-    const ids = await tx.promptCard.findMany({
-      where: {
-        deck: {
-          games: {
-            some: { gameId },
-          },
+    const where = {
+      deck: {
+        games: {
+          some: { gameId },
         },
       },
-      select: { id: true },
+      rounds: {
+        none: {
+          gameId,
+        },
+      },
+    };
+
+    const itemCount = await tx.promptCard.count({
+      where: where,
     });
 
-    const randomId = ids[Math.floor(Math.random() * ids.length)].id;
+    const skip = Math.max(0, Math.floor(Math.random() * itemCount) - 1);
+    const orderDir = randomElement([
+      Prisma.SortOrder.asc,
+      Prisma.SortOrder.desc,
+    ]);
 
-    const promptCard = await tx.promptCard.findUnique({
-      where: { id: randomId },
+    const promptCards = await tx.promptCard.findMany({
+      where: where,
+      skip: skip,
+      select: {
+        id: true,
+        content: true,
+        pick: true,
+      },
+      orderBy: { id: orderDir },
+      take: 1,
     });
+
+    const promptCard = promptCards[0];
 
     if (!promptCard) {
       throw new NotFoundError("Prompt card not found");

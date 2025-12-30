@@ -90,6 +90,13 @@ export class Game implements OnInit, OnDestroy {
     this.gameService.round$.pipe(takeUntil(this.destroy$)).subscribe((round) => {
       this.round.set(round);
       this.isCzar.set(round?.czar.username === this.currentPlayer()?.username);
+
+      if (round?.status === 'ENDED') {
+        this.selectedAnswerCard.set(null);
+        this.hasSubmittedAnswerCard.set(false);
+        this.selectedRoundPick.set(null);
+        this.hasSubmittedRoundPick.set(false);
+      }
     });
 
     this.gameService.handPick$

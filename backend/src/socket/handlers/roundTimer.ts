@@ -14,8 +14,8 @@ interface ActiveRounds {
 
 const activeGames: Record<string, ActiveRounds> = {};
 
-const setDefaultGameState = (game: IncompleteGame) => {
-  activeGames[game.id] = activeGames[game.id] || {
+const setDefaultGameState = (gameId: string) => {
+  activeGames[gameId] = activeGames[gameId] || {
     roundId: null,
     roundEndsAt: null,
     roundTimer: null,
@@ -23,36 +23,42 @@ const setDefaultGameState = (game: IncompleteGame) => {
 };
 
 export async function startRound(
-  game: IncompleteGame,
+  gameId: string,
   roomId: string,
   io: IoInstance
 ): Promise<void> {
-  setDefaultGameState(game);
+  try {
+    setDefaultGameState(gameId);
 
-  const { handPicks, roundResponse } = await roundService.create(game.id);
+    const { handPicks, roundResponse } = await roundService.create(gameId);
 
-  if (!roundResponse || !handPicks) {
-    throw new BadRequestError("Round not created");
-  }
+    if (!roundResponse || !handPicks) {
+      throw new BadRequestError("Round not created");
+    }
 
-  const inMemoryGame = activeGames[game.id];
-  inMemoryGame.roundId = roundResponse.id;
+    const inMemoryGame = activeGames[gameId];
+    inMemoryGame.roundId = roundResponse.id;
 
-  // Clear previous timer
-  if (inMemoryGame.roundTimer) clearTimeout(inMemoryGame.roundTimer);
+    // Clear previous timer
+    if (inMemoryGame.roundTimer) clearTimeout(inMemoryGame.roundTimer);
 
-  // Set timer
-  inMemoryGame.roundEndsAt = roundResponse.endsAt;
-  inMemoryGame.roundTimer = setTimeout(() => {
-    endRound(game.id, roomId, roundResponse.id, io, "timeout");
-  }, ROUND_DURATION);
+    // Set timer
+    inMemoryGame.roundEndsAt = roundResponse.endsAt;
+    inMemoryGame.roundTimer = setTimeout(() => {
+      endRound(gameId, roomId, roundResponse.id, io, "timeout");
 
-  // Notify all users in the room with the new game state
-  for (const [connectionId, cards] of handPicks) {
-    io.to(connectionId).emit("game:round:new", {
-      round: roundResponse,
-      handPick: cards,
-    });
+      startNextRound(gameId, roomId, io);
+    }, ROUND_DURATION);
+
+    // Notify all users in the room with the new game state
+    for (const [connectionId, cards] of handPicks) {
+      io.to(connectionId).emit("game:round:new", {
+        round: roundResponse,
+        handPick: cards,
+      });
+    }
+  } catch (err) {
+    console.log(err);
   }
 }
 
@@ -67,13 +73,10 @@ export async function endRound(
     const room = activeGames[gameId];
     if (!room.roundEndsAt) return; // already ended
 
-    console.log(room, 148);
     if (room.roundTimer) {
       clearTimeout(room.roundTimer);
       room.roundTimer = null;
     }
-
-    console.log(room, 14941);
 
     room.roundEndsAt = null;
 
@@ -84,8 +87,17 @@ export async function endRound(
       round,
     });
   } catch (err) {
-    console.log("BANANANA", 4959);
     console.log("Error ending a round", err);
   }
-  // startRound(gameId, io);
+}
+
+export function startNextRound(
+  gameId: string,
+  roomId: string,
+  io: IoInstance
+): void {
+  setTimeout(() => {
+    console.log("STARTING ROUND, 14484");
+    startRound(gameId, roomId, io);
+  }, 5000);
 }

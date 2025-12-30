@@ -26,6 +26,8 @@
   width: 216px;
   height: 246px;
   text-align: left;
+
+  overflow: hidden;
 }
 
 .card.small {

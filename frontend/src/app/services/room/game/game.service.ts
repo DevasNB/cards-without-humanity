@@ -43,10 +43,10 @@ export class GameService implements OnDestroy {
       .listen('game:round:new')
       .pipe(takeUntil(this.destroy$))
       .subscribe((update) => {
+        console.log(update, 14941)
         this.roundSubject.next(update.round);
 
-        const currentHandPick = this.handPickSubject.getValue();
-        this.handPickSubject.next([...currentHandPick, ...update.handPick]);
+        this.handPickSubject.next(update.handPick);
       });
 
     this.socketService
