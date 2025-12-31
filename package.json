@@ -12,5 +12,6 @@
   "scripts": {
     "prepare": "husky install",
     "lint-staged": "lint-staged"
-  }
+  },
+  "name": "cards-without-humanity"
 }
