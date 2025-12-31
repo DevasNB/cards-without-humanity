@@ -13,12 +13,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^6.16.0",
+    "@prisma/client": "6.16.0",
+    "cah-shared": "file:../shared",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "prisma": "^6.16.0",
+    "prisma": "6.16.0",
     "socket.io": "^4.8.1",
     "zod": "^4.1.12"
   },
@@ -35,6 +36,6 @@
     "typescript": "^5.9.3"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node ./prisma/seed.ts"
   }
 }

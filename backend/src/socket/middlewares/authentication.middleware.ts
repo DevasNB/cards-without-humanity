@@ -1,7 +1,7 @@
 import { UserRole } from "@prisma/client";
 import { extractUserFromJWT } from "../../utils/jwt";
-import { GameSocket } from "../types/socket";
 import { ExtendedError } from "socket.io";
+import { GameSocket } from "../config";
 
 // --- Socket.IO Middleware for Authentication & Initial Setup ---
 export const socketAuthenticationMiddleware = async (
@@ -21,4 +21,3 @@ export const socketAuthenticationMiddleware = async (
     next(new Error(`Authentication error: ${error.message}`));
   }
 };
-

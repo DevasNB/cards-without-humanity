@@ -86,6 +86,8 @@ CREATE TABLE `Game` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+ALTER TABLE `game` DROP COLUMN `winningScore`;
+
 -- CreateTable
 CREATE TABLE `Player` (
     `id` VARCHAR(191) NOT NULL,
@@ -204,6 +206,3 @@ ALTER TABLE `RoundPick` ADD CONSTRAINT `RoundPick_roundId_fkey` FOREIGN KEY (`ro
 
 -- AddForeignKey
 ALTER TABLE `RoundPick` ADD CONSTRAINT `RoundPick_cardId_fkey` FOREIGN KEY (`cardId`) REFERENCES `AnswerCard`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `RoundPick` ADD CONSTRAINT `RoundPick_playerId_fkey` FOREIGN KEY (`playerId`) REFERENCES `Player`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

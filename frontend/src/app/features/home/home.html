@@ -1,6 +1,11 @@
 <div class="container my-5">
   <!-- Central Title -->
-  <h1 class="text-center mb-5">Bem-vindo</h1>
+  <h1 class="text-center mb-5">
+    <span> Welcome back</span>
+    @if (authService.currentUser()) {
+      <span>, {{ authService.currentUser()?.username }}</span>
+    }
+  </h1>
 
   <div class="row justify-content-center mb-4">
     <!-- Create Room -->

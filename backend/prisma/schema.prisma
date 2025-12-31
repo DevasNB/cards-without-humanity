@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -20,7 +19,10 @@ model Deck {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name String // A deck as a name
+  isPublic Boolean @default(false)
+
+  name        String // A deck as a name
+  description String? // A short description of the deck
 
   promptCards PromptCard[] // All the PromptCards of that Deck
   answerCards AnswerCard[] // All the AnswerCards of that Deck
@@ -64,11 +66,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  username String   @unique // Each user for now only has a username
-  role     UserRole @default(ANONYMOUS) // Each user has an authentication role
-  roomAsHost Room? @relation("host") // One user can only be the host of one room
+  username   String   @unique // Each user for now only has a username
+  role       UserRole @default(ANONYMOUS) // Each user has an authentication role
+  roomAsHost Room?    @relation("host") // One user can only be the host of one room
 
-  rooms      RoomUser[] // The rooms the user is present in
+  rooms RoomUser[] // The rooms the user is present in
 }
 
 // Enabling the ANONYMOUS role - still receives auth to enter games, but must be identified as such
@@ -84,7 +86,7 @@ model Room {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name     String  // A room has a unique name that can be found
+  name     String // A room has a unique name that can be found
   hostId   String  @unique // A user can only be the host of one open room. If they leave, the ownership must change
   isPublic Boolean @default(true) // A room can be public or private
 
@@ -102,14 +104,14 @@ model RoomUser {
   createdAt DateTime @default(now()) // joinedAt
   updatedAt DateTime @updatedAt
 
-  connectionId String? // connection of WebSocket
+  connectionId String // connection of WebSocket
   status       RoomUserStatus // status of the user inside the room
 
   userId String // It is a user
   roomId String // And it is in a room
 
   players Player[] // One RoomUser can be many players (because there might be many games)
-  
+
   room Room @relation("users", fields: [roomId], references: [id], onDelete: Cascade) // One room can hold multiple users. If the room gets deleted, so do the RoomUsers
   user User @relation(fields: [userId], references: [id], onDelete: Restrict) // And one user can be in multiple rooms - It is only present on one, but can hold the data for many. If a user is inside a room and it is deleted, the RoomUser should restrict it
 
@@ -132,9 +134,8 @@ model Game {
 
   roomId String @unique // Each room can only have one active game at a time
 
-  status       GameStatus @default(WAITING_FOR_PLAYERS) // The status of the game
-  round        Int        @default(1) // The number of the round the game is in
-  winningScore Int // The max points a person can have
+  status GameStatus @default(WAITING_FOR_PLAYERS) // The status of the game
+  round  Int        @default(1) // The number of the round the game is in
 
   players Player[] // The game has many players playing
   rounds  Round[] // A game has many rounds
@@ -146,7 +147,6 @@ model Game {
 enum GameStatus {
   WAITING_FOR_PLAYERS // When in lobby
   PLAYING // When playing a round
-  ROUND_ENDED // When a round has ended
   GAME_ENDED // When the game ended
 }
 
@@ -167,17 +167,19 @@ model Player {
 
   hand        PlayerHandCard[] // The cards the user has
   submissions RoundPick[] // The cards the user submitted
+
+  @@unique([gameId, roomUserId]) // Player as a unique combination of game and roomUser
 }
 
 // The round of a game
 model Round {
   id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) // Used as an ordering system
   updatedAt DateTime @updatedAt
+  endsAt    DateTime
 
-  gameId      String // The game it belongs to
-  roundNumber Int // It has a numbering system. We need to know which is it
-  status      RoundStatus @default(DRAWING_CARDS) // The status of the round
+  gameId String // The game it belongs to
+  status RoundStatus @default(DRAWING_CARDS) // The status of the round
 
   czarId       String // Who is the judge?
   winnerId     String? // Who won the round? Optional because in the start we don't know
@@ -189,8 +191,6 @@ model Round {
   promptCard PromptCard @relation(fields: [promptCardId], references: [id], onDelete: Restrict) // It has only one prompt card. If any game is running and a promptCard is deleted, the Round should restrict it
 
   picks RoundPick[] // All answer card submissions for this round
-
-  @@unique([gameId, roundNumber]) // The round number is unique to the game it belongs to
 }
 
 // The status of the round
@@ -246,5 +246,5 @@ model RoundPick {
   answerCard AnswerCard @relation(fields: [cardId], references: [id], onDelete: Restrict) // If any game is running and an AnswerCard is deleted, the RoundPick should restrict it
   player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade) // If the player is deleted, so is the RoundPick
 
-  @@unique([roundId, cardId, playerId]) // A player can only submit a specific card once per round
+  @@unique([roundId, playerId]) // A player can only submit one card per round
 }

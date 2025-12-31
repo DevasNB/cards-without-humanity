@@ -1,0 +1,169 @@
+/* ================================================ */
+/* ===== ESTILOS GERAIS E DOS CARTÕES         ===== */
+/* ================================================ */
+
+.round-box {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  border-radius: 1em;
+  background-color: #fff;
+}
+
+.black-card {
+  background-color: #212529; /* Cor preta/cinza escura do Bootstrap */
+  color: white;
+}
+
+.black-card .invisible-textarea {
+  color: white;
+}
+
+/* Garante que o texto do footer na carta preta também é branco */
+.black-card .card-footer p {
+  color: white;
+}
+
+.white-card {
+  background-color: #fff;
+  color: #212529;
+}
+
+.link-home {
+  color: #0d6efd;
+
+  /* Remove o sublinhado padrão dos links */
+  text-decoration: none;
+
+  /* Efeitos visuais para interatividade */
+  display: inline-flex; /* Para alinhar o ícone e o texto corretamente */
+  align-items: center;
+  gap: 0.3rem; /* Pequeno espaço entre o ícone e o texto */
+  transition: opacity 0.2s;
+}
+
+/* Efeito subtil ao passar o rato por cima */
+.link-home:hover {
+  opacity: 0.8;
+  color: #0d6efd; /* Garante que a cor se mantém ao passar o rato */
+}
+
+.btn-remove-card {
+  /* Reduz o tamanho do ícone 'X' */
+  font-size: 0.8rem;
+
+  /* Ajuda a alinhar verticalmente o ícone em botões pequenos */
+  line-height: 1.5;
+}
+
+.card {
+  width: 200px;
+  height: 300px;
+  margin: 0 10px;
+  flex-shrink: 0;
+  border-radius: 1em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition:
+    transform 0.4s ease,
+    box-shadow 0.4s ease,
+    z-index 0s 0.2s; /* A transição do z-index tem um delay */
+  transform: scale(0.9);
+}
+
+.card-footer {
+  background: none;
+  border: none;
+}
+
+.active-card {
+  transform: scale(1.2);
+  z-index: 10; /* Fica por cima de tudo no mesmo container */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transition-delay: 0s; /* O z-index do cartão ativo muda instantaneamente */
+}
+
+.adjacent-card {
+  transform: scale(1);
+  z-index: 5;
+}
+
+.invisible-textarea {
+  resize: none;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background-color: transparent;
+  color: #333;
+  font-size: 16px;
+  font-family: inherit;
+}
+.invisible-textarea:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ================================================ */
+/* ===== ESTRUTURA DO CARROSSEL (COM A CORREÇÃO FINAL) ===== */
+/* ================================================ */
+
+/* 1. A Viewport: Continua a ser o container principal e o parente das setas */
+.carousel-viewport {
+  position: relative;
+}
+
+/* 2. O Track: O container que faz o scroll */
+.carousel-track {
+  display: flex;
+  align-items: center; /* Centra as cartas verticalmente */
+  overflow-x: auto; /* Permite o scroll horizontal e é a causa do corte */
+
+  /* ESTA É A CORREÇÃO FUNDAMENTAL: */
+  /* Damos ao próprio track altura suficiente para conter a carta ativa (300px * 1.2 = 360px). */
+  /* Com 450px de altura mínima, a carta escalada nunca será cortada pelo overflow do seu próprio container. */
+  min-height: 450px;
+  padding: 20px calc(50% - 100px); /* Padding vertical e horizontal para centrar a 1ª/última carta */
+
+  /* Magia do CSS Scroll Snap */
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+
+  /* Esconde a barra de scroll */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* 3. Os Itens: Diz a cada cartão para se alinhar ao centro */
+.carousel-track > .card {
+  scroll-snap-align: center;
+}
+
+/* 4. As Setas de Navegação (mantém-se igual) */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.carousel-arrow.left {
+  left: 15px;
+}
+.carousel-arrow.right {
+  right: 15px;
+}
+.carousel-arrow:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

@@ -1,0 +1,22 @@
+<div class="players-list">
+  <h4>Scoreboard</h4>
+  @for (player of leaderboard(); track player.username) {
+    <div
+      class="player-row"
+      [ngClass]="{
+        me: isCurrentUser(player),
+        czar: isCardCzar(player),
+        winner: isPlayerWinner(player),
+      }"
+    >
+      <div class="name">
+        {{ player.username }}
+        @if (isCardCzar(player)) {
+          <span class="czar-tag">👑 Czar</span>
+        }
+      </div>
+
+      <div class="points">{{ player.points }} pts</div>
+    </div>
+  }
+</div>

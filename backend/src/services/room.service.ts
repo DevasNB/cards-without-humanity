@@ -1,12 +1,12 @@
 // src/services/room.service.ts
 import prisma from "../utils/prisma";
-import { NotFoundError } from "../utils/errors";
 import {
   CreateRoomResponse,
-  EditableRoom,
   ListedRoom,
   RoomResponse,
-} from "../types/rooms";
+  EditableRoom,
+} from "cah-shared";
+import { NotFoundError } from "../utils/errors";
 import { RoomUserStatus } from "@prisma/client";
 
 export class RoomService {
@@ -233,12 +233,12 @@ export class RoomService {
    * Leaves a room.
    * @param {string} userId - The ID of the user leaving the room.
    * @param {string} roomId - The ID of the room to leave.
-   * @returns {Promise<void>} A promise that resolves when the user has left the room.
+   * @returns {Promise<boolean>} A promise that resolves when the user has left the room; true if the room was deleted, false otherwise.
    * @throws {NotFoundError} If the room or user is not found.
    * If the user is the host, the next host in the room will be set to the next online user.
    * If there are no online users in the room, the room will be deleted.
    */
-  public async leaveRoom(userId: string, roomId: string): Promise<void> {
+  public async leaveRoom(userId: string, roomId: string): Promise<boolean> {
     // Find the room
     const room = await prisma.room.findUnique({
       where: {
@@ -255,8 +255,6 @@ export class RoomService {
       throw new NotFoundError("Room not found");
     }
 
-    console.log("Room exists: ", room);
-
     // Mark the room user as disconnected
     await prisma.roomUser.update({
       where: {
@@ -272,29 +270,19 @@ export class RoomService {
 
     // If user isn't host, return - everything is fine
     if (room.hostId !== userId) {
-      console.log("Room user is not host");
-      return;
+      return false;
     }
 
     // If user is host, find the next host
-    console.log("Room is host");
 
     // Find all the online users that are not the host (the current player)
     const onlineUsersExceptHost = room.users
       .filter((user) => user.status !== RoomUserStatus.DISCONNECTED)
       .filter((user) => user.userId !== userId);
 
-    console.log(
-      "Online users except host: ",
-      onlineUsersExceptHost,
-      onlineUsersExceptHost.length
-    );
-
     // If there are any online users, set the new host and return
     if (onlineUsersExceptHost.length > 0) {
       const newHostId = onlineUsersExceptHost[0].userId;
-
-      console.log("Next host: ", newHostId);
 
       // Set the new host
       await prisma.room.update({
@@ -305,20 +293,20 @@ export class RoomService {
           hostId: newHostId,
         },
       });
-      return;
+      return false;
     }
 
     // If there are not any online users, delete the room
-    console.log("Online users except host length = 0");
-    console.log("Deleting room...", roomId);
 
     await prisma.room.delete({
       where: {
         id: roomId,
       },
     });
+
+    return true;
   }
 }
 
-const WINNING_ROUNDS = 5;
+const WINNING_ROUNDS = 8;
 const MAX_PLAYERS = 8;

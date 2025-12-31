@@ -33,12 +33,15 @@
     "@angular/router": "^20.3.0",
     "@angular/ssr": "^20.3.1",
     "@fontsource/fredoka": "^5.2.10",
+    "@ngx-translate/core": "^16.0.0",
+    "@ngx-translate/http-loader": "^16.0.0",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
+    "cah-shared": "file:../shared",
     "express": "^5.1.0",
     "rxjs": "~7.8.0",
     "socket.io-client": "^4.8.1",
-    "tslib": "^2.3.0"
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@angular/build": "^20.3.1",

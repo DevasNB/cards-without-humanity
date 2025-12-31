@@ -3,7 +3,7 @@ import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller";
 import { asyncHandler } from "../utils/asyncHandler";
 import { validate } from "../middlewares/validate.middleware";
-import { createUserSchema } from "../types/auth";
+import { createUserSchema } from "cah-shared";
 import { authenticate } from "../middlewares/auth.middleware";
 
 const router = Router();

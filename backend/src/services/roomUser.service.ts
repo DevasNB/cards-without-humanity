@@ -1,6 +1,7 @@
 // src/services/roomUser.service.ts
-import { EditableRoomUser } from "../types/rooms";
+import { EditableRoomUser } from "cah-shared";
 import prisma from "../utils/prisma";
+import { RoomUserStatus } from "@prisma/client";
 
 export class RoomUserService {
   /**
@@ -24,7 +25,10 @@ export class RoomUserService {
           userId,
         },
       },
-      data: payload,
+      data: {
+        ...payload,
+        status: payload.status as RoomUserStatus | undefined,
+      },
     });
   }
 }

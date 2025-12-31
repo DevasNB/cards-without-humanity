@@ -1,19 +1,17 @@
 // src/app/services/auth/auth.service.ts
-import { inject, Injectable, signal, WritableSignal } from '@angular/core';
+import { inject, Injectable, OnDestroy, signal, WritableSignal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { Observable, of, Subject, throwError } from 'rxjs';
+import { catchError, map, takeUntil, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import {
-  CreateUserRequestBody,
-  UserResponse, // Ensure these types match your backend's types
-} from './auth.types'; // Define these types in a local file, see step 2.1
+import { UserResponse, CreateUserRequestBody } from 'cah-shared';
 
 @Injectable({
   providedIn: 'root', // Makes the service a singleton available everywhere
 })
-export class AuthService {
+export class AuthService implements OnDestroy {
+  private readonly destroy$ = new Subject<void>();
   private readonly apiUrl = environment.backendApiUrl + '/auth';
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
@@ -24,7 +22,7 @@ export class AuthService {
   loadingAuth: WritableSignal<boolean> = signal(true);
 
   constructor() {
-    this.checkAuth().subscribe();
+    this.checkAuth().pipe(takeUntil(this.destroy$)).subscribe();
   }
 
   // --- API Calls ---
@@ -138,5 +136,12 @@ export class AuthService {
     console.error(`❌ [HTTP ${error.status}] ${error.url || ''}\nBody:`, error.error);
 
     return throwError(() => new Error(errorMessage));
+  }
+
+  // --- Lifecycle ---
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
