@@ -1,8 +1,14 @@
 // src/app/auth/login/login.component.ts
-import { Component, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms'; // Required for ngModel
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms'; // Required for ngModel
 import { AuthService } from '../../services/auth/auth.service';
-import { CommonModule } from '@angular/common'; // For ngIf, etc.
+import { CommonModule, NgOptimizedImage } from '@angular/common'; // For ngIf, etc.
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserResponse } from 'cah-shared';
 import { Subject, takeUntil } from 'rxjs';
@@ -10,41 +16,62 @@ import { Subject, takeUntil } from 'rxjs';
 @Component({
   standalone: true,
   selector: 'app-login',
-  imports: [CommonModule, FormsModule], // Import standalone dependencies
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, NgOptimizedImage], // Import standalone dependencies
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
+  private readonly returnUrl: string = '';
 
-  username: string = '';
-  returnUrl: string = '';
+  // Formulário
+  protected loginForm!: FormGroup;
 
-  errorMessage = signal<string | null>(null);
-  isLoading = signal<boolean>(false);
-  loginResponse = signal<UserResponse | null>(null);
+  protected errorMessage = signal<string | null>(null);
+  protected isLoading = signal<boolean>(false);
 
   constructor(
     protected readonly authService: AuthService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
+    private readonly fb: FormBuilder,
   ) {
     this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
   }
 
-  onLogin(): void {
+  ngOnInit() {
+    this.initializeForm();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // Inicia o formulario para o login
+  private initializeForm() {
+    this.loginForm = this.fb.group({
+      username: ['', Validators.required],
+    });
+  }
+
+  protected onLogin(): void {
     this.errorMessage.set(null);
     this.isLoading.set(true);
-    this.loginResponse.set(null);
+
+    if (!this.loginForm.valid) {
+      this.loginForm.markAllAsTouched();
+      this.errorMessage.set('Fill all fields');
+      return;
+    }
 
     this.authService
-      .login({ username: this.username })
+      .login({ username: this.loginForm.value.username })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
+        next: (loginResponse) => {
           // AuthService handles navigation on success
-          console.log('Login successful!', response);
-          this.loginResponse.set(response);
+          console.log('Login successful!', loginResponse);
           this.isLoading.set(false);
           this.router.navigateByUrl(this.returnUrl);
         },
@@ -55,10 +82,5 @@ export class LoginComponent {
           this.isLoading.set(false);
         },
       });
-  }
-
-  changeUsername(event: string): void {
-    this.username = event;
-    this.errorMessage.set(null);
   }
 }

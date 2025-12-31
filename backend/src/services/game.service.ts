@@ -124,7 +124,6 @@ export class GameService {
       throw new NotFoundError("Room not found");
     }
 
-    /*
     // Validations (all users are ready, and no less than 3 users are in the room)
     const usersStatus = room.users.map((user) => user.status);
 
@@ -143,7 +142,6 @@ export class GameService {
     if (readyCount < 3) {
       throw new BadRequestError("Not enough players to start the game");
     }
-      */
 
     // Get the ids of the decks for the game
     const selectedDecks = await prisma.deck.findMany({

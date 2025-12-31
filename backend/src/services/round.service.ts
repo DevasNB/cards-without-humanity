@@ -18,7 +18,7 @@ import { BadRequestError, NotFoundError } from "../utils/errors";
 
 const cardService = new CardService();
 
-const WINNING_ROUNDS = 1;
+const WINNING_ROUNDS = 8;
 
 export class RoundService {
   public async create(gameId: string): Promise<{

@@ -1,22 +1,61 @@
+<div class="container-fluid login-container">
+  <div class="d-flex login-card vw-75 vh-75 bg-white">
+    <!-- Lado Esquerdo: Imagem -->
+    <div class="col-xl-6 d-xl-block w-50 login-image"></div>
+
+    <!-- Lado Direito: Formulário -->
+    <div class="col-xl-6 p-md-5 d-flex align-items-center">
+      <div class="login-form w-100">
+        <div class="text-center mb-4">
+          <h3>Welcome back!</h3>
+          <span class="tiny-text">Enter a username to start playing</span>
+        </div>
+
+        <!-- Formulário de Login -->
+        <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+          <!-- Username -->
+          <div class="mb-3">
+            <input
+              type="text"
+              class="form-control"
+              formControlName="username"
+              placeholder="Nome de utilizador"
+              [ngClass]="{
+                'is-invalid':
+                  (loginForm.get('username')?.invalid && loginForm.get('username')?.touched) ||
+                  errorMessage,
+              }"
+            />
+
+            @if (loginForm.get('username')?.invalid && loginForm.get('username')?.touched) {
+              <div class="invalid-feedback">You need to fill a username</div>
+            }
+          </div>
+
+          <!-- Botão de Submissão -->
+          <div class="d-grid mb-3">
+            <button
+              [disabled]="isLoading()"
+              type="submit"
+              class="btn btn-primary btn-custom"
+              [disabled]="loginForm.invalid"
+            >
+              Login
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
 @if (authService.loadingAuth()) {
   <p>Loading...</p>
 } @else {
   <h2>Login</h2>
-  <form (ngSubmit)="onLogin()">
-    <div>
-      <label for="username">Username:</label>
-      <input
-        id="username"
-        [(ngModel)]="username"
-        (ngModelChange)="changeUsername($event)"
-        name="username"
-        required
-      />
-    </div>
-    <button [disabled]="isLoading()" type="submit">Entrar</button>
-
-    @if (errorMessage()) {
-      <div style="color: red">{{ errorMessage() }}</div>
-    }
-  </form>
+  @if (errorMessage()) {
+    <div style="color: red">{{ errorMessage() }}</div>
+  }
 }
+-->
