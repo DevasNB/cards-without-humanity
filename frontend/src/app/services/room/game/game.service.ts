@@ -43,9 +43,7 @@ export class GameService implements OnDestroy {
       .listen('game:round:new')
       .pipe(takeUntil(this.destroy$))
       .subscribe((update) => {
-        console.log(update, 14941);
         this.roundSubject.next(update.round);
-
         this.handPickSubject.next(update.handPick);
       });
 

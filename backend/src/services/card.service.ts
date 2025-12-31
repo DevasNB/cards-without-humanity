@@ -89,8 +89,6 @@ export class CardService {
       });
     }
 
-    console.log(answerCards, 149);
-
     // Create an array of objects to insert and shuffle it
     // TODO: now this is kinda inefficient and unnecessary. remove it for now
     /*
@@ -115,13 +113,6 @@ export class CardService {
         playerHandCards.push({ playerId: player.id, cardId: card.id });
         cardIndex++;
       }
-    }
-
-    if (playerHandCards.length !== 7 * game.players.length) {
-      console.log("Answer cards: ", answerCards);
-      console.log("Missing number of cards: ", missingNumberOfCardsPerPlayer);
-      console.log("Shuffled cards: ", shuffledCards);
-      console.log("Player hand cards: ", playerHandCards);
     }
 
     // Insert all new entries

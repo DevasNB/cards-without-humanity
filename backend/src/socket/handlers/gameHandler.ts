@@ -493,6 +493,7 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
 
       if (winner) {
         endGame(socket.data.currentGameId, currentRoomId, io, winner);
+        delete socket.data.currentGameId;
       } else {
         startNextRound(socket.data.currentGameId, currentRoomId, io);
       }

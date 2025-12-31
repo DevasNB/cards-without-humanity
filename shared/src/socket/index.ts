@@ -10,6 +10,7 @@ import {
   MiddleGamePayload,
   RoundUpdatePayload,
   StartingGamePayload,
+  BackToLobbyPayload,
 } from './payloads';
 
 // --- Client-to-Server Events (Incoming) ---
@@ -36,5 +37,5 @@ export interface ServerToClientEvents {
   'game:round:update': (payload: RoundUpdatePayload) => void;
   'game:round:end': (payload: EndRoundPayload) => void;
   'game:end': (payload: EndGamePayload) => void;
-  'game:backToLobby': () => void;
+  'game:backToLobby': (payload: BackToLobbyPayload) => void;
 }

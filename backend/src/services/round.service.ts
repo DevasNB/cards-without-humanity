@@ -18,7 +18,7 @@ import { BadRequestError, NotFoundError } from "../utils/errors";
 
 const cardService = new CardService();
 
-const WINNING_ROUNDS = 2;
+const WINNING_ROUNDS = 1;
 
 export class RoundService {
   public async create(gameId: string): Promise<{
@@ -215,8 +215,6 @@ export class RoundService {
       },
     });
 
-    // console.log(players[0].user.user.username, players[0].submissions, 1494);
-    // console.log(1914, players.every((player) => player.submissions.length > 0));
     return {
       haveAllPlayersSubmitted: players.every(
         (player) => player.submissions.length > 0

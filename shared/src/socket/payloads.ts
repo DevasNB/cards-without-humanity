@@ -1,4 +1,4 @@
-import { PlayerResponse } from 'src/models';
+import { PlayerResponse, RoomUpdatePayload } from 'src/models';
 import { AnswerCard } from '../models/AnswerCard';
 import { IncompleteGame } from '../models/Game';
 import { RoundResponse } from '../models/Round';
@@ -28,4 +28,8 @@ export interface EndGamePayload {
   winner: PlayerResponse;
   round: RoundResponse;
   players: PlayerResponse[];
+}
+
+export interface BackToLobbyPayload {
+  room: RoomUpdatePayload;
 }

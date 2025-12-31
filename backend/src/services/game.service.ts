@@ -256,8 +256,25 @@ export class GameService {
   }
 
   public async endGame(gameId: string): Promise<void> {
-    await prisma.game.delete({
-      where: { id: gameId },
+    await prisma.$transaction(async (tx) => {
+      await tx.roomUser.updateMany({
+        where: {
+          room: {
+            games: {
+              some: {
+                id: gameId,
+              },
+            },
+          },
+        },
+        data: {
+          status: RoomUserStatus.WAITING,
+        },
+      });
+
+      await tx.game.delete({
+        where: { id: gameId },
+      });
     });
   }
 }

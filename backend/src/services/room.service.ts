@@ -255,8 +255,6 @@ export class RoomService {
       throw new NotFoundError("Room not found");
     }
 
-    console.log("Room exists: ", room);
-
     // Mark the room user as disconnected
     await prisma.roomUser.update({
       where: {
@@ -272,29 +270,19 @@ export class RoomService {
 
     // If user isn't host, return - everything is fine
     if (room.hostId !== userId) {
-      console.log("Room user is not host");
       return false;
     }
 
     // If user is host, find the next host
-    console.log("Room is host");
 
     // Find all the online users that are not the host (the current player)
     const onlineUsersExceptHost = room.users
       .filter((user) => user.status !== RoomUserStatus.DISCONNECTED)
       .filter((user) => user.userId !== userId);
 
-    console.log(
-      "Online users except host: ",
-      onlineUsersExceptHost,
-      onlineUsersExceptHost.length
-    );
-
     // If there are any online users, set the new host and return
     if (onlineUsersExceptHost.length > 0) {
       const newHostId = onlineUsersExceptHost[0].userId;
-
-      console.log("Next host: ", newHostId);
 
       // Set the new host
       await prisma.room.update({
@@ -309,8 +297,6 @@ export class RoomService {
     }
 
     // If there are not any online users, delete the room
-    console.log("Online users except host length = 0");
-    console.log("Deleting room...", roomId);
 
     await prisma.room.delete({
       where: {
@@ -322,5 +308,5 @@ export class RoomService {
   }
 }
 
-const WINNING_ROUNDS = 2;
+const WINNING_ROUNDS = 1;
 const MAX_PLAYERS = 8;

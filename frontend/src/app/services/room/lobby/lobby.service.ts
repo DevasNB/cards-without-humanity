@@ -31,7 +31,14 @@ export class LobbyService implements OnDestroy {
       .listen('room:update')
       .pipe(takeUntil(this.destroy$))
       .subscribe((room) => this.roomSubject.next(room));
-      
+
+    this.socketService
+      .listen('game:backToLobby')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((update) => {
+        this.roomSubject.next(update.room);
+      });
+
     this.socketService
       .listen('error')
       .pipe(takeUntil(this.destroy$))

@@ -1,14 +1,21 @@
 import { GameService } from "../../services/game.service";
 import { PlayerService } from "../../services/player.sevice";
+import { RoomService } from "../../services/room.service";
 import { RoundService } from "../../services/round.service";
 import { BadRequestError } from "../../utils/errors";
 import { ROUND_DURATION } from "../../utils/prisma/helpers/dtos/rounds";
 import { IoInstance } from "../config";
-import { IncompleteGame, PlayerResponse, RoundResponse } from "cah-shared";
+import {
+  IncompleteGame,
+  PlayerResponse,
+  RoomUpdatePayload,
+  RoundResponse,
+} from "cah-shared";
 
 const roundService = new RoundService();
 const gameService = new GameService();
 const playerService = new PlayerService();
+const roomService = new RoomService();
 
 interface ActiveRounds {
   roundId: string | null;
@@ -111,15 +118,28 @@ export async function endGame(
   io: IoInstance,
   winner: PlayerResponse
 ): Promise<void> {
-  const roundState: RoundResponse = await roundService.getRoundState(roomId); // Get latest room data from service
-  const players = await playerService.getUpdatedPlayers(roomId);
+  try {
+    const roundState: RoundResponse = await roundService.getRoundState(roomId); // Get latest room data from service
+    const players = await playerService.getUpdatedPlayers(roomId);
 
-  delete activeGames[gameId];
-  io.to(roomId).emit("game:end", { winner, round: roundState, players });
+    delete activeGames[gameId];
+    io.to(roomId).emit("game:end", { winner, round: roundState, players });
 
-  setTimeout(() => {
-    io.to(roomId).emit("game:backToLobby");
+    await gameService.endGame(gameId);
 
-    gameService.endGame(gameId);
-  }, 5000);
+    setTimeout(async () => {
+      const roomState: RoomUpdatePayload =
+        await roomService.getRoomState(roomId); // Get latest room data from service
+
+      if (roomState) {
+        io.to(roomId).emit("game:backToLobby", { room: roomState });
+        console.log(`Room ${roomId} updated: ${JSON.stringify(roomState)}`);
+      }
+    }, 5000);
+
+    // TODO: HANDLE DUPLICATE
+  } catch (error: any) {
+    console.error(`Failed to emit room update for ${roomId}:`, error);
+    // Consider emitting a general error or specific room error to clients if critical
+  }
 }
