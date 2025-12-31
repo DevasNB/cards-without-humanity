@@ -43,7 +43,7 @@ export class GameService implements OnDestroy {
       .listen('game:round:new')
       .pipe(takeUntil(this.destroy$))
       .subscribe((update) => {
-        console.log(update, 14941)
+        console.log(update, 14941);
         this.roundSubject.next(update.round);
 
         this.handPickSubject.next(update.handPick);
@@ -66,8 +66,6 @@ export class GameService implements OnDestroy {
       .listen('game:round:end')
       .pipe(takeUntil(this.destroy$))
       .subscribe((update) => {
-        console.log(update, 2592);
-        console.log(new Date(), new Date(update.round.endsAt), 25923)
         this.roundSubject.next(update.round);
       });
 
@@ -75,6 +73,27 @@ export class GameService implements OnDestroy {
     this.socketService.listen('game:update').subscribe((update) => {
       this.gameSubject.next(update);
     });
+
+    this.socketService
+      .listen('game:end')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((update) => {
+        const currentGame = this.gameSubject.getValue();
+
+        this.roundSubject.next(update.round);
+        if (currentGame) {
+          this.gameSubject.next({ ...currentGame, winner: update.winner, players: update.players });
+        }
+      });
+
+    this.socketService
+      .listen('game:backToLobby')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.gameSubject.next(null);
+        this.roundSubject.next(null);
+        this.handPickSubject.next([]);
+      });
 
     // Errors
     this.socketService

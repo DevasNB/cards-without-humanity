@@ -1,5 +1,10 @@
 // src/services/game.service.ts
-import { Prisma, RoomUserStatus, RoundStatus } from "@prisma/client";
+import {
+  GameStatus,
+  Prisma,
+  RoomUserStatus,
+  RoundStatus,
+} from "@prisma/client";
 import { AnswerCard, PlayerResponse, RoundResponse } from "cah-shared";
 import { CardService } from "./card.service";
 import { randomElement } from "../utils/helpers";
@@ -12,6 +17,8 @@ import prisma from "../utils/prisma";
 import { BadRequestError, NotFoundError } from "../utils/errors";
 
 const cardService = new CardService();
+
+const WINNING_ROUNDS = 2;
 
 export class RoundService {
   public async create(gameId: string): Promise<{
@@ -218,7 +225,9 @@ export class RoundService {
     };
   }
 
-  public async voteForRoundPick(roundPickId: string): Promise<void> {
+  public async voteForRoundPick(
+    roundPickId: string
+  ): Promise<PlayerResponse | null> {
     const roundPick = await prisma.roundPick.findUnique({
       where: { id: roundPickId },
       select: { roundId: true },
@@ -241,7 +250,7 @@ export class RoundService {
       throw new BadRequestError("Round is not in voting phase");
     }
 
-    await prisma.$transaction(async (tx) => {
+    const gameWinnerId = await prisma.$transaction(async (tx) => {
       const roundPick = await tx.roundPick.update({
         where: { id: roundPickId },
         data: { isWinner: true },
@@ -251,11 +260,66 @@ export class RoundService {
         },
       });
 
-      await tx.round.update({
+      const newRound = await tx.round.update({
         where: { id: roundPick.round.id },
         data: { winnerId: roundPick.playerId, status: RoundStatus.ENDED },
       });
+
+      const roundsByWinner = await tx.round.groupBy({
+        by: ["winnerId"],
+        _count: {
+          id: true,
+        },
+      });
+
+      const winningPlayerId = roundsByWinner.find(
+        (t) => t._count.id >= WINNING_ROUNDS
+      );
+
+      if (!winningPlayerId?.winnerId) return null;
+
+      await tx.game.update({
+        where: { id: newRound.gameId },
+        data: { status: GameStatus.GAME_ENDED },
+      });
+
+      return winningPlayerId?.winnerId;
     });
+
+    if (!gameWinnerId) return null;
+
+    const winningPlayer = await prisma.player.findUnique({
+      where: { id: gameWinnerId },
+      select: {
+        id: true,
+        user: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                username: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            winningRounds: true,
+          },
+        },
+      },
+    });
+
+    if (!winningPlayer) {
+      throw new NotFoundError("Winning player not found");
+    }
+
+    return {
+      id: winningPlayer.id,
+      roomUserId: winningPlayer.user.id,
+      username: winningPlayer.user.user.username,
+      points: winningPlayer._count.winningRounds,
+    };
   }
 
   public async getRoundState(roomId: string): Promise<RoundResponse> {

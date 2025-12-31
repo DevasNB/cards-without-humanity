@@ -4,6 +4,12 @@
       <div class="counter">{{ counter() }}</div>
 
       <div class="top-flex">
+        @if (data.game.winner) {
+          <div class="winner-container">
+            <div class="game-winner">The winner is {{ data.game.winner.username }}</div>
+          </div>
+        }
+
         <div>
           <div class="card black-card">{{ data.round.promptCard.text }}</div>
           @if (isCzar()) {

@@ -23,3 +23,9 @@ export interface EndRoundPayload {
   reason: 'timeout' | 'all_played';
   round: RoundResponse;
 }
+
+export interface EndGamePayload {
+  winner: PlayerResponse;
+  round: RoundResponse;
+  players: PlayerResponse[];
+}

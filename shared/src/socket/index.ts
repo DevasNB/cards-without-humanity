@@ -2,16 +2,10 @@
 export * from './errors';
 export * from './payloads';
 
-import {
-  EditableRoom,
-  EditableRoomUser,
-  GameUpdatePayload,
-  RoomResponse,
-  RoomUpdatePayload,
-  RoundResponse,
-} from '../models';
+import { EditableRoom, EditableRoomUser, GameUpdatePayload, RoomUpdatePayload } from '../models';
 import { ErrorType } from './errors';
 import {
+  EndGamePayload,
   EndRoundPayload,
   MiddleGamePayload,
   RoundUpdatePayload,
@@ -41,4 +35,6 @@ export interface ServerToClientEvents {
   'game:round:new': (payload: MiddleGamePayload) => void;
   'game:round:update': (payload: RoundUpdatePayload) => void;
   'game:round:end': (payload: EndRoundPayload) => void;
+  'game:end': (payload: EndGamePayload) => void;
+  'game:backToLobby': () => void;
 }

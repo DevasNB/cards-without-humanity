@@ -1,10 +1,14 @@
+import { GameService } from "../../services/game.service";
+import { PlayerService } from "../../services/player.sevice";
 import { RoundService } from "../../services/round.service";
 import { BadRequestError } from "../../utils/errors";
 import { ROUND_DURATION } from "../../utils/prisma/helpers/dtos/rounds";
 import { IoInstance } from "../config";
-import { IncompleteGame } from "cah-shared";
+import { IncompleteGame, PlayerResponse, RoundResponse } from "cah-shared";
 
 const roundService = new RoundService();
+const gameService = new GameService();
+const playerService = new PlayerService();
 
 interface ActiveRounds {
   roundId: string | null;
@@ -97,7 +101,25 @@ export function startNextRound(
   io: IoInstance
 ): void {
   setTimeout(() => {
-    console.log("STARTING ROUND, 14484");
     startRound(gameId, roomId, io);
+  }, 5000);
+}
+
+export async function endGame(
+  gameId: string,
+  roomId: string,
+  io: IoInstance,
+  winner: PlayerResponse
+): Promise<void> {
+  const roundState: RoundResponse = await roundService.getRoundState(roomId); // Get latest room data from service
+  const players = await playerService.getUpdatedPlayers(roomId);
+
+  delete activeGames[gameId];
+  io.to(roomId).emit("game:end", { winner, round: roundState, players });
+
+  setTimeout(() => {
+    io.to(roomId).emit("game:backToLobby");
+
+    gameService.endGame(gameId);
   }, 5000);
 }

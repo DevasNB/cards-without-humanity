@@ -16,7 +16,7 @@ import {
   GameUpdatePayload,
   RoundResponse,
 } from "cah-shared";
-import { endRound, startNextRound, startRound } from "./roundTimer";
+import { endGame, endRound, startNextRound, startRound } from "./roundTimer";
 import { RoundService } from "../../services/round.service";
 import { PlayerService } from "../../services/player.sevice";
 
@@ -486,12 +486,16 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       );
 
       // Update game in database
-      await roundService.voteForRoundPick(payload.roundPickId);
+      const winner = await roundService.voteForRoundPick(payload.roundPickId);
 
       // Notify all users in the room with the new game state
       await emitRoundUpdate(io, currentRoomId, true);
 
-      startNextRound(socket.data.currentGameId, currentRoomId, io);
+      if (winner) {
+        endGame(socket.data.currentGameId, currentRoomId, io, winner);
+      } else {
+        startNextRound(socket.data.currentGameId, currentRoomId, io);
+      }
     } catch (error: any) {
       console.error(
         `Error voting for card ${payload.roundPickId} in game ${socket.data.currentGameId}:`,

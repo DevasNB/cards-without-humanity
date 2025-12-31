@@ -322,5 +322,5 @@ export class RoomService {
   }
 }
 
-const WINNING_ROUNDS = 5;
+const WINNING_ROUNDS = 2;
 const MAX_PLAYERS = 8;

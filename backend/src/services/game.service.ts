@@ -254,4 +254,10 @@ export class GameService {
 
     return gameResponse;
   }
+
+  public async endGame(gameId: string): Promise<void> {
+    await prisma.game.delete({
+      where: { id: gameId },
+    });
+  }
 }
