@@ -14,12 +14,18 @@ import {
   EditableRoomUser,
   EditableRoomUserSchema,
   GameUpdatePayload,
+  RoundResponse,
 } from "cah-shared";
+import { endGame, endRound, startNextRound, startRound } from "./roundTimer";
+import { RoundService } from "../../services/round.service";
+import { PlayerService } from "../../services/player.sevice";
 
 const roomService = new RoomService();
 const roomUserService = new RoomUserService();
 const gameService = new GameService();
 const cardService = new CardService();
+const roundService = new RoundService();
+const playerService = new PlayerService();
 
 const removeData = (socket: GameSocket) => {
   // Clear socket data info related to room
@@ -79,6 +85,39 @@ const emitGameUpdate = async (
   }
 };
 
+/**
+ * Emits a comprehensive game update to all clients in a specific room.
+ * @param io - The Socket.IO server instance.
+ * @param roomId - The ID of the room to update.
+ * @returns A promise that resolves when the update is complete.
+ * @throws {Error} If there is an error while emitting the update.
+ */
+const emitRoundUpdate = async (
+  io: IoInstance,
+  roomId: string,
+  withPlayers: boolean = false
+): Promise<void> => {
+  try {
+    // TODO: Do not send the whole object at once
+    const roundState: RoundResponse = await roundService.getRoundState(roomId); // Get latest room data from service
+    let players = undefined;
+
+    if (withPlayers) {
+      players = await playerService.getUpdatedPlayers(roomId);
+    }
+
+    if (roundState) {
+      io.to(roomId).emit("game:round:update", { round: roundState, players });
+      console.log(
+        `Round ${roundState.id} updated: ${JSON.stringify(roundState)}`
+      );
+    }
+  } catch (error: any) {
+    console.error(`Failed to emit game update for ${roomId}:`, error);
+    // Consider emitting a general error or specific room error to clients if critical
+  }
+};
+
 const leaveRoom = async (
   io: IoInstance,
   socket: GameSocket,
@@ -86,7 +125,6 @@ const leaveRoom = async (
 ) => {
   // Clear socket data info related to room
   removeData(socket);
-  console.log("LEAVINGGGG");
 
   if (!roomId) {
     throw new AppError("Room ID not provided.");
@@ -285,7 +323,14 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
     }
   });
 
-  // When a user starts the game
+  // on host click start game, start countdown
+  // Notify room users it's about to start in 3 seconds
+  /*
+      io.to(currentRoomId).emit("game:starting", {
+        message: "Starting game in 3 seconds.",
+      });*/
+
+  // Here it already started the game
   socket.on("room:host:startGame", async () => {
     const currentRoomId = socket.data.currentRoomId;
 
@@ -305,18 +350,16 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
 
       // Update room in database
       // TODO: Make this already return the handPick
-      const { game, handPicks } = await gameService.startGame(currentRoomId);
+      const game = await gameService.startGame(currentRoomId);
 
       // Set socket data info related to game
       socket.data.currentGameId = game.id;
 
-      // Notify all users in the room with the new game state
-      for (const [connectionId, cards] of handPicks) {
-        io.to(connectionId).emit("room:game:new", {
-          game: game,
-          handPick: cards,
-        });
-      }
+      io.to(currentRoomId).emit("room:game:new", {
+        game,
+      });
+
+      await startRound(game.id, currentRoomId, io);
 
       console.log(`Game ${game.id} updated: ${JSON.stringify(game)}`);
     } catch (error: any) {
@@ -338,6 +381,11 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       // Check if user is in a room
       if (!currentRoomId) {
         throw new AppError("Not currently in a room.", 400);
+      }
+
+      if (socket.data.isHost) {
+        console.warn("User has already joined the game because it is the host");
+        return;
       }
 
       if (socket.data.currentGameId) {
@@ -391,8 +439,21 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
         payload.cardId
       );
 
+      const { haveAllPlayersSubmitted, roundId } =
+        await roundService.haveAllPlayersSubmitted(socket.data.currentGameId);
+
+      if (haveAllPlayersSubmitted) {
+        endRound(
+          socket.data.currentGameId,
+          currentRoomId,
+          roundId,
+          io,
+          "all_played"
+        );
+      }
+
       // Notify all users in the room with the new game state
-      emitGameUpdate(io, currentRoomId);
+      emitRoundUpdate(io, currentRoomId);
     } catch (error: any) {
       console.error(
         `Error selecting card ${payload.cardId} in game ${socket.data.currentGameId}:`,
@@ -402,6 +463,49 @@ export const registerGameHandlers = (io: IoInstance, socket: GameSocket) => {
       // Send not-found error
       socket.emit("error", {
         message: error.message || "Failed to select card.",
+        type: "not-found",
+      });
+    }
+  });
+
+  socket.on("game:czar:vote", async (payload: { roundPickId: string }) => {
+    const currentRoomId = socket.data.currentRoomId;
+
+    try {
+      // Check if user is in a room
+      if (!currentRoomId) {
+        throw new AppError("Not currently in a room.", 400);
+      }
+
+      if (!socket.data.currentGameId) {
+        throw new AppError("Not currently in a game.", 400);
+      }
+
+      console.log(
+        `User ${socket.data.username} (${socket.data.userId}) voting for card ${payload.roundPickId} in game ${socket.data.currentGameId}`
+      );
+
+      // Update game in database
+      const winner = await roundService.voteForRoundPick(payload.roundPickId);
+
+      // Notify all users in the room with the new game state
+      await emitRoundUpdate(io, currentRoomId, true);
+
+      if (winner) {
+        endGame(socket.data.currentGameId, currentRoomId, io, winner);
+        delete socket.data.currentGameId;
+      } else {
+        startNextRound(socket.data.currentGameId, currentRoomId, io);
+      }
+    } catch (error: any) {
+      console.error(
+        `Error voting for card ${payload.roundPickId} in game ${socket.data.currentGameId}:`,
+        error
+      );
+
+      // Send not-found error
+      socket.emit("error", {
+        message: error.message || "Failed to vote for card.",
         type: "not-found",
       });
     }

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "types": ["node"],
     "lib": ["es2020"],
-    "rootDir": "./", // Root directory for your TypeScript source files
+    "rootDir": "./src", // Root directory for your TypeScript source files
     "skipLibCheck": true, // Skip type checking of all declaration files (*.d.ts)
     "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased file names.
     "resolveJsonModule": true, // Allow importing .json files
@@ -13,8 +13,13 @@
     "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
-    "emitDeclarationOnly": false
+    "emitDeclarationOnly": false,
+    "baseUrl": ".",
+    "paths": {
+      "cah-shared": ["cah-shared/src/index.ts"],
+      "cah-shared/*": ["cah-shared/src/*"]
+    }
   },
-  "include": ["src", "src/index.ts"],
+  "include": ["src"],
   "exclude": ["node_modules"]
 }

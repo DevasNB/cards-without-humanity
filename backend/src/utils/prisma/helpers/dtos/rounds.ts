@@ -2,6 +2,8 @@ import { RoundResponse } from "cah-shared";
 import { Prisma, RoundStatus } from "@prisma/client";
 import { SelectedRoundsType } from "../types/rounds";
 
+export const ROUND_DURATION = 30_000;
+
 export function getRoundResponse(
   updatedRound: Prisma.RoundGetPayload<{
     select: SelectedRoundsType;
@@ -22,9 +24,23 @@ export function getRoundResponse(
         : pick.answerCard.content,
   }));
 
+  let winner = undefined;
+
+  if (updatedRound.winner) {
+    winner = {
+      id: updatedRound.winner.id,
+      roomUserId: updatedRound.winner.user.id,
+      username: updatedRound.winner.user.user.username,
+      points: 0,
+    };
+  }
+
   const roundResponse: RoundResponse = {
     id: updatedRound.id,
+    startedAt: updatedRound.createdAt.getTime(),
+    endsAt: updatedRound.endsAt.getTime(),
     status: updatedRound.status,
+    winner: winner,
     czar: {
       id: czar.id,
       roomUserId: czar.user.id,

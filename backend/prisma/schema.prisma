@@ -147,7 +147,6 @@ model Game {
 enum GameStatus {
   WAITING_FOR_PLAYERS // When in lobby
   PLAYING // When playing a round
-  ROUND_ENDED // When a round has ended
   GAME_ENDED // When the game ended
 }
 
@@ -177,6 +176,7 @@ model Round {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now()) // Used as an ordering system
   updatedAt DateTime @updatedAt
+  endsAt    DateTime
 
   gameId String // The game it belongs to
   status RoundStatus @default(DRAWING_CARDS) // The status of the round

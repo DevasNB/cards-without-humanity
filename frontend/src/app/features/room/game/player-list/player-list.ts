@@ -12,10 +12,11 @@ export class PlayerList {
   private readonly _players = signal<PlayerResponse[]>([]);
   private readonly _currentUser = signal<PlayerResponse | null>(null);
   private readonly _czar = signal<PlayerResponse | null>(null);
+  private readonly _winner = signal<PlayerResponse | null>(null);
 
   @Input()
   set players(value: PlayerResponse[]) {
-    this._players.set(value ?? []);
+    this._players.set(value);
   }
   @Input()
   set currentUser(username: PlayerResponse | null) {
@@ -25,6 +26,10 @@ export class PlayerList {
   set czar(user: PlayerResponse | null) {
     this._czar.set(user);
   }
+  @Input()
+  set winner(user: PlayerResponse | null) {
+    this._winner.set(user);
+  }
 
   // Automatically sorted leaderboard
   leaderboard = computed(() => [...this._players()].sort((a, b) => b.points - a.points));
@@ -32,4 +37,6 @@ export class PlayerList {
   isCurrentUser = (username: PlayerResponse) => this._currentUser()?.id === username.id;
 
   isCardCzar = (player: PlayerResponse) => this._czar()?.id === player.id;
+
+  isPlayerWinner = (player: PlayerResponse) => this._winner()?.id === player.id;
 }

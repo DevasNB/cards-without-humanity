@@ -1,4 +1,4 @@
-export type UserStatus = 'DISCONNECTED' | 'WAITING' | 'READY' | 'IN_GAME';
+export type UserStatusType = 'DISCONNECTED' | 'WAITING' | 'READY' | 'IN_GAME';
 
 export const UserStatus = {
   DISCONNECTED: 'DISCONNECTED',

@@ -1,4 +1,4 @@
-import { UserStatus } from '../enums/RoomUserStatus';
+import { UserStatus, UserStatusType } from '../enums/RoomUserStatus';
 import { z } from 'zod';
 
 export interface RoomUserResponse {
@@ -6,7 +6,7 @@ export interface RoomUserResponse {
   username: string;
   connectionId: string | null;
   isHost: boolean;
-  status: UserStatus;
+  status: UserStatusType;
 
   // points: number;
 }

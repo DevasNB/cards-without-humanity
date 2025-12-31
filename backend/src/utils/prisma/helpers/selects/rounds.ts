@@ -1,6 +1,8 @@
 export const SelectedRounds = {
   select: {
     id: true,
+    createdAt: true,
+    endsAt: true,
     status: true,
     czar: {
       select: {
@@ -19,6 +21,21 @@ export const SelectedRounds = {
         answerCard: {
           select: {
             content: true,
+          },
+        },
+      },
+    },
+    winner: {
+      select: {
+        id: true,
+        user: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
       },

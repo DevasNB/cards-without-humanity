@@ -31,7 +31,14 @@ export class LobbyService implements OnDestroy {
       .listen('room:update')
       .pipe(takeUntil(this.destroy$))
       .subscribe((room) => this.roomSubject.next(room));
-      
+
+    this.socketService
+      .listen('game:backToLobby')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((update) => {
+        this.roomSubject.next(update.room);
+      });
+
     this.socketService
       .listen('error')
       .pipe(takeUntil(this.destroy$))
@@ -117,23 +124,21 @@ export class LobbyService implements OnDestroy {
 
     // Optional validations (all ready + minimum players)
 
-    if (false) {
-      const allReady = room?.users.every((u) => u.status === 'READY');
-      if (!allReady) {
-        this.errorSubject.next({
-          type: 'not-ready',
-          message: 'Nem todos os jogadores estão prontos!',
-        });
-        return;
-      }
+    const allReady = room?.users.every((u) => u.status === 'READY');
+    if (!allReady) {
+      this.errorSubject.next({
+        type: 'not-ready',
+        message: 'Nem todos os jogadores estão prontos!',
+      });
+      return;
+    }
 
-      if ((room?.users?.length || 0) < 3) {
-        this.errorSubject.next({
-          type: 'min-players',
-          message: 'O jogo precisa de pelo menos 3 jogadores!',
-        });
-        return;
-      }
+    if ((room?.users?.length || 0) < 3) {
+      this.errorSubject.next({
+        type: 'min-players',
+        message: 'O jogo precisa de pelo menos 3 jogadores!',
+      });
+      return;
     }
 
     // Emit start game

@@ -4,7 +4,14 @@ export * from './payloads';
 
 import { EditableRoom, EditableRoomUser, GameUpdatePayload, RoomUpdatePayload } from '../models';
 import { ErrorType } from './errors';
-import { MiddleGamePayload, StartingGamePayload } from './payloads';
+import {
+  EndGamePayload,
+  EndRoundPayload,
+  MiddleGamePayload,
+  RoundUpdatePayload,
+  StartingGamePayload,
+  BackToLobbyPayload,
+} from './payloads';
 
 // --- Client-to-Server Events (Incoming) ---
 export interface ClientToServerEvents {
@@ -15,6 +22,7 @@ export interface ClientToServerEvents {
   'room:host:startGame': () => void;
   'game:join': () => void;
   'game:card:select': (payload: { cardId: string }) => void;
+  'game:czar:vote': (payload: { roundPickId: string }) => void;
 }
 
 // --- Server-to-Client Events (Outgoing) ---
@@ -26,4 +34,8 @@ export interface ServerToClientEvents {
   'room:game:new': (payload: StartingGamePayload) => void;
   'game:update': (payload: GameUpdatePayload) => void;
   'game:round:new': (payload: MiddleGamePayload) => void;
+  'game:round:update': (payload: RoundUpdatePayload) => void;
+  'game:round:end': (payload: EndRoundPayload) => void;
+  'game:end': (payload: EndGamePayload) => void;
+  'game:backToLobby': (payload: BackToLobbyPayload) => void;
 }
