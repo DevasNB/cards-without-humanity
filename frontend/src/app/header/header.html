@@ -1,14 +1,9 @@
 <header class="app-header">
-  <div>
-    @if (authService.loadingAuth()) {
-      <p>Loading...</p>
-    } @else if (user) {
-      <p>Welcome, {{ user.username }}</p>
-    } @else {
-      <p>Please login to continue</p>
-    }
+  <div class="logo">Cards Without Humanity</div>
+  <nav></nav>
 
-    <button type="submit" (click)="toggleLogin()">
+  <div>
+    <button class="btn btn-primary btn-custom" type="submit" (click)="toggleLogin()">
       @if (!authService.isAuthenticated()) {
         Login
       } @else {

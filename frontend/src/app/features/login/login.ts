@@ -8,15 +8,14 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms'; // Required for ngModel
 import { AuthService } from '../../services/auth/auth.service';
-import { CommonModule, NgOptimizedImage } from '@angular/common'; // For ngIf, etc.
+import { CommonModule } from '@angular/common'; // For ngIf, etc.
 import { ActivatedRoute, Router } from '@angular/router';
-import { UserResponse } from 'cah-shared';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   standalone: true,
   selector: 'app-login',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, NgOptimizedImage], // Import standalone dependencies
+  imports: [CommonModule, FormsModule, ReactiveFormsModule], // Import standalone dependencies
   templateUrl: './login.html',
   styleUrl: './login.css',
 })

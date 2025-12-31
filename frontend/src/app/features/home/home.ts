@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { RoomService } from '../../services/room/room.service';
 import { Subject, takeUntil } from 'rxjs';
+import { AuthService } from '../../services/auth/auth.service';
 
 @Component({
   standalone: true,
@@ -16,6 +17,7 @@ export class Home {
   constructor(
     private readonly roomService: RoomService,
     private readonly router: Router,
+    protected readonly authService: AuthService,
   ) {}
 
   createRoom() {
