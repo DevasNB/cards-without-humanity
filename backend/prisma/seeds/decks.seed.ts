@@ -117,7 +117,7 @@ export async function seedDecks(prisma: PrismaClient): Promise<any[]> {
             content: t,
             pick: (t.match(/___/g) || []).length || 1,
           }))
-        ),
+        ).filter((t) => t.pick === 1),
       },
       answerCards: {
         create: [
