@@ -1,0 +1,68 @@
+version: '3.9'
+
+services:
+  workspace:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ..:/workspace:cached
+    command: sleep infinity
+    depends_on:
+      - mysql
+    networks:
+      - devnet
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.ssr
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm start
+    ports:
+      - "4200:4200"
+    networks:
+      - devnet
+
+  backend:
+    build:
+      context: ../backend
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run start:dev
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=cardsdb
+    networks:
+      - devnet
+
+  mysql:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cardsdb
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - devnet
+
+volumes:
+  mysql-data:
+
+networks:
+  devnet:
+    driver: bridge
